@@ -19,6 +19,7 @@ All admin endpoints require authentication and are accessed under `/api/v1/admin
 Admin endpoints require **Auth0 JWT authentication** via the standard `Authorization: Bearer <token>` header.
 
 **Access Control:**
+
 - ✅ Authentication required (JWT token)
 - ⏳ Role-based authorization (not yet implemented)
 - ⚠️ **Security Note:** Currently, any authenticated user can access admin endpoints
@@ -41,10 +42,12 @@ func RequireAdminRole(next echo.HandlerFunc) echo.HandlerFunc {
 ```
 
 **User Roles** (in database):
+
 - `user` - Regular user (default)
 - `admin` - Administrator with access to admin endpoints
 
 **Setting User Role:**
+
 ```sql
 -- Promote user to admin
 UPDATE users SET role = 'admin' WHERE email = 'admin@example.com';
@@ -58,6 +61,7 @@ UPDATE users SET role = 'user' WHERE email = 'user@example.com';
 Until role-based authorization is implemented:
 
 1. **Use feature flags** - Keep admin endpoints disabled in production:
+
    ```bash
    RECONCILE_ENABLED=0  # Disable reconciliation endpoint
    ```
@@ -74,20 +78,22 @@ Real Staging AI supports multiple AI models for image processing. Admins can swi
 
 ### Available Models
 
-| Model ID | Name | Description | Speed | Quality | Cost |
-|----------|------|-------------|-------|---------|------|
-| `qwen/qwen-image-edit` | Qwen Image Edit | Fast editing optimized for virtual staging | ⚡⚡⚡ | ⭐⭐⭐ | $ |
-| `black-forest-labs/flux-kontext-max` | Flux Kontext Max | High-quality with advanced context understanding | ⚡⚡ | ⭐⭐⭐⭐⭐ | $$$ |
+| Model ID                             | Name             | Description                                      | Speed  | Quality    | Cost |
+| ------------------------------------ | ---------------- | ------------------------------------------------ | ------ | ---------- | ---- |
+| `qwen/qwen-image-edit`               | Qwen Image Edit  | Fast editing optimized for virtual staging       | ⚡⚡⚡ | ⭐⭐⭐     | $    |
+| `black-forest-labs/flux-kontext-max` | Flux Kontext Max | High-quality with advanced context understanding | ⚡⚡   | ⭐⭐⭐⭐⭐ | $$$  |
 
 **Model Characteristics:**
 
 **Qwen Image Edit:**
+
 - Requires input image (no text-to-image)
 - Optimized for speed and cost
 - Best for: High-volume staging jobs
 - Processing time: ~5-10 seconds
 
 **Flux Kontext Max:**
+
 - Supports text-to-image and image-to-image
 - Superior quality and context understanding
 - Best for: Premium results, complex scenes
@@ -100,12 +106,14 @@ Real Staging AI supports multiple AI models for image processing. Admins can swi
 Returns all available AI models with their current status.
 
 **Request:**
+
 ```bash
 curl -X GET https://api.realstaging.ai/api/v1/admin/models \
   -H "Authorization: Bearer <token>"
 ```
 
 **Response:**
+
 ```json
 {
   "models": [
@@ -134,12 +142,14 @@ curl -X GET https://api.realstaging.ai/api/v1/admin/models \
 Returns the currently active AI model used for all new image processing jobs.
 
 **Request:**
+
 ```bash
 curl -X GET https://api.realstaging.ai/api/v1/admin/models/active \
   -H "Authorization: Bearer <token>"
 ```
 
 **Response:**
+
 ```json
 {
   "id": "qwen/qwen-image-edit",
@@ -151,6 +161,7 @@ curl -X GET https://api.realstaging.ai/api/v1/admin/models/active \
 ```
 
 **Error Cases:**
+
 - `404 Not Found` - Active model not found in registry (data corruption)
 - `500 Internal Server Error` - Database error
 
@@ -161,6 +172,7 @@ curl -X GET https://api.realstaging.ai/api/v1/admin/models/active \
 Updates the active AI model. All new jobs will use this model.
 
 **Request:**
+
 ```bash
 curl -X PUT https://api.realstaging.ai/api/v1/admin/models/active \
   -H "Authorization: Bearer <token>" \
@@ -171,13 +183,15 @@ curl -X PUT https://api.realstaging.ai/api/v1/admin/models/active \
 ```
 
 **Request Body:**
+
 ```json
 {
-  "value": "qwen/qwen-image-edit"  // Model ID to activate
+  "value": "qwen/qwen-image-edit" // Model ID to activate
 }
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Active model updated successfully",
@@ -186,16 +200,19 @@ curl -X PUT https://api.realstaging.ai/api/v1/admin/models/active \
 ```
 
 **Error Cases:**
+
 - `400 Bad Request` - Invalid model ID or missing `value` field
 - `401 Unauthorized` - Missing or invalid authentication token
 - `500 Internal Server Error` - Database error
 
 **Important Notes:**
+
 - ✅ Change takes effect immediately for new jobs
 - ⚠️ Existing jobs continue with their original model
 - 📝 Change is logged with admin user ID and timestamp
 
 **Example Workflow:**
+
 ```bash
 # 1. Check current model
 CURRENT=$(curl -s https://api.realstaging.ai/api/v1/admin/models/active \
@@ -225,22 +242,22 @@ System settings control application behavior. Settings are stored in the databas
 
 ```typescript
 interface Setting {
-  key: string;           // Unique identifier (e.g., "active_model")
-  value: string;         // Setting value (always string, parse as needed)
-  description?: string;  // Human-readable description
-  updated_at: string;    // ISO 8601 timestamp
-  updated_by?: string;   // User UUID who made the change
+  key: string; // Unique identifier (e.g., "active_model")
+  value: string; // Setting value (always string, parse as needed)
+  description?: string; // Human-readable description
+  updated_at: string; // ISO 8601 timestamp
+  updated_by?: string; // User UUID who made the change
 }
 ```
 
 ### Common Settings
 
-| Key | Description | Example Value | Type |
-|-----|-------------|---------------|------|
-| `active_model` | Currently active AI model | `qwen/qwen-image-edit` | string |
-| `max_image_size_mb` | Maximum upload size in MB | `10` | number |
-| `default_timeout_seconds` | Job timeout | `300` | number |
-| `maintenance_mode` | Enable maintenance mode | `true` or `false` | boolean |
+| Key                       | Description               | Example Value          | Type    |
+| ------------------------- | ------------------------- | ---------------------- | ------- |
+| `active_model`            | Currently active AI model | `qwen/qwen-image-edit` | string  |
+| `max_image_size_mb`       | Maximum upload size in MB | `10`                   | number  |
+| `default_timeout_seconds` | Job timeout               | `300`                  | number  |
+| `maintenance_mode`        | Enable maintenance mode   | `true` or `false`      | boolean |
 
 ### List All Settings
 
@@ -249,12 +266,14 @@ interface Setting {
 Returns all system settings.
 
 **Request:**
+
 ```bash
 curl -X GET https://api.realstaging.ai/api/v1/admin/settings \
   -H "Authorization: Bearer <token>"
 ```
 
 **Response:**
+
 ```json
 {
   "settings": [
@@ -283,12 +302,14 @@ curl -X GET https://api.realstaging.ai/api/v1/admin/settings \
 Returns a single setting by key.
 
 **Request:**
+
 ```bash
 curl -X GET https://api.realstaging.ai/api/v1/admin/settings/active_model \
   -H "Authorization: Bearer <token>"
 ```
 
 **Response:**
+
 ```json
 {
   "key": "active_model",
@@ -300,6 +321,7 @@ curl -X GET https://api.realstaging.ai/api/v1/admin/settings/active_model \
 ```
 
 **Error Cases:**
+
 - `404 Not Found` - Setting key doesn't exist
 
 ### Update Setting
@@ -309,6 +331,7 @@ curl -X GET https://api.realstaging.ai/api/v1/admin/settings/active_model \
 Updates a setting value.
 
 **Request:**
+
 ```bash
 curl -X PUT https://api.realstaging.ai/api/v1/admin/settings/max_image_size_mb \
   -H "Authorization: Bearer <token>" \
@@ -319,13 +342,15 @@ curl -X PUT https://api.realstaging.ai/api/v1/admin/settings/max_image_size_mb \
 ```
 
 **Request Body:**
+
 ```json
 {
-  "value": "new_value"  // New setting value (always string)
+  "value": "new_value" // New setting value (always string)
 }
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Setting updated successfully",
@@ -335,10 +360,12 @@ curl -X PUT https://api.realstaging.ai/api/v1/admin/settings/max_image_size_mb \
 ```
 
 **Error Cases:**
+
 - `400 Bad Request` - Missing `value` field
 - `401 Unauthorized` - Missing or invalid authentication token
 
 **Important Notes:**
+
 - ✅ All values stored as strings (parse to number/boolean as needed)
 - ✅ Changes logged with admin user ID
 - ⚠️ No validation on values (application must handle invalid values)
@@ -357,6 +384,7 @@ Scans S3 bucket and database to find discrepancies.
 **Feature Flag:** Requires `RECONCILE_ENABLED=1` environment variable.
 
 **Request:**
+
 ```bash
 curl -X POST "https://api.realstaging.ai/api/v1/admin/reconcile/images?dry_run=true&limit=100" \
   -H "Authorization: Bearer <token>"
@@ -371,6 +399,7 @@ curl -X POST "https://api.realstaging.ai/api/v1/admin/reconcile/images?dry_run=t
 | `batch_size` | integer | `50` | Database batch size |
 
 **Response:**
+
 ```json
 {
   "status": "received",
@@ -384,10 +413,12 @@ curl -X POST "https://api.realstaging.ai/api/v1/admin/reconcile/images?dry_run=t
 ```
 
 **Error Cases:**
+
 - `503 Service Unavailable` - Feature flag `RECONCILE_ENABLED` not set
 - `400 Bad Request` - Invalid query parameters
 
 **What It Does:**
+
 1. Lists all images in S3 bucket
 2. Compares with database records
 3. Detects:
@@ -397,6 +428,7 @@ curl -X POST "https://api.realstaging.ai/api/v1/admin/reconcile/images?dry_run=t
 4. Optionally fixes discrepancies (when `dry_run=false`)
 
 **Example:**
+
 ```bash
 # Dry run to preview issues
 curl -X POST "https://api.realstaging.ai/api/v1/admin/reconcile/images?dry_run=true&limit=1000" \
@@ -417,6 +449,7 @@ For detailed information, see [Storage Reconciliation Guide](../operations/recon
 A web-based admin panel is planned for easier management.
 
 **Planned Features:**
+
 - 📊 Dashboard with system metrics
 - 🎛️ Model switcher with preview
 - ⚙️ Settings editor with validation
@@ -431,12 +464,14 @@ A web-based admin panel is planned for easier management.
 ### Model Selection
 
 **When to use Qwen Image Edit:**
+
 - High-volume processing
 - Cost-sensitive applications
 - Fast turnaround required
 - Good quality acceptable
 
 **When to use Flux Kontext Max:**
+
 - Premium tier customers
 - Marketing materials
 - Complex scene understanding needed
@@ -478,6 +513,7 @@ Before enabling admin features in production:
 **Cause:** User doesn't have `admin` role
 
 **Fix:**
+
 ```sql
 -- Check user role
 SELECT id, email, role FROM users WHERE email = 'user@example.com';
@@ -491,6 +527,7 @@ UPDATE users SET role = 'admin' WHERE email = 'user@example.com';
 **Cause:** `RECONCILE_ENABLED` not set
 
 **Fix:**
+
 ```bash
 # Set environment variable
 export RECONCILE_ENABLED=1
@@ -504,6 +541,7 @@ docker compose restart api
 **Issue:** New jobs still use old model
 
 **Check:**
+
 ```bash
 # Verify active model setting
 curl -s https://api.realstaging.ai/api/v1/admin/settings/active_model \
@@ -514,6 +552,7 @@ psql $DATABASE_URL -c "SELECT * FROM settings WHERE key = 'active_model';"
 ```
 
 **Common causes:**
+
 - Worker using cached setting (restart worker)
 - Database transaction not committed
 - Wrong environment (staging vs production)
@@ -525,6 +564,7 @@ psql $DATABASE_URL -c "SELECT * FROM settings WHERE key = 'active_model';"
 **Cause:** Setting doesn't exist yet
 
 **Solution:** Create it by updating (same endpoint creates if missing):
+
 ```bash
 curl -X PUT https://api.realstaging.ai/api/v1/admin/settings/new_setting \
   -H "Authorization: Bearer $TOKEN" \
@@ -536,24 +576,26 @@ curl -X PUT https://api.realstaging.ai/api/v1/admin/settings/new_setting \
 
 ### Endpoints Summary
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/admin/models` | List all AI models |
-| GET | `/admin/models/active` | Get active model |
-| PUT | `/admin/models/active` | Switch active model |
-| GET | `/admin/settings` | List all settings |
-| GET | `/admin/settings/:key` | Get specific setting |
-| PUT | `/admin/settings/:key` | Update setting |
-| POST | `/admin/reconcile/images` | Reconcile S3 storage |
+| Method | Endpoint                  | Description          |
+| ------ | ------------------------- | -------------------- |
+| GET    | `/admin/models`           | List all AI models   |
+| GET    | `/admin/models/active`    | Get active model     |
+| PUT    | `/admin/models/active`    | Switch active model  |
+| GET    | `/admin/settings`         | List all settings    |
+| GET    | `/admin/settings/:key`    | Get specific setting |
+| PUT    | `/admin/settings/:key`    | Update setting       |
+| POST   | `/admin/reconcile/images` | Reconcile S3 storage |
 
 ### Authentication
 
 All endpoints require:
+
 ```
 Authorization: Bearer <jwt_token>
 ```
 
 Get token for testing:
+
 ```bash
 make token
 ```

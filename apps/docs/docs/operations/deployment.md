@@ -21,7 +21,7 @@ The application consists of:
 
 Before deploying:
 
-- [ ] Choose deployment platform (Docker Compose, Kubernetes, Fly.io, Render)
+- [x] Choose deployment platform (Docker Compose, Kubernetes, Fly.io, Render)
 - [ ] Provision PostgreSQL database (managed service recommended)
 - [ ] Provision Redis instance (managed service recommended)
 - [ ] Set up S3 bucket or compatible storage
