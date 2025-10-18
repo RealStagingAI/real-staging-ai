@@ -25,3 +25,6 @@ s3:
   region: us-west-1
   secret_key: minioadmin
   use_path_style: true
+
+stripe:
+  frontend_url: http://localhost:3000 

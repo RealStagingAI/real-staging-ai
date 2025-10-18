@@ -129,6 +129,8 @@ func NewServer(
 	bh := billing.NewDefaultHandler(s.db)
 	protected.GET("/billing/subscriptions", bh.GetMySubscriptions)
 	protected.GET("/billing/invoices", bh.GetMyInvoices)
+	protected.POST("/billing/create-checkout", bh.CreateCheckoutSession)
+	protected.POST("/billing/portal", bh.CreatePortalSession)
 
 	// User profile routes
 	userRepo := user.NewDefaultRepository(s.db)
@@ -220,6 +222,8 @@ func NewTestServer(db storage.Database, s3Service storage.S3Service, imageServic
 	bh := billing.NewDefaultHandler(s.db)
 	api.GET("/billing/subscriptions", withTestUser(bh.GetMySubscriptions))
 	api.GET("/billing/invoices", withTestUser(bh.GetMyInvoices))
+	api.POST("/billing/create-checkout", withTestUser(bh.CreateCheckoutSession))
+	api.POST("/billing/portal", withTestUser(bh.CreatePortalSession))
 
 	// User profile routes (test server)
 	userRepo := user.NewDefaultRepository(s.db)

@@ -1,16 +1,22 @@
 package billing
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
+	"github.com/stripe/stripe-go/v81"
+	"github.com/stripe/stripe-go/v81/billingportal/session"
+	checkoutsession "github.com/stripe/stripe-go/v81/checkout/session"
+	"github.com/stripe/stripe-go/v81/customer"
 
 	"github.com/real-staging-ai/api/internal/auth"
 	"github.com/real-staging-ai/api/internal/storage"
-	"github.com/real-staging-ai/api/internal/stripe"
+	stripeLib "github.com/real-staging-ai/api/internal/stripe"
 	"github.com/real-staging-ai/api/internal/user"
 )
 
@@ -65,7 +71,7 @@ func (h *DefaultHandler) GetMySubscriptions(c echo.Context) error {
 		userID = existingUser.ID.String()
 	}
 
-	subRepo := stripe.NewSubscriptionsRepository(h.db)
+	subRepo := stripeLib.NewSubscriptionsRepository(h.db)
 	rows, err := subRepo.ListByUserID(c.Request().Context(), userID, limit, offset)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -128,7 +134,7 @@ func (h *DefaultHandler) GetMyInvoices(c echo.Context) error {
 		userID = existingUser.ID.String()
 	}
 
-	invRepo := stripe.NewInvoicesRepository(h.db)
+	invRepo := stripeLib.NewInvoicesRepository(h.db)
 	rows, err := invRepo.ListByUserID(c.Request().Context(), userID, limit, offset)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -233,4 +239,185 @@ func formatUUIDBytes(b [16]byte) string {
 		j += 2
 	}
 	return string(out)
+}
+
+// CreateCheckoutSession creates a Stripe Checkout Session for subscription signup.
+// POST /api/v1/billing/create-checkout
+func (h *DefaultHandler) CreateCheckoutSession(c echo.Context) error {
+	var req struct {
+		PriceID string `json:"price_id" validate:"required"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "bad_request",
+			Message: "Invalid request body",
+		})
+	}
+
+	if req.PriceID == "" {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "bad_request",
+			Message: "price_id is required",
+		})
+	}
+
+	// Resolve current user
+	auth0Sub, err := auth.GetUserIDOrDefault(c)
+	if err != nil || auth0Sub == "" {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Unable to resolve current user",
+		})
+	}
+
+	// Get or create user
+	uRepo := user.NewDefaultRepository(h.db)
+	userRow, err := uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+	if err != nil {
+		// Create user on first access
+		_, createErr := uRepo.Create(c.Request().Context(), auth0Sub, "", "user")
+		if createErr != nil {
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "internal_server_error",
+				Message: "Failed to resolve user",
+			})
+		}
+		// Get the newly created user
+		userRow, err = uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "internal_server_error",
+				Message: "Failed to resolve user after creation",
+			})
+		}
+	}
+
+	// Set Stripe API key from environment
+	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+	if stripe.Key == "" {
+		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
+			Error:   "service_unavailable",
+			Message: "Stripe not configured",
+		})
+	}
+
+	// Create or get Stripe customer
+	var customerID string
+	if userRow.StripeCustomerID.Valid && userRow.StripeCustomerID.String != "" {
+		customerID = userRow.StripeCustomerID.String
+	} else {
+		// Create new Stripe customer
+		customerParams := &stripe.CustomerParams{
+			Metadata: map[string]string{
+				"user_id":   userRow.ID.String(),
+				"auth0_sub": auth0Sub,
+			},
+		}
+		cust, err := customer.New(customerParams)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "internal_server_error",
+				Message: fmt.Sprintf("Failed to create Stripe customer: %v", err),
+			})
+		}
+		customerID = cust.ID
+
+		// Update user with Stripe customer ID
+		if _, err := uRepo.UpdateStripeCustomerID(c.Request().Context(), userRow.ID.String(), customerID); err != nil {
+			// Log but don't fail - customer is created
+			fmt.Printf("Warning: failed to update user with Stripe customer ID: %v\n", err)
+		}
+	}
+
+	// Create checkout session
+	baseURL := os.Getenv("FRONTEND_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:3000"
+	}
+
+	params := &stripe.CheckoutSessionParams{
+		Customer: stripe.String(customerID),
+		Mode:     stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			{
+				Price:    stripe.String(req.PriceID),
+				Quantity: stripe.Int64(1),
+			},
+		},
+		SuccessURL: stripe.String(baseURL + "/profile?checkout=success"),
+		CancelURL:  stripe.String(baseURL + "/profile?checkout=canceled"),
+	}
+
+	sess, err := checkoutsession.New(params)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: fmt.Sprintf("Failed to create checkout session: %v", err),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"url": sess.URL,
+	})
+}
+
+// CreatePortalSession creates a Stripe Customer Portal session for subscription management.
+// POST /api/v1/billing/portal
+func (h *DefaultHandler) CreatePortalSession(c echo.Context) error {
+	// Resolve current user
+	auth0Sub, err := auth.GetUserIDOrDefault(c)
+	if err != nil || auth0Sub == "" {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Unable to resolve current user",
+		})
+	}
+
+	// Get user
+	uRepo := user.NewDefaultRepository(h.db)
+	existingUser, err := uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "Failed to resolve user",
+		})
+	}
+
+	if !existingUser.StripeCustomerID.Valid || existingUser.StripeCustomerID.String == "" {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "bad_request",
+			Message: "No payment method on file. Please subscribe first.",
+		})
+	}
+
+	// Set Stripe API key from environment
+	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+	if stripe.Key == "" {
+		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
+			Error:   "service_unavailable",
+			Message: "Stripe not configured",
+		})
+	}
+
+	baseURL := os.Getenv("FRONTEND_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:3000"
+	}
+
+	params := &stripe.BillingPortalSessionParams{
+		Customer:  stripe.String(existingUser.StripeCustomerID.String),
+		ReturnURL: stripe.String(baseURL + "/profile"),
+	}
+
+	sess, err := session.New(params)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: fmt.Sprintf("Failed to create portal session: %v", err),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{
+		"url": sess.URL,
+	})
 }

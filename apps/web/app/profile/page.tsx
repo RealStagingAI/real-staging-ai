@@ -38,6 +38,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'pro' | 'business'>('pro');
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -115,10 +116,15 @@ export default function ProfilePage() {
   }, [formData]);
 
   const handleSubscribe = async () => {
+    const priceIds = {
+      pro: 'price_1SJOLOLkQ5x1VWxdO06cPbj1',
+      business: 'price_1SJOMjLkQ5x1VWxdUYOkNqI4',
+    };
+    
     try {
       const data = await apiFetch<{ url: string }>('/v1/billing/create-checkout', {
         method: 'POST',
-        body: JSON.stringify({ priceId: 'price_1ABC123' }), // Replace with actual price ID
+        body: JSON.stringify({ price_id: priceIds[selectedPlan] }),
       });
       if (data?.url) {
         window.location.href = data.url; // Redirect to Stripe Checkout
@@ -394,20 +400,35 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div className="p-4 border border-gray-200 dark:border-gray-800 rounded-lg">
+                {/* Free Tier - Display only */}
+                <div className="p-4 border border-gray-200 dark:border-gray-800 rounded-lg opacity-60">
                   <p className="font-medium mb-1">Free Tier</p>
-                  <p className="text-2xl font-bold text-blue-600 mb-2">$0<span className="text-sm text-gray-500">/mo</span></p>
+                  <p className="text-2xl font-bold text-gray-600 mb-2">$0<span className="text-sm text-gray-500">/mo</span></p>
                   <ul className="space-y-1 text-gray-600 dark:text-gray-400">
                     <li>✓ 5 images/month</li>
                     <li>✓ Standard processing</li>
                     <li>✓ Email support</li>
                   </ul>
+                  <p className="text-xs text-gray-500 mt-3">Current plan</p>
                 </div>
 
-                <div className="p-4 border-2 border-blue-600 rounded-lg relative">
+                {/* Pro Plan - Selectable */}
+                <button
+                  onClick={() => setSelectedPlan('pro')}
+                  className={`p-4 rounded-lg relative text-left transition-all ${
+                    selectedPlan === 'pro'
+                      ? 'border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/20'
+                      : 'border-2 border-gray-200 dark:border-gray-800 hover:border-blue-400'
+                  }`}
+                >
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium">
                     Popular
                   </div>
+                  {selectedPlan === 'pro' && (
+                    <div className="absolute top-3 right-3">
+                      <CheckCircle className="h-5 w-5 text-blue-600" />
+                    </div>
+                  )}
                   <p className="font-medium mb-1">Pro</p>
                   <p className="text-2xl font-bold text-blue-600 mb-2">$29<span className="text-sm text-gray-500">/mo</span></p>
                   <ul className="space-y-1 text-gray-600 dark:text-gray-400">
@@ -415,9 +436,22 @@ export default function ProfilePage() {
                     <li>✓ Priority processing</li>
                     <li>✓ Chat support</li>
                   </ul>
-                </div>
+                </button>
 
-                <div className="p-4 border border-gray-200 dark:border-gray-800 rounded-lg">
+                {/* Business Plan - Selectable */}
+                <button
+                  onClick={() => setSelectedPlan('business')}
+                  className={`p-4 rounded-lg relative text-left transition-all ${
+                    selectedPlan === 'business'
+                      ? 'border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/20'
+                      : 'border-2 border-gray-200 dark:border-gray-800 hover:border-blue-400'
+                  }`}
+                >
+                  {selectedPlan === 'business' && (
+                    <div className="absolute top-3 right-3">
+                      <CheckCircle className="h-5 w-5 text-blue-600" />
+                    </div>
+                  )}
                   <p className="font-medium mb-1">Business</p>
                   <p className="text-2xl font-bold text-blue-600 mb-2">$99<span className="text-sm text-gray-500">/mo</span></p>
                   <ul className="space-y-1 text-gray-600 dark:text-gray-400">
@@ -425,7 +459,7 @@ export default function ProfilePage() {
                     <li>✓ Fastest processing</li>
                     <li>✓ Priority support</li>
                   </ul>
-                </div>
+                </button>
               </div>
             </div>
           )}

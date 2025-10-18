@@ -496,3 +496,92 @@ func TestGetMyInvoices(t *testing.T) {
 	handler := NewDefaultHandler(nil)
 	runHandlerTableTest(t, handler.GetMyInvoices, tests)
 }
+
+// Tests for CreateCheckoutSession
+func TestCreateCheckoutSession(t *testing.T) {
+	t.Run("fail: missing price_id", func(t *testing.T) {
+		h := NewDefaultHandler(nil)
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPost, "/", nil)
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Test-User", "auth0|testuser")
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = h.CreateCheckoutSession(c)
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("expected 400, got %d", rec.Code)
+		}
+	})
+
+	// Note: Full integration test with Stripe SDK calls would require mocking
+	// the Stripe client. The above tests cover the error paths we can test
+	// without external dependencies.
+}
+
+// Tests for CreatePortalSession
+func TestCreatePortalSession(t *testing.T) {
+	t.Run("fail: user has no stripe_customer_id", func(t *testing.T) {
+		now := time.Now()
+		db := &storage.DatabaseMock{
+			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row {
+				// Return user without stripe customer ID
+				return rowStub{
+					scan: func(dest ...any) error {
+						uid := uuid.New()
+						*dest[0].(*pgtype.UUID) = pgtype.UUID{Bytes: uid, Valid: true}
+						*dest[1].(*string) = "auth0|testuser"
+						*dest[2].(*pgtype.Text) = pgtype.Text{String: "", Valid: false} // No stripe customer
+						*dest[3].(*string) = "user"
+						*dest[4].(*pgtype.Timestamptz) = pgtype.Timestamptz{Time: now, Valid: true}
+						return nil
+					},
+				}
+			},
+		}
+		h := NewDefaultHandler(db)
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPost, "/", nil)
+		req.Header.Set("X-Test-User", "auth0|testuser")
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = h.CreatePortalSession(c)
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("expected 400 for missing customer, got %d", rec.Code)
+		}
+	})
+
+	t.Run("fail: missing STRIPE_SECRET_KEY", func(t *testing.T) {
+		t.Setenv("STRIPE_SECRET_KEY", "")
+
+		now := time.Now()
+		db := &storage.DatabaseMock{
+			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row {
+				// Return user with stripe customer ID
+				return rowStub{
+					scan: func(dest ...any) error {
+						uid := uuid.New()
+						*dest[0].(*pgtype.UUID) = pgtype.UUID{Bytes: uid, Valid: true}
+						*dest[1].(*string) = "auth0|testuser"
+						*dest[2].(*pgtype.Text) = pgtype.Text{String: "cus_test123", Valid: true}
+						*dest[3].(*string) = "user"
+						*dest[4].(*pgtype.Timestamptz) = pgtype.Timestamptz{Time: now, Valid: true}
+						return nil
+					},
+				}
+			},
+		}
+		h := NewDefaultHandler(db)
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodPost, "/", nil)
+		req.Header.Set("X-Test-User", "auth0|testuser")
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = h.CreatePortalSession(c)
+		if rec.Code != http.StatusServiceUnavailable {
+			t.Fatalf("expected 503 for missing Stripe config, got %d", rec.Code)
+		}
+	})
+}
