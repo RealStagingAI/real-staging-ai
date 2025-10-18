@@ -711,6 +711,190 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
         "500":
           $ref: "#/components/responses/InternalServerError"
+  /api/v1/billing/create-checkout:
+    post:
+      summary: Create Stripe Checkout session
+      description: |
+        Creates a Stripe Checkout session for subscription signup. Returns a URL
+        to redirect the user to Stripe's hosted checkout page.
+        
+        **Flow:**
+        1. User selects a pricing tier (Pro or Business)
+        2. Frontend calls this endpoint with the Stripe price ID
+        3. API creates or retrieves the user's Stripe customer
+        4. API creates a checkout session with success/cancel URLs
+        5. Frontend redirects user to the returned checkout URL
+        6. User completes payment on Stripe's hosted page
+        7. Stripe redirects back to success URL: `/profile?checkout=success`
+        8. Webhook fires to save subscription to database
+        
+        **Success URL:** User redirected to `/profile?checkout=success` after payment  
+        **Cancel URL:** User redirected to `/profile?checkout=canceled` if they cancel
+        
+        **Prerequisites:**
+        - User must be authenticated
+        - `STRIPE_SECRET_KEY` must be configured
+        - `FRONTEND_URL` must be configured for redirect URLs
+      tags:
+        - Billing
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - price_id
+              properties:
+                price_id:
+                  type: string
+                  description: Stripe price ID for the selected subscription tier
+                  example: "price_1SJOLOLkQ5x1VWxdO06cPbj1"
+            examples:
+              pro_plan:
+                summary: Pro plan subscription
+                value:
+                  price_id: "price_1SJOLOLkQ5x1VWxdO06cPbj1"
+              business_plan:
+                summary: Business plan subscription
+                value:
+                  price_id: "price_1SJOMjLkQ5x1VWxdUYOkNqI4"
+      responses:
+        "200":
+          description: Checkout session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Stripe Checkout session URL to redirect user to
+                    example: "https://checkout.stripe.com/c/pay/cs_test_a1b2c3d4..."
+        "400":
+          description: Bad request - missing or invalid price_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "bad_request"
+                  message:
+                    type: string
+                    example: "price_id is required"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          description: Internal server error (e.g., Stripe API failure)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "internal_server_error"
+                  message:
+                    type: string
+                    example: "Failed to create checkout session: <details>"
+        "503":
+          description: Service unavailable - Stripe not configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "service_unavailable"
+                  message:
+                    type: string
+                    example: "Stripe not configured"
+  /api/v1/billing/portal:
+    post:
+      summary: Create Stripe Customer Portal session
+      description: |
+        Creates a Stripe Customer Portal session for subscription management.
+        Returns a URL to redirect the user to Stripe's hosted portal where they
+        can manage their subscription, payment methods, and billing information.
+        
+        **Portal capabilities:**
+        - Update payment methods (credit card, etc.)
+        - View invoices and payment history
+        - Cancel or modify subscription
+        - Update billing information
+        - Download receipts
+        
+        **Prerequisites:**
+        - User must be authenticated
+        - User must have an existing Stripe customer ID (have subscribed before)
+        - `STRIPE_SECRET_KEY` must be configured
+        - `FRONTEND_URL` must be configured for return URL
+        
+        **Return URL:** User redirected back to `/profile` after managing subscription
+      tags:
+        - Billing
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Portal session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Stripe Customer Portal URL to redirect user to
+                    example: "https://billing.stripe.com/p/session/test_a1b2c3..."
+        "400":
+          description: Bad request - user has no Stripe customer (never subscribed)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "bad_request"
+                  message:
+                    type: string
+                    example: "No payment method on file. Please subscribe first."
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          description: Internal server error (e.g., Stripe API failure)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "internal_server_error"
+                  message:
+                    type: string
+                    example: "Failed to create portal session: <details>"
+        "503":
+          description: Service unavailable - Stripe not configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "service_unavailable"
+                  message:
+                    type: string
+                    example: "Stripe not configured"
   /api/v1/user/profile:
     get:
       summary: Get authenticated user's profile

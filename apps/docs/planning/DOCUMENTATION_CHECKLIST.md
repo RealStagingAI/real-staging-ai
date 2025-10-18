@@ -17,51 +17,52 @@ See [DOCUMENTATION_PLAN.md](DOCUMENTATION_PLAN.md) for detailed information.
 **Target:** Week of Oct 14-18 (parallel track)
 
 **Backend (5-7 days):**
-- [ ] Create migration `0009_extend_user_profile.up.sql`
-- [ ] Build user profile API (`GET /api/v1/user/profile`, `PATCH /api/v1/user/profile`)
-- [ ] Build Stripe checkout API (`POST /api/v1/billing/create-checkout`)
-- [ ] Build customer portal API (`POST /api/v1/billing/portal`)
-- [ ] Write tests for all endpoints
+- [x] Create migration `0009_extend_user_profile.up.sql`
+- [x] Build user profile API (`GET /api/v1/user/profile`, `PATCH /api/v1/user/profile`)
+- [x] Build Stripe checkout API (`POST /api/v1/billing/create-checkout`)
+- [x] Build customer portal API (`POST /api/v1/billing/portal`)
+- [x] Write tests for all endpoints
 
 **Frontend (5-7 days):**
-- [ ] Create `/app/profile/page.tsx` with personal info section
-- [ ] Add business information section
-- [ ] Add payment & billing section with Stripe integration
-- [ ] Add preferences section
+- [x] Create `/app/profile/page.tsx` with personal info section
+- [x] Add business information section
+- [x] Add payment & billing section with Stripe integration
+- [x] Add preferences section
 - [ ] Add usage/history section
 - [ ] Form validation and error handling
 - [ ] Test complete payment flow
 
 **Documentation:**
 - [x] Create STRIPE_INTEGRATION_PLAN.md with full explanation
-- [ ] Document API endpoints in OpenAPI spec
-- [ ] Add user guide for profile management
+- [x] Create comprehensive Stripe Billing Guide (stripe-billing.md)
+- [x] Document API endpoints in OpenAPI spec (create-checkout, portal)
+- [ ] Add user guide for profile management (can be part of P1.1)
 
-**Progress:** 0% → 100%
+**Progress:** 90% → 100%
 
 ---
 
-### P0.1: Complete Deployment Guide ⏳
+### P0.1: Complete Deployment Guide ✅
 **File:** `apps/docs/docs/operations/deployment.md`  
-**Assignee:** _____  
+**Assignee:** Completed  
 **Target:** Week of Oct 14-18
 
-- [ ] Expand Docker Compose production setup
-- [ ] Kubernetes deployment guide
-  - [ ] Deployment manifests example
-  - [ ] Service manifests example
-  - [ ] ConfigMap/Secret examples
-  - [ ] Ingress configuration
-  - [ ] Optional: Helm chart
-- [ ] Fly.io deployment guide
-- [ ] Render deployment guide  
-- [ ] Secrets management (Vault, AWS Secrets Manager, etc.)
-- [ ] Health checks & readiness probes
-- [ ] Rollback procedures
-- [ ] Troubleshooting section
-- [ ] Test by deploying to staging environment
+- [x] Expand Docker Compose production setup
+- [x] Kubernetes deployment guide
+  - [x] Deployment manifests example
+  - [x] Service manifests example
+  - [x] ConfigMap/Secret examples
+  - [x] Ingress configuration
+  - [x] Horizontal Pod Autoscaler
+- [x] Fly.io deployment guide
+- [x] Render deployment guide  
+- [x] Secrets management (Vault, AWS Secrets Manager, Kubernetes External Secrets)
+- [x] Health checks & readiness probes
+- [x] Rollback procedures
+- [x] Troubleshooting section
+- [ ] Test by deploying to staging environment (pending actual deployment)
 
-**Progress:** 30% → 100%
+**Progress:** 100%
 
 ---
 
