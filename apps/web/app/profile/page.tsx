@@ -2,7 +2,7 @@
 
 import { useUser } from '@auth0/nextjs-auth0';
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   User, 
   Mail, 
@@ -33,12 +33,14 @@ interface Subscription {
 export default function ProfilePage() {
   const { user, isLoading: authLoading } = useUser();
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'business'>('pro');
+  const [pollingSubscription, setPollingSubscription] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -56,6 +58,73 @@ export default function ProfilePage() {
     defaultStyle: 'modern',
   });
 
+  // Define functions before they're used in useEffect
+  const fetchProfileAndSubscription = useCallback(async () => {
+    try {
+      // Fetch both in parallel
+      const [profileData, subscriptionData] = await Promise.all([
+        apiFetch<BackendProfile>('/v1/user/profile'),
+        apiFetch<{ items: Subscription[] }>('/v1/billing/subscriptions')
+      ]);
+
+      // Populate form from backend (snake_case) using mapper
+      setFormData(toFormData(profileData));
+      
+      // Set subscription if available
+      if (subscriptionData.items && subscriptionData.items.length > 0) {
+        setSubscription(subscriptionData.items[0]);
+        
+        // If we were polling and now have a subscription, stop and show success
+        if (pollingSubscription) {
+          setPollingSubscription(false);
+          setMessage({ 
+            type: 'success', 
+            text: 'Subscription activated successfully! Welcome to your new plan.' 
+          });
+          setTimeout(() => setMessage(null), 5000);
+          // Clean up URL
+          router.replace('/profile');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch profile or subscription:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [pollingSubscription, router]);
+
+  const pollSubscriptionWithRetry = useCallback(async () => {
+    // Poll up to 10 times with 2 second intervals (20 seconds total)
+    for (let i = 0; i < 10; i++) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      try {
+        const data = await apiFetch<{ items: Subscription[] }>('/v1/billing/subscriptions');
+        if (data.items && data.items.length > 0) {
+          setSubscription(data.items[0]);
+          setPollingSubscription(false);
+          setMessage({ 
+            type: 'success', 
+            text: 'Subscription activated successfully! Welcome to your new plan.' 
+          });
+          setTimeout(() => setMessage(null), 5000);
+          // Clean up URL
+          router.replace('/profile');
+          return; // Success, stop polling
+        }
+      } catch (error) {
+        console.error('Poll attempt failed:', error);
+      }
+    }
+    
+    // If we get here, polling timed out
+    setPollingSubscription(false);
+    setMessage({ 
+      type: 'error', 
+      text: 'Subscription is taking longer than expected to activate. Please refresh the page in a moment.' 
+    });
+  }, [router]);
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
@@ -63,37 +132,32 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, router]);
 
-  // Fetch user profile
+  // Fetch user profile and handle checkout success
   useEffect(() => {
     if (user) {
-      fetchProfile();
-      fetchSubscription();
-    }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    try {
-      const data = await apiFetch<BackendProfile>('/v1/user/profile');
-
-      // Populate form from backend (snake_case) using mapper
-      setFormData(toFormData(data));
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSubscription = async () => {
-    try {
-      const data = await apiFetch<{ items: Subscription[] }>('/v1/billing/subscriptions');
-      if (data.items && data.items.length > 0) {
-        setSubscription(data.items[0]);
+      const checkoutStatus = searchParams.get('checkout');
+      
+      if (checkoutStatus === 'success') {
+        // Show success message and poll for subscription
+        setMessage({ 
+          type: 'success', 
+          text: 'Payment successful! Your subscription is being activated...' 
+        });
+        setPollingSubscription(true);
+        
+        // Poll for subscription (webhook may take a few seconds)
+        pollSubscriptionWithRetry();
+      } else if (checkoutStatus === 'canceled') {
+        setMessage({ 
+          type: 'error', 
+          text: 'Checkout was canceled. You can try again anytime.' 
+        });
+        setTimeout(() => setMessage(null), 5000);
       }
-    } catch (error) {
-      console.error('Failed to fetch subscription:', error);
+      
+      fetchProfileAndSubscription();
     }
-  };
+  }, [user, searchParams, fetchProfileAndSubscription, pollSubscriptionWithRetry]);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -106,14 +170,14 @@ export default function ProfilePage() {
         body: JSON.stringify(payload),
       });
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
-      fetchProfile(); // Refresh
+      fetchProfileAndSubscription(); // Refresh
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
     } finally {
       setSaving(false);
       setTimeout(() => setMessage(null), 5000);
     }
-  }, [formData]);
+  }, [formData, fetchProfileAndSubscription]);
 
   const handleSubscribe = async () => {
     const priceIds = {

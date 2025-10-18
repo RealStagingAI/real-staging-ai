@@ -14,7 +14,8 @@ vi.mock('@auth0/nextjs-auth0', () => ({
 
 // Mock next/navigation router
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => ({ get: vi.fn(() => null) }),
 }))
 
 // Mock api client

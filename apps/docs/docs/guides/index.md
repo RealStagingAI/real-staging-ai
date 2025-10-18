@@ -7,6 +7,7 @@ Comprehensive how-to guides for working with Real Staging AI.
 - **[Configuration](configuration.md)** - Environment variables and settings
 - **[Local Development](local-development.md)** - Set up your development environment
 - **[Authentication](authentication.md)** - Auth0 setup and token generation
+- **[Stripe Billing](stripe-billing.md)** - Subscription billing and payment processing
 
 ## Development
 
@@ -24,6 +25,7 @@ Comprehensive how-to guides for working with Real Staging AI.
 |-------|-------------|
 | [Configuration](configuration.md) | All environment variables explained |
 | [Authentication](authentication.md) | Auth0 setup and JWT tokens |
+| [Stripe Billing](stripe-billing.md) | Subscription management and webhooks |
 | [Testing](testing.md) | TDD practices and test execution |
 | [Local Development](local-development.md) | Getting started with development |
 | [Adding Models](adding-models.md) | Extend AI model support |
