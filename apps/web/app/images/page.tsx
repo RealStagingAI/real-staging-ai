@@ -19,7 +19,6 @@ import {
   X
 } from "lucide-react";
 
-import SSEViewer from "@/components/SSEViewer";
 import { apiFetch } from "@/lib/api";
 import { cn, formatRelativeTime } from "@/lib/utils";
 
@@ -875,24 +874,6 @@ export default function ImagesPage() {
                 </tbody>
               </table>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* SSE Live Updates */}
-      {selectedProjectId && (
-        <div className="card">
-          <div className="card-header">
-            <span>Live Updates</span>
-          </div>
-          <div className="card-body">
-            <SSEViewer
-              onStatus={(status) => {
-                if (status === "ready" || status === "error") {
-                  loadImages(selectedProjectId, true); // Use background refresh to avoid page jump
-                }
-              }}
-            />
           </div>
         </div>
       )}
