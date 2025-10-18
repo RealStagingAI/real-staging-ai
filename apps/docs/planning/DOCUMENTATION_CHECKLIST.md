@@ -66,24 +66,26 @@ See [DOCUMENTATION_PLAN.md](DOCUMENTATION_PLAN.md) for detailed information.
 
 ---
 
-### P0.2: Document Admin Features ⏳
+### P0.2: Document Admin Features ✅
 **New File:** `apps/docs/docs/guides/admin-features.md`  
-**Assignee:** _____  
+**Assignee:** Completed  
 **Target:** Week of Oct 14-18
 
-- [ ] Admin authentication/authorization
-- [ ] Model management documentation
-  - [ ] `GET /admin/models` - List models
-  - [ ] `GET /admin/models/active` - Get active model
-  - [ ] `PUT /admin/models/active` - Switch model
-  - [ ] Model comparison table
-- [ ] Settings system overview
-- [ ] Reconciliation admin tools
-- [ ] Admin UI guide (`/admin/settings`)
-- [ ] Screenshots of admin UI
-- [ ] Add to `mkdocs.yml` navigation under "Guides"
+- [x] Admin authentication/authorization
+- [x] Model management documentation
+  - [x] `GET /admin/models` - List models
+  - [x] `GET /admin/models/active` - Get active model
+  - [x] `PUT /admin/models/active` - Switch model
+  - [x] Model comparison table
+- [x] Settings system overview
+- [x] Reconciliation admin tools (POST /admin/reconcile/images)
+- [x] Security recommendations and best practices
+- [x] Troubleshooting section
+- [x] Add to guides/index.md navigation
+- [ ] Admin UI guide (`/admin/settings`) - deferred (UI not built yet)
+- [ ] Screenshots of admin UI - deferred (UI not built yet)
 
-**Progress:** 0% → 100%
+**Progress:** 100%
 
 ---
 

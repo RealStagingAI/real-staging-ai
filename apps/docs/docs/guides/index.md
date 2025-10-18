@@ -15,6 +15,10 @@ Comprehensive how-to guides for working with Real Staging AI.
 - **[Linting & Code Quality](linting.md)** - Code standards and linting tools
 - **[Server-Sent Events](sse-events.md)** - Real-time updates implementation
 
+## Administration
+
+- **[Admin Features](admin-features.md)** - System administration and model management
+
 ## AI Models
 
 - **[Adding AI Models](adding-models.md)** - How to integrate new AI models
@@ -26,6 +30,7 @@ Comprehensive how-to guides for working with Real Staging AI.
 | [Configuration](configuration.md) | All environment variables explained |
 | [Authentication](authentication.md) | Auth0 setup and JWT tokens |
 | [Stripe Billing](stripe-billing.md) | Subscription management and webhooks |
+| [Admin Features](admin-features.md) | System administration and AI model management |
 | [Testing](testing.md) | TDD practices and test execution |
 | [Local Development](local-development.md) | Getting started with development |
 | [Adding Models](adding-models.md) | Extend AI model support |
