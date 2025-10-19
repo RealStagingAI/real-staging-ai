@@ -21,7 +21,7 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
   - [ ] Configure CORS for your frontend domain
 
 - [ ] **Auth0 Configuration**
-  - [ ] Create production application
+  - [x] Create production application
   - [ ] Configure allowed callback URLs for production
   - [ ] Configure allowed logout URLs
   - [ ] Configure allowed web origins
@@ -29,12 +29,12 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
   - [ ] Save Domain and Audience values
 
 - [ ] **Stripe Configuration**
-  - [ ] Complete business verification
-  - [ ] Switch to Live Mode
-  - [ ] Get live API keys (secret and publishable)
-  - [ ] Create webhook endpoint for production URL
-  - [ ] Save webhook secret
-  - [ ] Configure products and pricing
+  - [x] Complete business verification
+  - [x] Switch to Live Mode
+  - [x] Get live API keys (secret and publishable)
+  - [x] Create webhook endpoint for production URL
+  - [x] Save webhook secret
+  - [x] Configure products and pricing
   - [ ] Test checkout flow in live mode
 
 - [ ] **Replicate Account**
@@ -67,34 +67,57 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
 
 ### Render Setup
 
-- [ ] **Connect Repository**
+- [x] **Connect Repository**
   - [x] Log into Render dashboard
   - [x] Click "New" → "Blueprint"
   - [x] Connect GitHub repository
   - [x] Select main branch
-  - [ ] Render detects `render.yaml`
-  - [ ] Click "Apply"
+  - [x] Render detects `render.yaml`
+  - [x] Click "Apply"
 
-- [ ] **Configure Secrets (API Service)**
-  - [ ] `AUTH0_DOMAIN`: `your-tenant.us.auth0.com`
-  - [ ] `AUTH0_AUDIENCE`: `https://api.yourdomain.com`
-  - [ ] `S3_ACCESS_KEY`: B2 keyID
-  - [ ] `S3_SECRET_KEY`: B2 applicationKey
-  - [ ] `STRIPE_SECRET_KEY`: `sk_live_...`
-  - [ ] `STRIPE_WEBHOOK_SECRET`: `whsec_...`
-  - [ ] `REPLICATE_API_TOKEN`: `r8_...`
+- [x] **Configure Secrets (API Service)**
+  - [x] `AUTH0_DOMAIN`: `your-tenant.us.auth0.com`
+  - [x] `AUTH0_AUDIENCE`: `https://api.yourdomain.com`
+  - [x] `S3_ACCESS_KEY`: B2 keyID
+  - [x] `S3_SECRET_KEY`: B2 applicationKey
+  - [x] `STRIPE_SECRET_KEY`: `sk_live_...`
+  - [x] `STRIPE_WEBHOOK_SECRET`: `whsec_...`
+  - [x] `REPLICATE_API_TOKEN`: `r8_...`
 
-- [ ] **Configure Secrets (Worker Service)**
-  - [ ] `S3_ACCESS_KEY`: B2 keyID
-  - [ ] `S3_SECRET_KEY`: B2 applicationKey
-  - [ ] `REPLICATE_API_TOKEN`: `r8_...`
+- [x] **Configure Secrets (Worker Service)**
+  - [x] `S3_ACCESS_KEY`: B2 keyID
+  - [x] `S3_SECRET_KEY`: B2 applicationKey
+  - [x] `REPLICATE_API_TOKEN`: `r8_...`
 
 - [ ] **Database Setup**
-  - [ ] Wait for PostgreSQL to provision
-  - [ ] Note connection string
-  - [ ] Open shell to API service
-  - [ ] Run migrations: `/app/migrate up`
-  - [ ] Verify: `/app/migrate version`
+- [ ] Get DATABASE_URL from Render dashboard:
+  - Go to `realstaging-db` → Connect → Copy Internal Database URL
+  - [ ] **Run Migrations (Choose ONE method):**
+    
+    **Option A: From Local Machine (Recommended)**
+    ```bash
+    # Export the DATABASE_URL from Render
+    export DATABASE_URL="postgres://realstaging_db_user:xxx@xxx.oregon-postgres.render.com/realstaging_db"
+    
+    # Run migrations using Docker
+    docker run --rm \
+      -v $(pwd)/infra/migrations:/migrations \
+      migrate/migrate \
+      -path /migrations \
+      -database "$DATABASE_URL" \
+      up
+    
+    # Verify
+    docker run --rm \
+      -v $(pwd)/infra/migrations:/migrations \
+      migrate/migrate \
+      -path /migrations \
+      -database "$DATABASE_URL" \
+      version
+    ```
+    
+    **Option B: Add to render.yaml** (Future deployments)
+    - See [Running Migrations on Render](#running-migrations-on-render) section below
 
 ### Verification
 
@@ -201,7 +224,7 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
   - [ ] Update deployment docs with actual values
   - [ ] Document any issues encountered
   - [ ] Document solutions and workarounds
-  - [ ] Update architecture diagrams if needed
+  - [ ] Update architecture diagrams if needed   ```
 
 ## Ongoing Maintenance
 
@@ -226,6 +249,255 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
 - [ ] Review access control lists
 - [ ] Performance review and optimization
 - [ ] Capacity planning review
+
+## Running Migrations on Render
+
+### Why Migrations Aren't Automated
+
+The current Docker setup doesn't include the `migrate` binary in the API container because:
+1. The API Dockerfile only includes compiled Go binaries (`api-server`, `reconcile`)
+2. Migration files are in `infra/migrations`, not in `apps/api`
+3. Keeping the production image minimal (security best practice)
+
+### Migration Strategies
+
+#### Option 1: Manual Migrations from Local Machine (Current)
+
+**Pros:**
+- Simple and reliable
+- Full control over timing
+- Can review migrations before applying
+- No changes to production infrastructure
+
+**Cons:**
+- Requires manual intervention for each deployment
+- Requires VPN or database to accept external connections
+
+**Steps:**
+```bash
+# 1. Get DATABASE_URL from Render dashboard
+export DATABASE_URL="postgres://user:pass@host.oregon-postgres.render.com/dbname"
+
+# 2. Run migrations
+docker run --rm \
+  -v $(pwd)/infra/migrations:/migrations \
+  migrate/migrate \
+  -path /migrations \
+  -database "$DATABASE_URL" \
+  up
+
+# 3. Verify
+docker run --rm \
+  -v $(pwd)/infra/migrations:/migrations \
+  migrate/migrate \
+  -path /migrations \
+  -database "$DATABASE_URL" \
+  version
+```
+
+#### Option 2: Include Migrate Binary in API Docker Image
+
+Add the migrate binary to your API container for on-demand migrations.
+
+**Update `apps/api/Dockerfile`:**
+```dockerfile
+# ---- Builder ----
+FROM golang:1.25.1-alpine AS builder
+
+WORKDIR /app
+
+# Install migrate
+RUN apk add --no-cache curl && \
+    curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | \
+    tar xvz && \
+    mv migrate /usr/local/bin/migrate
+
+# ... rest of your build steps ...
+
+# ---- Runner ----
+FROM alpine:latest
+
+WORKDIR /app
+
+# Copy migrate binary
+COPY --from=builder /usr/local/bin/migrate /usr/local/bin/migrate
+
+# Copy migrations
+COPY ../../infra/migrations /app/migrations
+
+# Copy compiled binaries
+COPY --from=builder /api-server /app/api-server
+COPY --from=builder /reconcile /app/reconcile
+
+EXPOSE 8080
+ENTRYPOINT ["/app/api-server"]
+```
+
+**Then run migrations via Render Shell:**
+```bash
+# In Render dashboard: realstaging-api → Shell
+migrate -path /app/migrations -database $DATABASE_URL up
+```
+
+**Pros:**
+- Can run migrations directly from Render shell
+- No external access needed
+- Migrations bundled with application
+
+**Cons:**
+- Increases Docker image size slightly
+- Requires rebuilding and redeploying to update migrations
+- Still requires manual execution
+
+#### Option 3: Separate Migration Job Service
+
+Create a dedicated service for running migrations.
+
+**Create `apps/migrate/Dockerfile`:**
+```dockerfile
+FROM migrate/migrate:v4.17.0
+
+WORKDIR /migrations
+
+# Copy all migration files
+COPY infra/migrations ./
+
+# Default command
+CMD ["migrate", "-path", "/migrations", "-database", "${DATABASE_URL}", "up"]
+```
+
+**Add to `render.yaml`:**
+```yaml
+services:
+  # ... existing services ...
+
+  # Migration Job (manual trigger)
+  - type: worker
+    name: realstaging-migrations
+    runtime: docker
+    dockerfilePath: ./apps/migrate/Dockerfile
+    dockerContext: .
+    region: oregon
+    plan: starter
+    numInstances: 0  # Don't run automatically
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: realstaging-db
+          property: connectionString
+```
+
+**Run migrations:**
+```bash
+# Manually scale up to run migrations
+# Render dashboard: realstaging-migrations → Scale to 1 instance
+# Wait for it to complete
+# Scale back down to 0
+```
+
+**Pros:**
+- Dedicated migration infrastructure
+- Can be triggered on-demand
+- Clear separation of concerns
+
+**Cons:**
+- Additional service to manage
+- Still somewhat manual (scale up/down)
+- Worker services run continuously unless numInstances=0
+
+#### Option 4: Pre-Deploy Hook with CI/CD
+
+Run migrations automatically in your CI/CD pipeline before deploying.
+
+**GitHub Actions Example:**
+```yaml
+name: Deploy to Render
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Migrations
+        run: |
+          docker run --rm \
+            -v $(pwd)/infra/migrations:/migrations \
+            migrate/migrate \
+            -path /migrations \
+            -database "${{ secrets.DATABASE_URL }}" \
+            up
+      
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+```
+
+**Pros:**
+- Fully automated
+- Migrations run before deployment
+- No manual intervention needed
+- Audit trail in CI/CD logs
+
+**Cons:**
+- Requires CI/CD setup
+- Requires DATABASE_URL in CI/CD secrets
+- Render needs to accept connections from CI/CD IPs
+
+### Recommended Approach
+
+**For initial setup:** Use **Option 1** (manual from local machine)
+- Quickest to get started
+- No infrastructure changes needed
+- Works immediately
+
+**For ongoing deployments:** Consider **Option 4** (CI/CD) or **Option 2** (include in Docker)
+- Option 4 is best for teams with CI/CD already
+- Option 2 is simpler if you don't have CI/CD
+
+### Migration Best Practices
+
+1. **Always test migrations locally first:**
+   ```bash
+   make migrate  # Run against local dev database
+   ```
+
+2. **Make migrations backward-compatible:**
+   - Add columns as nullable first
+   - Remove columns in separate migration later
+   - Don't break running application versions
+
+3. **Backup before migrations:**
+   ```bash
+   # Render auto-backs up daily, but you can trigger manual backup
+   # Dashboard → realstaging-db → Backups → Create Backup
+   ```
+
+4. **Monitor migrations:**
+   ```bash
+   # Check migration status
+   docker run --rm \
+     -v $(pwd)/infra/migrations:/migrations \
+     migrate/migrate \
+     -path /migrations \
+     -database "$DATABASE_URL" \
+     version
+   ```
+
+5. **Have rollback plan:**
+   ```bash
+   # Rollback last migration
+   docker run --rm \
+     -v $(pwd)/infra/migrations:/migrations \
+     migrate/migrate \
+     -path /migrations \
+     -database "$DATABASE_URL" \
+     down 1
+   ```
 
 ## Rollback Plan
 

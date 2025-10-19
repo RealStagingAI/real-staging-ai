@@ -53,13 +53,13 @@
 
 **Backblaze B2 (Storage)**
 - [x] Create account at [backblaze.com](https://www.backblaze.com/b2/cloud-storage.html)
-- [ ] Create bucket: `realstaging-prod`
-- [ ] Create application key
-- [ ] Configure CORS
+- [x] Create bucket: `realstaging-prod`
+- [x] Create application key
+- [x] Configure CORS
 - **Cost:** ~$5-20/month
 
 **Auth0 (Authentication)**
-- [ ] Create production application
+- [x] Create production application
 - [ ] Configure callback URLs for your domain
 - [ ] Get Domain and Audience values
 - **Cost:** Free tier should suffice initially
