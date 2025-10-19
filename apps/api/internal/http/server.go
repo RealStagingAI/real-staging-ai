@@ -76,7 +76,7 @@ func NewServer(
 	}
 
 	// Initialize subscription checker
-	subscriptionChecker := billing.NewSubscriptionChecker(db)
+	subscriptionChecker := billing.NewDefaultSubscriptionChecker(db)
 
 	s := &Server{
 		ctx:                 ctx,

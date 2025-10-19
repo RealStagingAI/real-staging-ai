@@ -7,10 +7,24 @@ import (
 	"github.com/real-staging-ai/api/internal/storage"
 )
 
+func TestNewDefaultSubscriptionChecker(t *testing.T) {
+	t.Run("success: creates checker with database", func(t *testing.T) {
+		mockDB := &storage.DatabaseMock{}
+		checker := NewDefaultSubscriptionChecker(mockDB)
+
+		if checker == nil {
+			t.Fatal("Expected non-nil checker")
+		}
+
+		// Verify it implements the interface
+		_ = SubscriptionChecker(checker)
+	})
+}
+
 func TestDefaultSubscriptionChecker_HasActiveSubscription(t *testing.T) {
 	t.Run("fail: empty userID", func(t *testing.T) {
 		mockDB := &storage.DatabaseMock{}
-		checker := NewSubscriptionChecker(mockDB)
+		checker := NewDefaultSubscriptionChecker(mockDB)
 
 		hasSubscription, err := checker.HasActiveSubscription(context.Background(), "")
 		if err == nil {
@@ -26,7 +40,7 @@ func TestDefaultSubscriptionChecker_HasActiveSubscription(t *testing.T) {
 
 	t.Run("fail: invalid userID format", func(t *testing.T) {
 		mockDB := &storage.DatabaseMock{}
-		checker := NewSubscriptionChecker(mockDB)
+		checker := NewDefaultSubscriptionChecker(mockDB)
 
 		hasSubscription, err := checker.HasActiveSubscription(context.Background(), "not-a-uuid")
 		if err == nil {
@@ -39,20 +53,7 @@ func TestDefaultSubscriptionChecker_HasActiveSubscription(t *testing.T) {
 			t.Errorf("Expected hasSubscription=false for error case, got true")
 		}
 	})
-}
 
-func TestNewSubscriptionChecker(t *testing.T) {
-	t.Run("success: creates checker with database", func(t *testing.T) {
-		mockDB := &storage.DatabaseMock{}
-		checker := NewSubscriptionChecker(mockDB)
-
-		if checker == nil {
-			t.Fatal("Expected non-nil checker")
-		}
-
-		// Verify it implements the interface
-		var _ SubscriptionChecker = checker
-	})
 }
 
 // Test the subscription status logic explicitly
@@ -81,7 +82,7 @@ func TestSubscriptionStatusLogic(t *testing.T) {
 
 			isAllowed := allowedStatuses[tt.status]
 			if isAllowed != tt.shouldBeActive {
-				t.Errorf("Status %s: expected shouldBeActive=%v, got %v", 
+				t.Errorf("Status %s: expected shouldBeActive=%v, got %v",
 					tt.status, tt.shouldBeActive, isAllowed)
 			}
 		})
@@ -91,6 +92,6 @@ func TestSubscriptionStatusLogic(t *testing.T) {
 // NOTE: Full integration tests with database are in tests/integration/http_upload_handlers_test.go
 // These test the full flow including:
 // - User without subscription -> 403 Forbidden
-// - User with active subscription -> 200 OK  
+// - User with active subscription -> 200 OK
 // - User with trialing subscription -> 200 OK
 // - User with canceled subscription -> 403 Forbidden

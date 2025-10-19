@@ -11,20 +11,13 @@ import (
 	"github.com/real-staging-ai/api/internal/storage/queries"
 )
 
-// SubscriptionChecker provides methods to check user subscription status.
-type SubscriptionChecker interface {
-	// HasActiveSubscription checks if a user has an active paid subscription.
-	// Returns true if the user has an active or trialing subscription.
-	HasActiveSubscription(ctx context.Context, userID string) (bool, error)
-}
-
 // DefaultSubscriptionChecker implements SubscriptionChecker using the database.
 type DefaultSubscriptionChecker struct {
 	db storage.Database
 }
 
-// NewSubscriptionChecker creates a new subscription checker.
-func NewSubscriptionChecker(db storage.Database) SubscriptionChecker {
+// NewDefaultSubscriptionChecker creates a new subscription checker.
+func NewDefaultSubscriptionChecker(db storage.Database) SubscriptionChecker {
 	return &DefaultSubscriptionChecker{db: db}
 }
 
