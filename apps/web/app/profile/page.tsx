@@ -181,8 +181,8 @@ export default function ProfilePage() {
 
   const handleSubscribe = async () => {
     const priceIds = {
-      pro: 'price_1SJOLOLkQ5x1VWxdO06cPbj1',
-      business: 'price_1SJOMjLkQ5x1VWxdUYOkNqI4',
+      pro: 'price_1SJmy5LpUWppqPSlNElnvowM',
+      business: 'price_1SJmyqLpUWppqPSlGhxfz2oQ',
     };
     
     try {
