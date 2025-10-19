@@ -51,7 +51,7 @@ services:
         sync: false  # Set in Render dashboard
       # Frontend URL
       - key: FRONTEND_URL
-        value: https://app.yourdomain.com  # Update to your frontend URL
+        value: https://real-staging.ai
 
   # Worker Service
   - type: worker
@@ -103,7 +103,7 @@ services:
 databases:
   # PostgreSQL Database
   - name: realstaging-db
-    plan: standard  # standard or pro (starter no longer supported)
+    plan: standardPlus  # use non-legacy plan (starter/standard deprecated)
     region: oregon  # Same region as services
     databaseName: realstaging
     user: realstaging
