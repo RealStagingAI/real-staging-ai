@@ -130,6 +130,9 @@ var _ Querier = &QuerierMock{}
 //			ListSubscriptionsByUserIDFunc: func(ctx context.Context, arg ListSubscriptionsByUserIDParams) ([]*Subscription, error) {
 //				panic("mock out the ListSubscriptionsByUserID method")
 //			},
+//			ListSubscriptionsByUserIDAndStatusesFunc: func(ctx context.Context, arg ListSubscriptionsByUserIDAndStatusesParams) ([]*Subscription, error) {
+//				panic("mock out the ListSubscriptionsByUserIDAndStatuses method")
+//			},
 //			ListUsersFunc: func(ctx context.Context, arg ListUsersParams) ([]*ListUsersRow, error) {
 //				panic("mock out the ListUsers method")
 //			},
@@ -289,6 +292,9 @@ type QuerierMock struct {
 
 	// ListSubscriptionsByUserIDFunc mocks the ListSubscriptionsByUserID method.
 	ListSubscriptionsByUserIDFunc func(ctx context.Context, arg ListSubscriptionsByUserIDParams) ([]*Subscription, error)
+
+	// ListSubscriptionsByUserIDAndStatusesFunc mocks the ListSubscriptionsByUserIDAndStatuses method.
+	ListSubscriptionsByUserIDAndStatusesFunc func(ctx context.Context, arg ListSubscriptionsByUserIDAndStatusesParams) ([]*Subscription, error)
 
 	// ListUsersFunc mocks the ListUsers method.
 	ListUsersFunc func(ctx context.Context, arg ListUsersParams) ([]*ListUsersRow, error)
@@ -589,6 +595,13 @@ type QuerierMock struct {
 			// Arg is the arg argument value.
 			Arg ListSubscriptionsByUserIDParams
 		}
+		// ListSubscriptionsByUserIDAndStatuses holds details about calls to the ListSubscriptionsByUserIDAndStatuses method.
+		ListSubscriptionsByUserIDAndStatuses []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Arg is the arg argument value.
+			Arg ListSubscriptionsByUserIDAndStatusesParams
+		}
 		// ListUsers holds details about calls to the ListUsers method.
 		ListUsers []struct {
 			// Ctx is the ctx argument value.
@@ -688,57 +701,58 @@ type QuerierMock struct {
 			Arg UpsertSubscriptionByStripeIDParams
 		}
 	}
-	lockCompleteJob                    sync.RWMutex
-	lockCountProjectsByUserID          sync.RWMutex
-	lockCountUsers                     sync.RWMutex
-	lockCreateImage                    sync.RWMutex
-	lockCreateJob                      sync.RWMutex
-	lockCreateProcessedEvent           sync.RWMutex
-	lockCreateProject                  sync.RWMutex
-	lockCreateUser                     sync.RWMutex
-	lockDeleteImage                    sync.RWMutex
-	lockDeleteImagesByProjectID        sync.RWMutex
-	lockDeleteJob                      sync.RWMutex
-	lockDeleteJobsByImageID            sync.RWMutex
-	lockDeleteOldProcessedEvents       sync.RWMutex
-	lockDeleteProject                  sync.RWMutex
-	lockDeleteProjectByUserID          sync.RWMutex
-	lockDeleteSubscriptionByStripeID   sync.RWMutex
-	lockDeleteUser                     sync.RWMutex
-	lockFailJob                        sync.RWMutex
-	lockGetAllProjects                 sync.RWMutex
-	lockGetImageByID                   sync.RWMutex
-	lockGetImagesByProjectID           sync.RWMutex
-	lockGetInvoiceByStripeID           sync.RWMutex
-	lockGetJobByID                     sync.RWMutex
-	lockGetJobsByImageID               sync.RWMutex
-	lockGetPendingJobs                 sync.RWMutex
-	lockGetProcessedEventByStripeID    sync.RWMutex
-	lockGetProjectByID                 sync.RWMutex
-	lockGetProjectsByUserID            sync.RWMutex
-	lockGetSubscriptionByStripeID      sync.RWMutex
-	lockGetUserByAuth0Sub              sync.RWMutex
-	lockGetUserByID                    sync.RWMutex
-	lockGetUserByStripeCustomerID      sync.RWMutex
-	lockGetUserProfileByAuth0Sub       sync.RWMutex
-	lockGetUserProfileByID             sync.RWMutex
-	lockListImagesForReconcile         sync.RWMutex
-	lockListInvoicesByUserID           sync.RWMutex
-	lockListSubscriptionsByUserID      sync.RWMutex
-	lockListUsers                      sync.RWMutex
-	lockStartJob                       sync.RWMutex
-	lockUpdateImageStatus              sync.RWMutex
-	lockUpdateImageWithError           sync.RWMutex
-	lockUpdateImageWithStagedURL       sync.RWMutex
-	lockUpdateJobStatus                sync.RWMutex
-	lockUpdateProject                  sync.RWMutex
-	lockUpdateProjectByUserID          sync.RWMutex
-	lockUpdateUserProfile              sync.RWMutex
-	lockUpdateUserRole                 sync.RWMutex
-	lockUpdateUserStripeCustomerID     sync.RWMutex
-	lockUpsertInvoiceByStripeID        sync.RWMutex
-	lockUpsertProcessedEventByStripeID sync.RWMutex
-	lockUpsertSubscriptionByStripeID   sync.RWMutex
+	lockCompleteJob                          sync.RWMutex
+	lockCountProjectsByUserID                sync.RWMutex
+	lockCountUsers                           sync.RWMutex
+	lockCreateImage                          sync.RWMutex
+	lockCreateJob                            sync.RWMutex
+	lockCreateProcessedEvent                 sync.RWMutex
+	lockCreateProject                        sync.RWMutex
+	lockCreateUser                           sync.RWMutex
+	lockDeleteImage                          sync.RWMutex
+	lockDeleteImagesByProjectID              sync.RWMutex
+	lockDeleteJob                            sync.RWMutex
+	lockDeleteJobsByImageID                  sync.RWMutex
+	lockDeleteOldProcessedEvents             sync.RWMutex
+	lockDeleteProject                        sync.RWMutex
+	lockDeleteProjectByUserID                sync.RWMutex
+	lockDeleteSubscriptionByStripeID         sync.RWMutex
+	lockDeleteUser                           sync.RWMutex
+	lockFailJob                              sync.RWMutex
+	lockGetAllProjects                       sync.RWMutex
+	lockGetImageByID                         sync.RWMutex
+	lockGetImagesByProjectID                 sync.RWMutex
+	lockGetInvoiceByStripeID                 sync.RWMutex
+	lockGetJobByID                           sync.RWMutex
+	lockGetJobsByImageID                     sync.RWMutex
+	lockGetPendingJobs                       sync.RWMutex
+	lockGetProcessedEventByStripeID          sync.RWMutex
+	lockGetProjectByID                       sync.RWMutex
+	lockGetProjectsByUserID                  sync.RWMutex
+	lockGetSubscriptionByStripeID            sync.RWMutex
+	lockGetUserByAuth0Sub                    sync.RWMutex
+	lockGetUserByID                          sync.RWMutex
+	lockGetUserByStripeCustomerID            sync.RWMutex
+	lockGetUserProfileByAuth0Sub             sync.RWMutex
+	lockGetUserProfileByID                   sync.RWMutex
+	lockListImagesForReconcile               sync.RWMutex
+	lockListInvoicesByUserID                 sync.RWMutex
+	lockListSubscriptionsByUserID            sync.RWMutex
+	lockListSubscriptionsByUserIDAndStatuses sync.RWMutex
+	lockListUsers                            sync.RWMutex
+	lockStartJob                             sync.RWMutex
+	lockUpdateImageStatus                    sync.RWMutex
+	lockUpdateImageWithError                 sync.RWMutex
+	lockUpdateImageWithStagedURL             sync.RWMutex
+	lockUpdateJobStatus                      sync.RWMutex
+	lockUpdateProject                        sync.RWMutex
+	lockUpdateProjectByUserID                sync.RWMutex
+	lockUpdateUserProfile                    sync.RWMutex
+	lockUpdateUserRole                       sync.RWMutex
+	lockUpdateUserStripeCustomerID           sync.RWMutex
+	lockUpsertInvoiceByStripeID              sync.RWMutex
+	lockUpsertProcessedEventByStripeID       sync.RWMutex
+	lockUpsertSubscriptionByStripeID         sync.RWMutex
 }
 
 // CompleteJob calls CompleteJobFunc.
@@ -2062,6 +2076,42 @@ func (mock *QuerierMock) ListSubscriptionsByUserIDCalls() []struct {
 	mock.lockListSubscriptionsByUserID.RLock()
 	calls = mock.calls.ListSubscriptionsByUserID
 	mock.lockListSubscriptionsByUserID.RUnlock()
+	return calls
+}
+
+// ListSubscriptionsByUserIDAndStatuses calls ListSubscriptionsByUserIDAndStatusesFunc.
+func (mock *QuerierMock) ListSubscriptionsByUserIDAndStatuses(ctx context.Context, arg ListSubscriptionsByUserIDAndStatusesParams) ([]*Subscription, error) {
+	if mock.ListSubscriptionsByUserIDAndStatusesFunc == nil {
+		panic("QuerierMock.ListSubscriptionsByUserIDAndStatusesFunc: method is nil but Querier.ListSubscriptionsByUserIDAndStatuses was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Arg ListSubscriptionsByUserIDAndStatusesParams
+	}{
+		Ctx: ctx,
+		Arg: arg,
+	}
+	mock.lockListSubscriptionsByUserIDAndStatuses.Lock()
+	mock.calls.ListSubscriptionsByUserIDAndStatuses = append(mock.calls.ListSubscriptionsByUserIDAndStatuses, callInfo)
+	mock.lockListSubscriptionsByUserIDAndStatuses.Unlock()
+	return mock.ListSubscriptionsByUserIDAndStatusesFunc(ctx, arg)
+}
+
+// ListSubscriptionsByUserIDAndStatusesCalls gets all the calls that were made to ListSubscriptionsByUserIDAndStatuses.
+// Check the length with:
+//
+//	len(mockedQuerier.ListSubscriptionsByUserIDAndStatusesCalls())
+func (mock *QuerierMock) ListSubscriptionsByUserIDAndStatusesCalls() []struct {
+	Ctx context.Context
+	Arg ListSubscriptionsByUserIDAndStatusesParams
+} {
+	var calls []struct {
+		Ctx context.Context
+		Arg ListSubscriptionsByUserIDAndStatusesParams
+	}
+	mock.lockListSubscriptionsByUserIDAndStatuses.RLock()
+	calls = mock.calls.ListSubscriptionsByUserIDAndStatuses
+	mock.lockListSubscriptionsByUserIDAndStatuses.RUnlock()
 	return calls
 }
 

@@ -186,6 +186,64 @@ func (q *Queries) ListSubscriptionsByUserID(ctx context.Context, arg ListSubscri
 	return items, nil
 }
 
+const ListSubscriptionsByUserIDAndStatuses = `-- name: ListSubscriptionsByUserIDAndStatuses :many
+SELECT
+  id,
+  user_id,
+  stripe_subscription_id,
+  status,
+  price_id,
+  current_period_start,
+  current_period_end,
+  cancel_at,
+  canceled_at,
+  cancel_at_period_end,
+  created_at,
+  updated_at
+FROM subscriptions
+WHERE user_id = $1
+  AND status = ANY($2::text[])
+ORDER BY created_at DESC
+`
+
+type ListSubscriptionsByUserIDAndStatusesParams struct {
+	UserID  pgtype.UUID `json:"user_id"`
+	Column2 []string    `json:"column_2"`
+}
+
+func (q *Queries) ListSubscriptionsByUserIDAndStatuses(ctx context.Context, arg ListSubscriptionsByUserIDAndStatusesParams) ([]*Subscription, error) {
+	rows, err := q.db.Query(ctx, ListSubscriptionsByUserIDAndStatuses, arg.UserID, arg.Column2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*Subscription{}
+	for rows.Next() {
+		var i Subscription
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.StripeSubscriptionID,
+			&i.Status,
+			&i.PriceID,
+			&i.CurrentPeriodStart,
+			&i.CurrentPeriodEnd,
+			&i.CancelAt,
+			&i.CanceledAt,
+			&i.CancelAtPeriodEnd,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const UpsertProcessedEventByStripeID = `-- name: UpsertProcessedEventByStripeID :one
 INSERT INTO processed_events (stripe_event_id, type, payload)
 VALUES ($1, $2, $3)

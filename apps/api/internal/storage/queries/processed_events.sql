@@ -120,3 +120,22 @@ LIMIT $2 OFFSET $3;
 -- name: DeleteSubscriptionByStripeID :exec
 DELETE FROM subscriptions
 WHERE stripe_subscription_id = $1;
+
+-- name: ListSubscriptionsByUserIDAndStatuses :many
+SELECT
+  id,
+  user_id,
+  stripe_subscription_id,
+  status,
+  price_id,
+  current_period_start,
+  current_period_end,
+  cancel_at,
+  canceled_at,
+  cancel_at_period_end,
+  created_at,
+  updated_at
+FROM subscriptions
+WHERE user_id = $1
+  AND status = ANY($2::text[])
+ORDER BY created_at DESC;

@@ -30,9 +30,10 @@ type Server struct {
 	db        storage.Database
 	s3Service storage.S3Service
 
-	imageService image.Service
-	authConfig   *auth.Auth0Config
-	pubsub       PubSub
+	imageService         image.Service
+	subscriptionChecker  billing.SubscriptionChecker
+	authConfig           *auth.Auth0Config
+	pubsub               PubSub
 }
 
 // NewServer creates and configures a new Echo server.
@@ -74,8 +75,18 @@ func NewServer(
 		ps = p
 	}
 
+	// Initialize subscription checker
+	subscriptionChecker := billing.NewSubscriptionChecker(db)
+
 	s := &Server{
-		ctx: ctx, db: db, s3Service: s3Service, imageService: imageService, echo: e, authConfig: authConfig, pubsub: ps,
+		ctx:                 ctx,
+		db:                  db,
+		s3Service:           s3Service,
+		imageService:        imageService,
+		subscriptionChecker: subscriptionChecker,
+		echo:                e,
+		authConfig:          authConfig,
+		pubsub:              ps,
 	}
 
 	// Health check route

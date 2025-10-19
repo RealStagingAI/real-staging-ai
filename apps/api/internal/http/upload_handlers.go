@@ -97,6 +97,22 @@ func (s *Server) presignUploadHandler(c echo.Context) error {
 		userID = existingUser.ID.String()
 	}
 
+	// Check if user has an active paid subscription
+	hasSubscription, err := s.subscriptionChecker.HasActiveSubscription(c.Request().Context(), userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "Failed to verify subscription status",
+		})
+	}
+
+	if !hasSubscription {
+		return c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "subscription_required",
+			Message: "An active paid subscription is required to upload images. Please subscribe to continue.",
+		})
+	}
+
 	// Generate presigned upload URL using injected S3 service
 	result, err := s.s3Service.GeneratePresignedUploadURL(
 		c.Request().Context(),

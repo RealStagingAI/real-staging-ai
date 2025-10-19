@@ -51,6 +51,7 @@ type Querier interface {
 	ListImagesForReconcile(ctx context.Context, arg ListImagesForReconcileParams) ([]*ListImagesForReconcileRow, error)
 	ListInvoicesByUserID(ctx context.Context, arg ListInvoicesByUserIDParams) ([]*Invoice, error)
 	ListSubscriptionsByUserID(ctx context.Context, arg ListSubscriptionsByUserIDParams) ([]*Subscription, error)
+	ListSubscriptionsByUserIDAndStatuses(ctx context.Context, arg ListSubscriptionsByUserIDAndStatusesParams) ([]*Subscription, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]*ListUsersRow, error)
 	StartJob(ctx context.Context, id pgtype.UUID) (*Job, error)
 	UpdateImageStatus(ctx context.Context, arg UpdateImageStatusParams) (*UpdateImageStatusRow, error)

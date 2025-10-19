@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Upload as UploadIcon, FolderOpen, Plus, RefreshCw, CheckCircle2, Loader2, FileImage, X, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Upload as UploadIcon, FolderOpen, Plus, RefreshCw, CheckCircle2, Loader2, FileImage, X, AlertCircle, CreditCard, Lock } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +31,17 @@ type UploadProgress = {
   imageId?: string
 }
 
+type Subscription = {
+  id: string
+  status: string
+}
+
+type SubscriptionResponse = {
+  items: Subscription[]
+}
+
 export default function UploadPage() {
+  const router = useRouter()
   const [files, setFiles] = useState<FileWithOverrides[]>([])
   const [projectId, setProjectId] = useState("")
   const [defaultRoomType, setDefaultRoomType] = useState("")
@@ -41,6 +52,24 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({})
+  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null)
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true)
+
+  async function checkSubscription() {
+    try {
+      setSubscriptionLoading(true)
+      const res = await apiFetch<SubscriptionResponse>("/v1/billing/subscriptions")
+      const activeSubscription = res.items?.some(
+        sub => sub.status === "active" || sub.status === "trialing"
+      )
+      setHasActiveSubscription(activeSubscription || false)
+    } catch (err: unknown) {
+      console.error("Failed to check subscription:", err)
+      setHasActiveSubscription(false)
+    } finally {
+      setSubscriptionLoading(false)
+    }
+  }
 
   async function loadProjects() {
     try {
@@ -79,6 +108,7 @@ export default function UploadPage() {
   }
 
   useEffect(() => {
+    checkSubscription()
     loadProjects()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -170,7 +200,13 @@ export default function UploadPage() {
             file_size: fileData.file.size,
           }),
         }
-      )
+      ).catch((err) => {
+        // Handle subscription_required error specifically
+        if (err.message && err.message.includes('subscription_required')) {
+          throw new Error('An active subscription is required to upload images. Please subscribe to continue.');
+        }
+        throw err;
+      })
 
       // 2) Upload to S3
       updateProgress('uploading', 40)
@@ -262,7 +298,33 @@ export default function UploadPage() {
   const successfulUploads = Object.values(uploadProgress).filter(p => p.status === 'success')
 
   return (
-    <div className="space-y-8">
+    <div className="container max-w-7xl py-8 space-y-8">
+      {/* Subscription Required Banner */}
+      {!subscriptionLoading && hasActiveSubscription === false && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <Lock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-300">
+                Subscription Required
+              </h3>
+              <p className="text-amber-800 dark:text-amber-400">
+                An active paid subscription is required to upload and process images. Upgrade your plan to unlock unlimited image staging.
+              </p>
+              <button
+                onClick={() => router.push('/profile')}
+                className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <CreditCard className="h-4 w-4" />
+                View Subscription Plans
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold mb-2">
@@ -354,11 +416,12 @@ export default function UploadPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Property Images</label>
             <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              onDragOver={hasActiveSubscription !== false ? handleDragOver : undefined}
+              onDragLeave={hasActiveSubscription !== false ? handleDragLeave : undefined}
+              onDrop={hasActiveSubscription !== false ? handleDrop : undefined}
               className={cn(
                 "relative rounded-xl border-2 border-dashed transition-all duration-200 p-8",
+                hasActiveSubscription === false ? "opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-800" :
                 isDragging 
                   ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/30" 
                   : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500",
@@ -368,9 +431,10 @@ export default function UploadPage() {
               <input
                 type="file"
                 multiple
+                accept="image/*"
+                className="hidden"
                 onChange={handleFileSelect}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                accept="image/jpeg,image/png,image/webp"
+                disabled={hasActiveSubscription === false}
               />
               <div className="flex flex-col items-center justify-center text-center space-y-3">
                 <div className={cn(
