@@ -93,6 +93,40 @@ services:
       # Worker Configuration
       - key: WORKER_CONCURRENCY
         value: 5
+
+  # Web Frontend (Next.js)
+  - type: web
+    name: realstaging-web
+    runtime: node
+    buildCommand: cd apps/web && npm install && npm run build
+    startCommand: cd apps/web && npm run start
+    region: oregon  # Same region as API
+    plan: starter
+    envVars:
+      # Auth0 Configuration
+      - key: AUTH0_SECRET
+        sync: false  # Set in Render dashboard - long random string (>=32 chars)
+      - key: APP_BASE_URL
+        value: https://real-staging.ai
+      - key: AUTH0_DOMAIN
+        value: real-staging-ai.us.auth0.com
+      - key: AUTH0_CLIENT_ID
+        sync: false  # Set in Render dashboard
+      - key: AUTH0_CLIENT_SECRET
+        sync: false  # Set in Render dashboard
+      - key: AUTH0_AUDIENCE
+        value: https://api.real-staging.ai
+      - key: AUTH0_SCOPE
+        value: openid profile email offline_access
+      # API Configuration
+      - key: API_URL
+        fromService:
+          name: realstaging-api
+          type: web
+          property: url
+      # Optional: Public API base for client-side calls
+      - key: NEXT_PUBLIC_API_BASE
+        value: /api
   # Redis Service
   - type: redis
     name: realstaging-redis
