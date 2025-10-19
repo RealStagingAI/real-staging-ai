@@ -60,22 +60,22 @@
 
 **Auth0 (Authentication)**
 - [x] Create production application
-- [ ] Configure callback URLs for your domain
-- [ ] Get Domain and Audience values
+- [x] Configure callback URLs for your domain
+- [x] Get Domain and Audience values
 - **Cost:** Free tier should suffice initially
 
 **Stripe (Billing)**
-- [ ] Complete business verification (can take days)
-- [ ] Switch to Live Mode
-- [ ] Get live API keys
-- [ ] Create webhook endpoint
-- [ ] Configure products/pricing
+- [x] Complete business verification (can take days)
+- [x] Switch to Live Mode
+- [x] Get live API keys
+- [x] Create webhook endpoint
+- [x] Configure products/pricing
 - **Cost:** Pay as you go (2.9% + $0.30 per transaction)
 
 **Replicate (AI)**
-- [ ] Create account at [replicate.com](https://replicate.com)
-- [ ] Get API token
-- [ ] Add payment method
+- [x] Create account at [replicate.com](https://replicate.com)
+- [x] Get API token
+- [x] Add payment method
 - **Cost:** ~$0.011 per image
 
 ### 2. Configuration Values Needed
@@ -108,18 +108,18 @@ FRONTEND_URL=https://app.yourdomain.com
 ### 3. Domain Setup (Optional but recommended)
 
 **If using custom domain:**
-- [ ] Purchase domain (if not already owned)
-- [ ] Configure DNS for API subdomain
-- [ ] Configure DNS for frontend subdomain
+- [x] Purchase domain (if not already owned)
+- [x] Configure DNS for API subdomain
+- [x] Configure DNS for frontend subdomain
 - **Cost:** ~$12/year for domain
 
 ### 4. Frontend Deployment
 
 **Note:** The provided documentation focuses on backend deployment. You'll also need to:
 
-- [ ] Deploy Next.js frontend (Vercel/Render/Cloudflare Pages)
-- [ ] Configure frontend environment variables
-- [ ] Update Auth0 with frontend URLs
+- [x] Deploy Next.js frontend (Vercel/Render/Cloudflare Pages)
+- [x] Configure frontend environment variables
+- [x] Update Auth0 with frontend URLs
 - [ ] Test end-to-end flows
 
 **Recommendation:** Use Vercel for frontend (free tier, automatic deployments)

@@ -176,8 +176,7 @@ docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/realstaging-api:latest
      {
        "corsRuleName": "allowUploads",
        "allowedOrigins": [
-         "https://yourdomain.com",
-         "https://app.yourdomain.com"
+         "https://real-staging.ai"
        ],
        "allowedOperations": [
          "s3_put",
