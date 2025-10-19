@@ -15,9 +15,6 @@ func TestNewDefaultSubscriptionChecker(t *testing.T) {
 		if checker == nil {
 			t.Fatal("Expected non-nil checker")
 		}
-
-		// Verify it implements the interface
-		_ = SubscriptionChecker(checker)
 	})
 }
 
