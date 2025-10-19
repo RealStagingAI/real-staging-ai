@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+
 	"github.com/real-staging-ai/api/internal/storage"
 	"github.com/real-staging-ai/api/internal/storage/queries"
 )
@@ -35,12 +36,12 @@ func (s *DefaultSubscriptionChecker) HasActiveSubscription(ctx context.Context, 
 	}
 
 	q := queries.New(s.db)
-	
+
 	// Query for active subscriptions
 	// According to Stripe docs, valid active statuses are:
 	// - "active": Subscription is active and paid
 	// - "trialing": Subscription is in trial period
-	// 
+	//
 	// We explicitly exclude:
 	// - "incomplete": Payment failed during creation
 	// - "incomplete_expired": Incomplete subscription expired

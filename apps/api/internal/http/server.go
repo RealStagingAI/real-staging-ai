@@ -30,10 +30,10 @@ type Server struct {
 	db        storage.Database
 	s3Service storage.S3Service
 
-	imageService         image.Service
-	subscriptionChecker  billing.SubscriptionChecker
-	authConfig           *auth.Auth0Config
-	pubsub               PubSub
+	imageService        image.Service
+	subscriptionChecker billing.SubscriptionChecker
+	authConfig          *auth.Auth0Config
+	pubsub              PubSub
 }
 
 // NewServer creates and configures a new Echo server.
