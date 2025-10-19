@@ -51,7 +51,7 @@ func NewServer(
 	e.Use(otelecho.Middleware("real-staging-api"))
 
 	// Add other middleware
-	e.Use(middleware.Logger())
+	e.Use(RequestLoggerMiddleware()) // Custom JSON logger with proper log levels for Render
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:3000", "http://localhost:3001"},
@@ -178,7 +178,7 @@ func NewTestServer(db storage.Database, s3Service storage.S3Service, imageServic
 	e := echo.New()
 
 	// Add basic middleware (no Auth0 for testing)
-	e.Use(middleware.Logger())
+	e.Use(RequestLoggerMiddleware()) // Custom JSON logger with proper log levels for Render
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
