@@ -352,7 +352,7 @@ databases:
 5. **Verify Deployment:**
    ```bash
    # Check health endpoint
-   curl https://realstaging-api.onrender.com/health
+   curl https://api.real-staging.ai/health
    
    # Should return:
    # {"status":"healthy","database":"connected","redis":"connected"}

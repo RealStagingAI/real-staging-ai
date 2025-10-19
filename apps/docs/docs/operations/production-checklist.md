@@ -122,7 +122,7 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
 ### Verification
 
 - [ ] **Health Checks**
-  - [ ] Check API health: `curl https://realstaging-api.onrender.com/health`
+  - [ ] Check API health: `curl https://api.real-staging.ai/health`
   - [ ] Verify database connection
   - [ ] Verify Redis connection
   - [ ] Check service logs for errors

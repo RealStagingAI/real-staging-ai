@@ -9,7 +9,7 @@ Stripe webhooks notify your application about events that happen in your Stripe 
 ## Prerequisites
 
 - ✅ Stripe account in **Live Mode**
-- ✅ Production API deployed and accessible (e.g., `https://realstaging-api.onrender.com`)
+- ✅ Production API deployed and accessible (e.g., `https://real-staging.ai`)
 - ✅ SSL/TLS certificate configured (automatic with Render)
 
 ---
@@ -34,7 +34,7 @@ https://your-api-domain.com/api/v1/stripe/webhook
 
 **Examples:**
 - Render default: `https://realstaging-api.onrender.com/api/v1/stripe/webhook`
-- Custom domain: `https://api.yourdomain.com/api/v1/stripe/webhook`
+- Custom domain: `https://api.real-staging.ai/api/v1/stripe/webhook`
 
 **Important Notes:**
 - ✅ Must use HTTPS (not HTTP)
@@ -409,7 +409,7 @@ curl https://realstaging-api.onrender.com/health
 # {"status":"healthy","database":"connected","redis":"connected"}
 
 # Test webhook endpoint (will fail signature check but confirms reachability)
-curl -X POST https://realstaging-api.onrender.com/api/v1/stripe/webhook \
+curl -X POST https://api.real-staging.ai/api/v1/stripe/webhook \
   -H "Content-Type: application/json" \
   -d '{"type":"test.event"}'
 

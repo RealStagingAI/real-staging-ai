@@ -105,8 +105,7 @@ CORS is **required** for presigned upload URLs to work from your web application
   {
     "corsRuleName": "allowProductionUploads",
     "allowedOrigins": [
-      "https://real-staging.ai",
-      "https://realstaging-api.onrender.com"
+      "https://real-staging.ai"
     ],
     "allowedOperations": [
       "s3_put",
