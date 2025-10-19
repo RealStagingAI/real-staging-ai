@@ -211,6 +211,7 @@ nav:
   - Operations:
     - operations/index.md
     - Deployment: operations/deployment.md
+    - Production Checklist: operations/production-checklist.md
     - Storage Reconciliation: operations/reconciliation.md
     - Monitoring: operations/monitoring.md
   

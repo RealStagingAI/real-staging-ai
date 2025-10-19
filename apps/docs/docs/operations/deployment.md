@@ -4,7 +4,7 @@ Comprehensive guide for deploying Real Staging AI to production environments.
 
 ## Overview
 
-Real Staging AI is a containerized application designed for flexible deployment across various platforms. This guide covers multiple deployment strategies from simple single-server setups to scalable Kubernetes clusters.
+Real Staging AI is a containerized application designed for flexible deployment across various platforms. **This guide recommends Render for compute/database and Backblaze B2 for storage** as the primary production deployment strategy, with alternative options documented for flexibility.
 
 ### Architecture Components
 
@@ -21,10 +21,10 @@ The application consists of:
 
 Before deploying:
 
-- [x] Choose deployment platform (Docker Compose, Kubernetes, Fly.io, Render)
-- [ ] Provision PostgreSQL database (managed service recommended)
-- [ ] Provision Redis instance (managed service recommended)
-- [ ] Set up S3 bucket or compatible storage
+- [x] Choose deployment platform: **Render (recommended)**
+- [ ] Provision PostgreSQL database on Render
+- [ ] Provision Redis instance on Render
+- [ ] Set up Backblaze B2 bucket for storage
 - [ ] Configure Auth0 application for production domain
 - [ ] Configure Stripe webhook endpoint for production
 - [ ] Prepare secrets (database credentials, API keys, etc.)
@@ -52,7 +52,8 @@ Before deploying:
    - Upstash
 
 3. **S3-Compatible Storage**:
-   - AWS S3 (recommended)
+   - **Backblaze B2 (recommended)** - Cost-effective, S3-compatible
+   - AWS S3
    - Google Cloud Storage (S3-compatible mode)
    - DigitalOcean Spaces
    - Cloudflare R2
@@ -133,7 +134,305 @@ docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/realstaging-api:latest
 
 ## Deployment Strategies
 
-### Option 1: Docker Compose (Small to Medium Scale)
+### Option 1: Render (Recommended for Production)
+
+**Best for:** Production deployments, managed services, automatic SSL, zero DevOps
+
+**Why Render?**
+- Fully managed PostgreSQL and Redis
+- Automatic SSL/TLS certificates
+- Zero-downtime deployments
+- Built-in monitoring and alerting
+- Automatic scaling
+- Free SSL certificates
+- Easy GitHub integration
+
+#### Prerequisites
+
+1. **Render Account** - [render.com](https://render.com)
+2. **Backblaze B2 Account** - [backblaze.com](https://www.backblaze.com/b2/cloud-storage.html)
+3. **Auth0 Production App** configured
+4. **Stripe Live API Keys** and webhook endpoint
+
+#### Step 1: Set Up Backblaze B2 Storage
+
+1. **Create B2 Account and Bucket:**
+   ```bash
+   # Log into Backblaze B2 dashboard
+   # Create a new bucket: realstaging-prod
+   # Set bucket to Private
+   # Note the bucket region (e.g., us-west-004)
+   ```
+
+2. **Create Application Key:**
+   - Go to "App Keys" in B2 dashboard
+   - Create new key with access to your bucket
+   - Save the `keyID` (access key) and `applicationKey` (secret key)
+   - **Important:** Save these credentials securely - you won't see them again
+
+3. **Configure B2 CORS (for presigned uploads):**
+   ```json
+   [
+     {
+       "corsRuleName": "allowUploads",
+       "allowedOrigins": [
+         "https://yourdomain.com",
+         "https://app.yourdomain.com"
+       ],
+       "allowedOperations": [
+         "s3_put",
+         "s3_get",
+         "s3_head"
+       ],
+       "allowedHeaders": ["*"],
+       "exposeHeaders": ["ETag"],
+       "maxAgeSeconds": 3600
+     }
+   ]
+   ```
+
+4. **Note Your B2 Configuration:**
+   - **Endpoint:** `https://s3.us-west-004.backblazeb2.com` (adjust region)
+   - **Bucket Name:** `realstaging-prod`
+   - **Region:** `us-west-004` (your bucket's region)
+   - **Access Key ID:** Your B2 keyID
+   - **Secret Access Key:** Your B2 applicationKey
+
+#### Step 2: Create Render Blueprint
+
+Create `render.yaml` in your repository root:
+
+```yaml
+services:
+  # API Service
+  - type: web
+    name: realstaging-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
+    region: oregon  # or your preferred region
+    plan: starter  # or standard for production
+    numInstances: 1  # scale as needed
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: realstaging-db
+          property: connectionString
+      - key: REDIS_ADDR
+        fromService:
+          name: realstaging-redis
+          type: redis
+          property: connectionString
+      - key: AUTH0_DOMAIN
+        sync: false  # Set in Render dashboard
+      - key: AUTH0_AUDIENCE
+        sync: false
+      - key: S3_ENDPOINT
+        value: https://s3.us-west-004.backblazeb2.com
+      - key: S3_REGION
+        value: us-west-004
+      - key: S3_BUCKET_NAME
+        value: realstaging-prod
+      - key: S3_ACCESS_KEY
+        sync: false  # Set in Render dashboard (B2 keyID)
+      - key: S3_SECRET_KEY
+        sync: false  # Set in Render dashboard (B2 applicationKey)
+      - key: S3_USE_PATH_STYLE
+        value: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: REPLICATE_API_TOKEN
+        sync: false
+      - key: FRONTEND_URL
+        value: https://app.yourdomain.com
+
+  # Worker Service
+  - type: worker
+    name: realstaging-worker
+    runtime: docker
+    dockerfilePath: ./apps/worker/Dockerfile
+    dockerContext: ./apps/worker
+    region: oregon
+    plan: starter
+    numInstances: 1
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: realstaging-db
+          property: connectionString
+      - key: REDIS_ADDR
+        fromService:
+          name: realstaging-redis
+          type: redis
+          property: connectionString
+      - key: S3_ENDPOINT
+        value: https://s3.us-west-004.backblazeb2.com
+      - key: S3_REGION
+        value: us-west-004
+      - key: S3_BUCKET_NAME
+        value: realstaging-prod
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: S3_USE_PATH_STYLE
+        value: false
+      - key: REPLICATE_API_TOKEN
+        sync: false
+      - key: WORKER_CONCURRENCY
+        value: 5
+
+databases:
+  - name: realstaging-db
+    plan: starter  # or standard for production
+    region: oregon
+    databaseName: realstaging
+    user: realstaging
+
+  - name: realstaging-redis
+    plan: starter
+    region: oregon
+    maxmemoryPolicy: allkeys-lru
+```
+
+#### Step 3: Deploy to Render
+
+1. **Push to GitHub:**
+   ```bash
+   git add render.yaml
+   git commit -m "feat(infra): add Render deployment configuration"
+   git push origin main
+   ```
+
+2. **Connect in Render Dashboard:**
+   - Go to [render.com/dashboard](https://render.com/dashboard)
+   - Click "New" → "Blueprint"
+   - Connect your GitHub repository
+   - Render will detect `render.yaml` automatically
+   - Click "Apply"
+
+3. **Configure Environment Variables:**
+   In Render dashboard, for each service, add the secret values:
+   
+   **API Service:**
+   - `AUTH0_DOMAIN`: `your-tenant.us.auth0.com`
+   - `AUTH0_AUDIENCE`: `https://api.yourdomain.com`
+   - `S3_ACCESS_KEY`: Your B2 keyID
+   - `S3_SECRET_KEY`: Your B2 applicationKey
+   - `STRIPE_SECRET_KEY`: `sk_live_...`
+   - `STRIPE_WEBHOOK_SECRET`: `whsec_...`
+   - `REPLICATE_API_TOKEN`: `r8_...`
+
+   **Worker Service:**
+   - `S3_ACCESS_KEY`: Your B2 keyID
+   - `S3_SECRET_KEY`: Your B2 applicationKey
+   - `REPLICATE_API_TOKEN`: `r8_...`
+
+4. **Run Database Migrations:**
+   ```bash
+   # Get shell access to API service
+   # In Render dashboard: realstaging-api → Shell
+   
+   # Run migrations
+   /app/migrate up
+   
+   # Verify migration status
+   /app/migrate version
+   ```
+
+5. **Verify Deployment:**
+   ```bash
+   # Check health endpoint
+   curl https://realstaging-api.onrender.com/health
+   
+   # Should return:
+   # {"status":"healthy","database":"connected","redis":"connected"}
+   ```
+
+#### Step 4: Configure Custom Domain (Optional)
+
+1. **In Render Dashboard:**
+   - Go to realstaging-api settings
+   - Click "Custom Domains"
+   - Add `api.yourdomain.com`
+   - Add DNS records as shown
+
+2. **Update Environment Variables:**
+   - Update `FRONTEND_URL` if needed
+   - Update Auth0 callback URLs
+   - Update Stripe webhook URLs
+
+#### Step 5: Set Up Monitoring
+
+1. **Enable Render Metrics:**
+   - Available in Render dashboard
+   - CPU, memory, request rate
+   - Response time percentiles
+
+2. **Set Up Alerts:**
+   - Go to service settings → Alerts
+   - Configure alerts for:
+     - High error rate
+     - High response time
+     - Service down
+
+#### Scaling on Render
+
+**Vertical Scaling:**
+```yaml
+# Update render.yaml
+services:
+  - type: web
+    plan: standard  # or pro
+```
+
+**Horizontal Scaling:**
+```yaml
+# Update render.yaml
+services:
+  - type: web
+    numInstances: 3  # scale API
+  - type: worker
+    numInstances: 2  # scale workers
+```
+
+**Database Scaling:**
+- Upgrade plan in Render dashboard
+- Enable connection pooling
+- Consider read replicas for high load
+
+#### Cost Estimation (Render + Backblaze B2)
+
+**Render (Monthly):**
+- API (Starter): $7/month
+- Worker (Starter): $7/month
+- PostgreSQL (Starter): $7/month
+- Redis (Starter): $10/month
+- **Total: ~$31/month**
+
+**Backblaze B2 (Monthly):**
+- Storage: $0.005/GB (~$5 for 1TB)
+- Downloads: First 3x storage free, then $0.01/GB
+- API Calls: Generous free tier
+- **Estimated: $5-20/month** (depending on usage)
+
+**Replicate AI:**
+- Pay per image processed (~$0.011/image)
+
+**Total estimated: $40-60/month** plus AI costs
+
+---
+
+### Option 2: Docker Compose (Small to Medium Scale)
 
 **Best for:** Single-server deployments, small teams, 100-1000 users
 
@@ -541,7 +840,7 @@ kubectl get ing -n realstaging
 kubectl logs -f -n realstaging -l app=api
 ```
 
-### Option 3: Fly.io (Easy Global Deployment)
+### Option 3: Fly.io (Alternative)
 
 **Best for:** Global low-latency, easy scaling, Heroku alternative
 
@@ -695,122 +994,11 @@ fly status -a realstaging-api
 fly logs -a realstaging-api
 ```
 
-### Option 4: Render (Fully Managed)
+### Option 4: Fly.io (Alternative Platform)
 
-**Best for:** Zero DevOps, managed databases, automatic SSL
+**Best for:** Global low-latency, easy scaling, edge deployments
 
-#### Create render.yaml
-
-```yaml
-services:
-  - type: web
-    name: realstaging-api
-    runtime: docker
-    dockerfilePath: ./apps/api/Dockerfile
-    dockerContext: ./apps/api
-    region: oregon
-    plan: standard
-    numInstances: 2
-    healthCheckPath: /health
-    envVars:
-      - key: APP_ENV
-        value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: realstaging-db
-          property: connectionString
-      - key: REDIS_ADDR
-        fromService:
-          name: realstaging-redis
-          type: redis
-          property: connectionString
-      - key: AUTH0_DOMAIN
-        sync: false
-      - key: AUTH0_AUDIENCE
-        sync: false
-      - key: S3_BUCKET_NAME
-        sync: false
-      - key: S3_ACCESS_KEY
-        sync: false
-      - key: S3_SECRET_KEY
-        sync: false
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false
-      - key: REPLICATE_API_TOKEN
-        sync: false
-
-  - type: worker
-    name: realstaging-worker
-    runtime: docker
-    dockerfilePath: ./apps/worker/Dockerfile
-    dockerContext: ./apps/worker
-    region: oregon
-    plan: standard
-    numInstances: 2
-    envVars:
-      - key: APP_ENV
-        value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: realstaging-db
-          property: connectionString
-      - key: REDIS_ADDR
-        fromService:
-          name: realstaging-redis
-          type: redis
-          property: connectionString
-      - key: S3_BUCKET_NAME
-        sync: false
-      - key: S3_ACCESS_KEY
-        sync: false
-      - key: S3_SECRET_KEY
-        sync: false
-      - key: REPLICATE_API_TOKEN
-        sync: false
-
-databases:
-  - name: realstaging-db
-    plan: standard
-    region: oregon
-    databaseName: realstaging
-    user: realstaging
-
-  - name: realstaging-redis
-    plan: standard
-    region: oregon
-    maxmemoryPolicy: allkeys-lru
-```
-
-#### Deploy to Render
-
-1. **Push to GitHub:**
-   ```bash
-   git push origin main
-   ```
-
-2. **Connect in Render Dashboard:**
-   - Go to [render.com](https://render.com)
-   - Click "New Blueprint Instance"
-   - Connect GitHub repository
-   - Render will auto-detect `render.yaml`
-
-3. **Configure Environment Variables:**
-   - In Render dashboard, go to each service
-   - Add secret environment variables (Auth0, Stripe, S3, etc.)
-
-4. **Run Migrations:**
-   ```bash
-   # Get shell access to API service
-   render shell realstaging-api
-   ./migrate up
-   ```
-
-5. **Monitor:**
-   - View logs in Render dashboard
-   - Set up alerts for failures
-   - Configure auto-deploy on git push
+See full Fly.io deployment instructions earlier in this document for detailed setup
 
 ## Secrets Management
 

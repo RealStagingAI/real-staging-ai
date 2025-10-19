@@ -6,12 +6,15 @@
 A DIY virtual staging SaaS for real-estate photos. Upload a room photo → receive an AI-staged image using Replicate's SDXL-Lightning model. Fast time-to-market with production-ready AI staging.
 
 ### Tech Summary
+
 - **Backend/API**: Go (Echo), Postgres (pgx), Redis (asynq), S3, Stripe, Auth0 (OIDC/JWT), OpenTelemetry
 - **Frontend**: Next.js + Tailwind + shadcn/ui
 - **AI Staging**: Replicate API (qwen/qwen-image-edit) - ~9s per image, ~$0.011/image
-- **Infra**: Docker Compose (dev), GitHub Actions (CI), Fly.io/Render/Neon/Supabase/Cloudflare R2 (later)
+- **Production**: Render (compute/DB), Backblaze B2 (storage) - ~$40-60/month
+- **Infra**: Docker Compose (dev), GitHub Actions (CI)
 
 ### How It Works
+
 1. User logs in via Auth0 → frontend gets JWT
 2. Upload original image(s) via **S3 presigned PUT** from API
    - Supports single or **multi-file upload** (up to 50 images per batch)
@@ -27,6 +30,7 @@ A DIY virtual staging SaaS for real-estate photos. Upload a room photo → recei
 1. Install dependencies: Docker, Docker Compose, Go 1.22+, Node.js 18+.
 
 2. Get a Replicate API token:
+
    - Sign up at [replicate.com](https://replicate.com)
    - Get your token from [account settings](https://replicate.com/account/api-tokens)
    - Export it: `export REPLICATE_API_TOKEN=r8_your_token_here`
@@ -76,7 +80,7 @@ make coverage-summary  # Show coverage percentage summary
 
 - Standard suite lives under `apps/api/tests/integration/` and `apps/worker/tests/integration/`.
 - The suite brings up Postgres, Redis, and LocalStack via `docker-compose.test.yml`.
-- Makefile sets the proper env for tests (PG*, `REDIS_ADDR`).
+- Makefile sets the proper env for tests (PG\*, `REDIS_ADDR`).
 
 ### Optional E2E Happy Path (env-gated)
 
@@ -94,15 +98,18 @@ go test -tags=integration -v ./tests/integration -run TestE2E_Presign_Upload_Cre
 See `docs/configuration.md` for all environment variables. Highlights:
 
 - **Replicate AI** (Required for staging)
+
   - `REPLICATE_API_TOKEN`: Your Replicate API token (required)
   - `REPLICATE_MODEL_VERSION`: Model to use (default: `qwen/qwen-image-edit`)
 
 - **Queue**
+
   - `REDIS_ADDR`: Redis address (required for job queue and SSE).
   - `JOB_QUEUE_NAME`: Asynq queue name (default `default`).
   - `WORKER_CONCURRENCY`: Worker concurrency (default `5`).
 
 - **S3**
+
   - `S3_BUCKET_NAME`: S3 bucket name (required)
   - `S3_ENDPOINT`: Custom S3 endpoint (e.g., MinIO for local dev)
   - Local dev uses MinIO via `docker-compose.yml`
@@ -113,16 +120,19 @@ See `docs/configuration.md` for all environment variables. Highlights:
 ## Documentation
 
 **Full Documentation:**
+
 - **Live:** https://jasonkradams.github.io/real-staging-ai/ (Material for MkDocs)
 - **API Reference:** https://jasonkradams.github.io/real-staging-ai/api/ (OpenAPI/Swagger)
 - **Local:** `make docs-serve` then open http://localhost:8000
 
 **Documentation Status (75% Complete):**
+
 - 📋 [Documentation Plan](./apps/docs/planning/DOCUMENTATION_PLAN.md) - Comprehensive plan for 1.0 completion
 - ✅ [Progress Checklist](./apps/docs/planning/DOCUMENTATION_CHECKLIST.md) - Track documentation work
 - 📊 [Status Summary](./apps/docs/planning/DOCUMENTATION_SUMMARY.md) - Executive overview
 
 **Local Development:**
+
 ```bash
 # Serve MkDocs site
 make docs-serve

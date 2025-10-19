@@ -21,14 +21,14 @@ This document provides a detailed explanation of all the environment variables u
 | `STRIPE_WEBHOOK_SECRET`       | Required in non-dev environments; used to verify Stripe webhooks. **CRITICAL for production security - webhook verification will fail without this.** |                                    |
 | `STRIPE_PUBLISHABLE_KEY`      | Stripe publishable key for frontend integration.                                                                                                      |                                    |
 | `STRIPE_SECRET_KEY`           | Stripe secret key for server-side operations. **CRITICAL for production - required for payment processing.**                                          |                                    |
-| `S3_ENDPOINT`                 | The endpoint of the S3-compatible storage.                                                                                                            | `http://minio:9000`                |
+| `S3_ENDPOINT`                 | The endpoint of the S3-compatible storage. For Backblaze B2, use `https://s3.{region}.backblazeb2.com` (e.g., `https://s3.us-west-004.backblazeb2.com`). For local dev, use MinIO endpoint. | `http://minio:9000`                |
 | `S3_PUBLIC_ENDPOINT`          | Public/base endpoint to use when presigning URLs (ensures browser-accessible host); when set, presigners use this host.                               |                                    |
-| `S3_REGION`                   | The region of the S3 bucket.                                                                                                                          | `us-west-1`                        |
+| `S3_REGION`                   | The region of the S3 bucket. For Backblaze B2, use the bucket's region code (e.g., `us-west-004`).                                                   | `us-west-1`                        |
 | `S3_BUCKET`                   | The name of the S3 bucket.                                                                                                                            | `real-staging`                  |
 | `S3_BUCKET_NAME`              | Alias for S3 bucket name used in some code paths (fallback if `S3_BUCKET` not set).                                                                   |                                    |
-| `S3_ACCESS_KEY`               | The access key for the S3 bucket.                                                                                                                     | `minioadmin`                       |
-| `S3_SECRET_KEY`               | The secret key for the S3 bucket.                                                                                                                     | `minioadmin`                       |
-| `S3_USE_PATH_STYLE`           | Whether to use path-style addressing for S3.                                                                                                          | `true`                             |
+| `S3_ACCESS_KEY`               | The access key for the S3 bucket. For Backblaze B2, this is the `keyID` from your application key.                                                   | `minioadmin`                       |
+| `S3_SECRET_KEY`               | The secret key for the S3 bucket. For Backblaze B2, this is the `applicationKey` from your application key.                                          | `minioadmin`                       |
+| `S3_USE_PATH_STYLE`           | Whether to use path-style addressing for S3. Set to `false` for Backblaze B2 and AWS S3, `true` for MinIO.                                          | `true`                             |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | The endpoint of the OpenTelemetry Collector.                                                                                                          | `http://otel:4318`                 |
 
 ## Worker Service (`worker`)
