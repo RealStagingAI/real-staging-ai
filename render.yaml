@@ -103,7 +103,7 @@ services:
 databases:
   # PostgreSQL Database
   - name: realstaging-db
-    plan: starter  # starter, standard, or pro
+    plan: standard  # standard or pro (starter no longer supported)
     region: oregon  # Same region as services
     databaseName: realstaging
     user: realstaging
