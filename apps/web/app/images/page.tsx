@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import JSZip from "jszip";
 import NextImage from "next/image";
 
@@ -62,6 +62,12 @@ export default function ImagesPage() {
   const [hoveredImageId, setHoveredImageId] = useState<string | null>(null);
   const [downloadType, setDownloadType] = useState<'original' | 'staged'>('staged');
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const imagesRef = useRef<ImageRecord[]>([]);
+
+  // Keep ref in sync with images state
+  useEffect(() => {
+    imagesRef.current = images;
+  }, [images]);
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) ?? null,
@@ -115,12 +121,20 @@ export default function ImagesPage() {
 
   // Prefetch image URLs for display
   const prefetchImageUrls = useCallback(async (imageList: ImageRecord[]) => {
-    const urlMap: Record<string, { original?: string; staged?: string }> = {};
+    // Start with existing URLs to avoid re-fetching
+    const urlMap: Record<string, { original?: string; staged?: string }> = { ...imageUrls };
     
     // Only fetch URLs for images that have been uploaded (not still processing)
+    // AND don't already have cached URLs
     const imagesToFetch = imageList.filter(img => 
-      img.status !== 'queued' && img.status !== 'processing'
+      (img.status !== 'queued' && img.status !== 'processing') &&
+      (!urlMap[img.id]?.original || (img.staged_url && !urlMap[img.id]?.staged))
     );
+    
+    // Skip if no new images to fetch
+    if (imagesToFetch.length === 0) {
+      return;
+    }
     
     // Fetch all URLs in parallel (with throttling to avoid overwhelming the API)
     const chunks = [];
@@ -131,10 +145,11 @@ export default function ImagesPage() {
     for (const chunk of chunks) {
       await Promise.all(
         chunk.map(async (image) => {
-          const [originalUrl, stagedUrl] = await Promise.all([
-            getPresignedUrl(image.id, 'original'),
-            image.staged_url ? getPresignedUrl(image.id, 'staged') : Promise.resolve(null)
-          ]);
+          // Only fetch if we don't have it cached
+          const originalUrl = urlMap[image.id]?.original || await getPresignedUrl(image.id, 'original');
+          const stagedUrl = image.staged_url 
+            ? (urlMap[image.id]?.staged || await getPresignedUrl(image.id, 'staged'))
+            : null;
           
           urlMap[image.id] = {
             original: originalUrl || undefined,
@@ -145,7 +160,7 @@ export default function ImagesPage() {
     }
 
     setImageUrls(urlMap);
-  }, []);
+  }, [imageUrls]);
 
   // Prefetch image on hover (for smooth transitions)
   const handleImageHover = useCallback((imageId: string) => {
@@ -358,34 +373,44 @@ export default function ImagesPage() {
 
   // Auto-polling for processing images
   useEffect(() => {
-    // Check if there are any images still being processed
-    const hasProcessingImages = images.some(
-      img => img.status === 'queued' || img.status === 'processing'
-    );
-
-    // Clear existing interval
+    // Clear any existing interval first
     if (pollingInterval) {
       clearInterval(pollingInterval);
       setPollingInterval(null);
     }
 
-    // Set up polling if there are processing images
-    if (hasProcessingImages && selectedProjectId) {
-      const interval = setInterval(() => {
-        loadImages(selectedProjectId, true); // Pass true for background refresh
-      }, 3000); // Poll every 3 seconds
-
-      setPollingInterval(interval);
+    // Only poll if we have a selected project
+    if (!selectedProjectId) {
+      return;
     }
 
-    // Cleanup on unmount
+    // Set up polling interval that checks current image states
+    const interval = setInterval(() => {
+      const hasProcessingImages = imagesRef.current.some(
+        img => img.status === 'queued' || img.status === 'processing'
+      );
+
+      if (hasProcessingImages) {
+        loadImages(selectedProjectId, true);
+      } else {
+        // All images are done processing, stop polling
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
+        }
+      }
+    }, 3000);
+
+    setPollingInterval(interval);
+
+    // Cleanup on unmount or project change
     return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
+      if (interval) {
+        clearInterval(interval);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [images, selectedProjectId]);
+  }, [selectedProjectId]);
 
   return (
     <div className="space-y-8">
