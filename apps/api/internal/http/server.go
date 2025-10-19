@@ -120,7 +120,7 @@ func NewServer(
 	protected.POST("/images/batch", imgHandler.BatchCreateImages)
 	protected.GET("/images/:id", imgHandler.GetImage)
 	protected.GET("/images/:id/presign", s.presignImageDownloadHandler)
-	protected.DELETE("/images/:id", imgHandler.DeleteImage)
+	protected.DELETE("/images/:id", s.deleteImageHandler)
 	protected.GET("/projects/:project_id/images", imgHandler.GetProjectImages)
 	protected.GET("/projects/:project_id/cost", imgHandler.GetProjectCost)
 
@@ -213,7 +213,7 @@ func NewTestServer(db storage.Database, s3Service storage.S3Service, imageServic
 	api.POST("/images", imgHandler.CreateImage)
 	api.GET("/images/:id", imgHandler.GetImage)
 	api.GET("/images/:id/presign", s.presignImageDownloadHandler)
-	api.DELETE("/images/:id", imgHandler.DeleteImage)
+	api.DELETE("/images/:id", s.deleteImageHandler)
 	api.GET("/projects/:project_id/images", imgHandler.GetProjectImages)
 	api.GET("/projects/:project_id/cost", imgHandler.GetProjectCost)
 

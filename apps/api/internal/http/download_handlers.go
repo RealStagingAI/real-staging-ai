@@ -1,14 +1,63 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
+
+// deleteImageHandler handles DELETE requests to remove an image from both database and S3 storage.
+func (s *Server) deleteImageHandler(c echo.Context) error {
+	imageID := c.Param("id")
+	if imageID == "" {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "bad_request", Message: "image id is required"})
+	}
+
+	// Validate UUID format
+	if _, err := uuid.Parse(imageID); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "bad_request", Message: "invalid image id format"})
+	}
+
+	ctx := c.Request().Context()
+
+	// First, get the image to retrieve S3 keys
+	img, err := s.imageService.GetImageByID(ctx, imageID)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, ErrorResponse{Error: "not_found", Message: "image not found"})
+	}
+
+	// Delete from S3 (original image)
+	if img.OriginalURL != "" {
+		if err := s.s3Service.DeleteFile(ctx, img.OriginalURL); err != nil {
+			// Log error but don't fail - file might already be deleted
+			fmt.Printf("Warning: failed to delete original image from S3 (%s): %v\n", img.OriginalURL, err)
+		}
+	}
+
+	// Delete from S3 (staged image if exists)
+	if img.StagedURL != nil && *img.StagedURL != "" {
+		if err := s.s3Service.DeleteFile(ctx, *img.StagedURL); err != nil {
+			// Log error but don't fail - file might already be deleted
+			fmt.Printf("Warning: failed to delete staged image from S3 (%s): %v\n", *img.StagedURL, err)
+		}
+	}
+
+	// Delete from database
+	if err := s.imageService.DeleteImage(ctx, imageID); err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "failed to delete image",
+		})
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
 
 // presignImageDownloadHandler handles GET /api/v1/images/:id/presign
 // Query params:

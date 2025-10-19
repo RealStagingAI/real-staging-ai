@@ -16,7 +16,8 @@ import {
   Image as ImageIcon,
   AlertCircle,
   Check,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
@@ -62,7 +63,9 @@ export default function ImagesPage() {
   const [hoveredImageId, setHoveredImageId] = useState<string | null>(null);
   const [downloadType, setDownloadType] = useState<'original' | 'staged'>('staged');
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const imagesRef = useRef<ImageRecord[]>([]);
+  const pollingStartTimeRef = useRef<number | null>(null);
 
   // Keep ref in sync with images state
   useEffect(() => {
@@ -371,12 +374,60 @@ export default function ImagesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId]);
 
+  // Manual refresh function
+  const handleManualRefresh = useCallback(async () => {
+    if (!selectedProjectId || isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      await loadImages(selectedProjectId, false);
+    } finally {
+      setIsRefreshing(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId, isRefreshing]);
+
+  // Delete image function
+  const deleteImage = useCallback(async (imageId: string) => {
+    if (!confirm('Are you sure you want to delete this image? It will not be recoverable.')) {
+      return;
+    }
+
+    try {
+      setStatusMessage('Deleting image...');
+      await apiFetch(`/v1/images/${imageId}`, {
+        method: 'DELETE',
+      });
+      
+      // Remove from local state
+      setImages(prev => prev.filter(img => img.id !== imageId));
+      setImageUrls(prev => {
+        const newUrls = { ...prev };
+        delete newUrls[imageId];
+        return newUrls;
+      });
+      setSelectedImageIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(imageId);
+        return newSet;
+      });
+      
+      setStatusMessage('Image deleted successfully');
+      setTimeout(() => setStatusMessage(''), 3000);
+    } catch (err: unknown) {
+      console.error('Failed to delete image:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setStatusMessage(`Delete failed: ${message}`);
+    }
+  }, []);
+
   // Auto-polling for processing images
   useEffect(() => {
     // Clear any existing interval first
     if (pollingInterval) {
       clearInterval(pollingInterval);
       setPollingInterval(null);
+      pollingStartTimeRef.current = null;
     }
 
     // Only poll if we have a selected project
@@ -384,8 +435,31 @@ export default function ImagesPage() {
       return;
     }
 
+    // Check if there are processing images initially
+    const hasProcessingImages = imagesRef.current.some(
+      img => img.status === 'queued' || img.status === 'processing'
+    );
+
+    if (!hasProcessingImages) {
+      return;
+    }
+
+    // Start polling timer
+    pollingStartTimeRef.current = Date.now();
+    const MAX_POLLING_DURATION = 5 * 60 * 1000; // 5 minutes
+
     // Set up polling interval that checks current image states
     const interval = setInterval(() => {
+      // Check if max polling duration exceeded
+      if (pollingStartTimeRef.current && 
+          Date.now() - pollingStartTimeRef.current > MAX_POLLING_DURATION) {
+        console.warn('Max polling duration exceeded, stopping auto-refresh');
+        clearInterval(interval);
+        setPollingInterval(null);
+        pollingStartTimeRef.current = null;
+        return;
+      }
+
       const hasProcessingImages = imagesRef.current.some(
         img => img.status === 'queued' || img.status === 'processing'
       );
@@ -394,10 +468,9 @@ export default function ImagesPage() {
         loadImages(selectedProjectId, true);
       } else {
         // All images are done processing, stop polling
-        if (pollingInterval) {
-          clearInterval(pollingInterval);
-          setPollingInterval(null);
-        }
+        clearInterval(interval);
+        setPollingInterval(null);
+        pollingStartTimeRef.current = null;
       }
     }, 3000);
 
@@ -408,6 +481,7 @@ export default function ImagesPage() {
       if (interval) {
         clearInterval(interval);
       }
+      pollingStartTimeRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId]);
@@ -463,16 +537,27 @@ export default function ImagesPage() {
             </button>
           </div>
           {selectedProject && (
-            <div className="flex items-center gap-3 mt-3">
-              <p className="text-sm text-gray-600">
-                Viewing <span className="font-medium">{selectedProject.name}</span> • {images.length} image{images.length !== 1 ? 's' : ''}
-              </p>
-              {pollingInterval && (
-                <span className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-1 rounded-full">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Auto-updating
-                </span>
-              )}
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-3">
+                <p className="text-sm text-gray-600">
+                  Viewing <span className="font-medium">{selectedProject.name}</span> • {images.length} image{images.length !== 1 ? 's' : ''}
+                </p>
+                {pollingInterval && (
+                  <span className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 px-2 py-1 rounded-full">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Auto-updating
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={handleManualRefresh}
+                disabled={isRefreshing || loadingImages}
+                className="btn btn-secondary text-sm"
+                title="Manually refresh images"
+              >
+                <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+                Refresh
+              </button>
             </div>
           )}
         </div>
@@ -693,14 +778,24 @@ export default function ImagesPage() {
                   )}
                 </div>
 
-                {/* Status Badge */}
-                <div className="absolute top-3 right-3">
+                {/* Action Buttons */}
+                <div className="absolute top-3 right-3 flex items-center gap-2">
                   <span className={cn(
                     "badge",
                     `badge-status-${image.status}`
                   )}>
                     {image.status}
                   </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteImage(image.id);
+                    }}
+                    className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete image"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
 
                 {/* Original/Staged Indicator */}
@@ -891,6 +986,16 @@ export default function ImagesPage() {
                               <CheckCircle2 className="h-4 w-4" />
                             </button>
                           )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteImage(image.id);
+                            }}
+                            className="text-red-600 hover:text-red-700 transition-colors"
+                            title="Delete image"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
