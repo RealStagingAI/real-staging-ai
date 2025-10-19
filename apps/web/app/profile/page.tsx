@@ -1,7 +1,7 @@
 'use client';
 
 import { useUser } from '@auth0/nextjs-auth0';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   User, 
@@ -30,7 +30,7 @@ interface Subscription {
   currentPeriodEnd?: string;
 }
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const { user, isLoading: authLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -672,5 +672,19 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Wrap with Suspense boundary to handle useSearchParams
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <p className="text-gray-600 dark:text-gray-400">Loading your profile...</p>
+      </div>
+    }>
+      <ProfilePageContent />
+    </Suspense>
   );
 }
