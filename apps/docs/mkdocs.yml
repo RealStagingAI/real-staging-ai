@@ -204,6 +204,7 @@ nav:
     - Local Development: guides/local-development.md
     - Testing: guides/testing.md
     - Authentication: guides/authentication.md
+    - Stripe Webhook Setup: guides/stripe-webhook-setup.md
     - Adding AI Models: guides/adding-models.md
     - Server-Sent Events: guides/sse-events.md
     - Linting & Code Quality: guides/linting.md
