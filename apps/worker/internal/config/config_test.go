@@ -72,11 +72,13 @@ func TestDatabaseURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Set environment variable if specified
+			// Set environment variable if specified, otherwise clear it
 			if tt.envVar != "" {
 				t.Setenv("DATABASE_URL", tt.envVar)
+			} else {
+				// Clear DATABASE_URL so the test uses config values
+				t.Setenv("DATABASE_URL", "")
 			}
-			// Note: t.Setenv automatically cleans up, no need to unset
 
 			got := tt.config.DatabaseURL()
 			if got != tt.want {

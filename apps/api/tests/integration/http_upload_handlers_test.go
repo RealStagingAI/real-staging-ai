@@ -18,6 +18,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/real-staging-ai/api/internal/config"
 	httpLib "github.com/real-staging-ai/api/internal/http"
+	"github.com/real-staging-ai/api/internal/image"
 	"github.com/real-staging-ai/api/internal/logging"
 	"github.com/real-staging-ai/api/internal/storage"
 	"github.com/real-staging-ai/api/internal/storage/queries"
@@ -495,7 +496,7 @@ func TestPresignUpload_SubscriptionRequired(t *testing.T) {
 	// Test cases to implement:
 	// 1. User without subscription -> 403 Forbidden with subscription_required error
 	// 2. User with active subscription -> 200 OK
-	// 3. User with trialing subscription -> 200 OK  
+	// 3. User with trialing subscription -> 200 OK
 	// 4. User with canceled subscription -> 403 Forbidden
 	// 5. User with past_due subscription -> 403 Forbidden
 	// 6. User with incomplete subscription -> 403 Forbidden
@@ -504,15 +505,15 @@ func TestPresignUpload_SubscriptionRequired(t *testing.T) {
 // Helper function to create a test subscription
 func createTestSubscription(t *testing.T, db storage.Database, userID string, status string) error {
 	t.Helper()
-	
+
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return err
 	}
-	
+
 	q := queries.New(db)
 	ctx := context.Background()
-	
+
 	now := time.Now()
 	_, err = q.UpsertSubscriptionByStripeID(ctx, queries.UpsertSubscriptionByStripeIDParams{
 		UserID:               pgtype.UUID{Bytes: uid, Valid: true},
@@ -525,6 +526,6 @@ func createTestSubscription(t *testing.T, db storage.Database, userID string, st
 		CanceledAt:           pgtype.Timestamptz{Valid: false},
 		CancelAtPeriodEnd:    false,
 	})
-	
+
 	return err
 }
