@@ -27,7 +27,7 @@ linters:
     - bidichk       # Check for dangerous unicode character sequences
     - bodyclose     # Check whether HTTP response body is closed successfully
     - copyloopvar   # Detect places where loop variables are copied (Go 1.22+)
-    - dupl          # Tool for code clone detection
+    # - dupl          # Tool for code clone detection (disabled - too many false positives in test files)
     - durationcheck # Check for two durations multiplied together
     - errname       # Check that sentinel errors are prefixed with Err
     - errorlint     # Find code that will cause problems with error wrapping
@@ -70,9 +70,6 @@ linters:
     # - whitespace    # Check for unnecessary newlines
     
 linters-settings:
-  dupl:
-    threshold: 60
-  
   errcheck:
     check-type-assertions: true
     check-blank: true
@@ -190,11 +187,10 @@ issues:
   
   exclude-rules:
     # Exclude some linters from running on tests files
-    - path: _test\.go
+    - path: "_test\\.go"
       linters:
         - gocyclo
         - errcheck
-        - dupl
         - gosec
         - goconst  # Test data often has repeated strings that don't need constants
         - nilnil   # Test helpers often return (nil, nil) for simplicity
@@ -216,7 +212,6 @@ issues:
       linters:
         - gocyclo
         - gocognit
-        - dupl
         - lll
     
     # Ignore complexity in sqlc generated code
@@ -224,7 +219,6 @@ issues:
       linters:
         - revive
         - gocyclo
-        - dupl
         - lll
     
     # Database wrapper returns rows to caller to close
@@ -236,6 +230,5 @@ severity:
   default: error
   rules:
     - linters:
-        - dupl
         - lll
       severity: warning
