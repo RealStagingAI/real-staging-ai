@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
 import { Clock, CreditCard, Loader2, Package, TrendingUp, AlertCircle } from 'lucide-react';
 
@@ -31,7 +30,6 @@ interface SubscriptionResponse {
 }
 
 export default function BillingPage() {
-  const router = useRouter();
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -239,7 +237,7 @@ export default function BillingPage() {
                   Current Plan
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {usage?.plan_code.toUpperCase()} Plan
+                  {usage?.plan_code ? `${usage.plan_code.toUpperCase()} Plan` : 'Loading...'}
                   {subscription && ` • ${subscription.status === 'trialing' ? 'Trial' : 'Active'}`}
                 </p>
                 {usage?.plan_code === 'free' && (
@@ -253,21 +251,13 @@ export default function BillingPage() {
               </div>
             </div>
 
-            {subscription ? (
+            {subscription && (
               <button
                 onClick={handleManageSubscription}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
               >
                 <CreditCard className="h-4 w-4" />
                 Manage Subscription
-              </button>
-            ) : (
-              <button
-                onClick={() => router.push('/profile')}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <CreditCard className="h-4 w-4" />
-                Subscribe Now
               </button>
             )}
           </div>
@@ -326,12 +316,12 @@ export default function BillingPage() {
               {/* Free Plan */}
               {!subscription && (
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Free Plan</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h3>
                   <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$0<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                   <ul className="mt-4 space-y-2">
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
-                      5 images per month
+                      10 images per month
                     </li>
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
@@ -339,20 +329,20 @@ export default function BillingPage() {
                     </li>
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
-                      No credit card required
+                      Email support
                     </li>
                   </ul>
                   <button
                     onClick={() => handleUpgrade('free')}
                     className="w-full mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                   >
-                    Start Free Plan
+                    Continue with Free
                   </button>
                 </div>
               )}
               {/* Pro Plan */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pro Plan</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pro</h3>
                 <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$29<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                 <ul className="mt-4 space-y-2">
                   <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -365,7 +355,7 @@ export default function BillingPage() {
                   </li>
                   <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-                    Email support
+                    Chat support
                   </li>
                 </ul>
                 <button
@@ -381,7 +371,7 @@ export default function BillingPage() {
                 <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg rounded-tr-lg">
                   Best Value
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business Plan</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business</h3>
                 <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$99<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                 <ul className="mt-4 space-y-2">
                   <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
@@ -390,11 +380,11 @@ export default function BillingPage() {
                   </li>
                   <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <div className="h-1.5 w-1.5 rounded-full bg-purple-600" />
-                    Highest priority
+                    Fastest processing
                   </li>
                   <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <div className="h-1.5 w-1.5 rounded-full bg-purple-600" />
-                    Premium support
+                    Priority support
                   </li>
                 </ul>
                 <button

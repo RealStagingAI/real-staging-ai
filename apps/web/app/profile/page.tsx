@@ -39,7 +39,6 @@ function ProfilePageContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<'pro' | 'business'>('pro');
   const [pollingSubscription, setPollingSubscription] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -70,12 +69,20 @@ function ProfilePageContent() {
       // Populate form from backend (snake_case) using mapper
       setFormData(toFormData(profileData));
       
-      // Set subscription if available
+      // Set subscription if available and active
       if (subscriptionData.items && subscriptionData.items.length > 0) {
-        setSubscription(subscriptionData.items[0]);
+        const activeSub = subscriptionData.items.find(
+          (sub: Subscription) => sub.status === 'active' || sub.status === 'trialing'
+        );
+        setSubscription(activeSub || null);
+      }
         
-        // If we were polling and now have a subscription, stop and show success
-        if (pollingSubscription) {
+      // If we were polling and now have an active subscription, stop and show success
+      if (pollingSubscription && subscriptionData.items && subscriptionData.items.length > 0) {
+        const hasActiveSub = subscriptionData.items.some(
+          (sub: Subscription) => sub.status === 'active' || sub.status === 'trialing'
+        );
+        if (hasActiveSub) {
           setPollingSubscription(false);
           setMessage({ 
             type: 'success', 
@@ -179,8 +186,9 @@ function ProfilePageContent() {
     }
   }, [formData, fetchProfileAndSubscription]);
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = async (planCode: 'free' | 'pro' | 'business') => {
     const priceIds = {
+      free: 'price_1SK67rLpUWppqPSl2XfvuIlh',
       pro: 'price_1SJmy5LpUWppqPSlNElnvowM',
       business: 'price_1SJmyqLpUWppqPSlGhxfz2oQ',
     };
@@ -188,7 +196,7 @@ function ProfilePageContent() {
     try {
       const data = await apiFetch<{ url: string }>('/v1/billing/create-checkout', {
         method: 'POST',
-        body: JSON.stringify({ price_id: priceIds[selectedPlan] }),
+        body: JSON.stringify({ price_id: priceIds[planCode] }),
       });
       if (data?.url) {
         window.location.href = data.url; // Redirect to Stripe Checkout
@@ -446,84 +454,91 @@ function ProfilePageContent() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-center">
-                <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  No active subscription
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
-                  Subscribe to unlock 500 images and priority support
-                </p>
-                <button
-                  onClick={handleSubscribe}
-                  className="btn btn-primary inline-flex items-center gap-2"
-                >
-                  <CreditCard className="h-4 w-4" />
-                  Subscribe Now
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                {/* Free Tier - Display only */}
-                <div className="p-4 border border-gray-200 dark:border-gray-800 rounded-lg opacity-60">
-                  <p className="font-medium mb-1">Free Tier</p>
-                  <p className="text-2xl font-bold text-gray-600 mb-2">$0<span className="text-sm text-gray-500">/mo</span></p>
-                  <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                    <li>✓ 10 images/month</li>
-                    <li>✓ Standard processing</li>
-                    <li>✓ Email support</li>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
+                Choose a Plan
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Free Plan */}
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h4>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$0<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
+                  <ul className="mt-4 space-y-2">
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
+                      10 images per month
+                    </li>
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
+                      Standard processing
+                    </li>
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
+                      Email support
+                    </li>
                   </ul>
-                  <p className="text-xs text-gray-500 mt-3">Current plan</p>
+                  <button
+                    onClick={() => handleSubscribe('free')}
+                    className="w-full mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Continue with Free
+                  </button>
                 </div>
 
-                {/* Pro Plan - Selectable */}
-                <button
-                  onClick={() => setSelectedPlan('pro')}
-                  className={`p-4 rounded-lg relative text-left transition-all ${
-                    selectedPlan === 'pro'
-                      ? 'border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/20'
-                      : 'border-2 border-gray-200 dark:border-gray-800 hover:border-blue-400'
-                  }`}
-                >
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    Popular
-                  </div>
-                  {selectedPlan === 'pro' && (
-                    <div className="absolute top-3 right-3">
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                    </div>
-                  )}
-                  <p className="font-medium mb-1">Pro</p>
-                  <p className="text-2xl font-bold text-blue-600 mb-2">$29<span className="text-sm text-gray-500">/mo</span></p>
-                  <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                    <li>✓ 100 images/month</li>
-                    <li>✓ Priority processing</li>
-                    <li>✓ Chat support</li>
+                {/* Pro Plan */}
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pro</h4>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$29<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
+                  <ul className="mt-4 space-y-2">
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                      100 images per month
+                    </li>
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                      Priority processing
+                    </li>
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                      Chat support
+                    </li>
                   </ul>
-                </button>
+                  <button
+                    onClick={() => handleSubscribe('pro')}
+                    className="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Subscribe to Pro
+                  </button>
+                </div>
 
-                {/* Business Plan - Selectable */}
-                <button
-                  onClick={() => setSelectedPlan('business')}
-                  className={`p-4 rounded-lg relative text-left transition-all ${
-                    selectedPlan === 'business'
-                      ? 'border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/20'
-                      : 'border-2 border-gray-200 dark:border-gray-800 hover:border-blue-400'
-                  }`}
-                >
-                  {selectedPlan === 'business' && (
-                    <div className="absolute top-3 right-3">
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                    </div>
-                  )}
-                  <p className="font-medium mb-1">Business</p>
-                  <p className="text-2xl font-bold text-blue-600 mb-2">$99<span className="text-sm text-gray-500">/mo</span></p>
-                  <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                    <li>✓ 500 images/month</li>
-                    <li>✓ Fastest processing</li>
-                    <li>✓ Priority support</li>
+                {/* Business Plan */}
+                <div className="border-2 border-purple-500 dark:border-purple-400 rounded-lg p-6 relative">
+                  <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg rounded-tr-lg">
+                    Best Value
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business</h4>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$99<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
+                  <ul className="mt-4 space-y-2">
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-purple-600" />
+                      500 images per month
+                    </li>
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-purple-600" />
+                      Fastest processing
+                    </li>
+                    <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-purple-600" />
+                      Priority support
+                    </li>
                   </ul>
-                </button>
+                  <button
+                    onClick={() => handleSubscribe('business')}
+                    className="w-full mt-6 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Subscribe to Business
+                  </button>
+                </div>
               </div>
             </div>
           )}
