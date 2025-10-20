@@ -32,19 +32,23 @@ func (s *Server) deleteImageHandler(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, ErrorResponse{Error: "not_found", Message: "image not found"})
 	}
 
-	// Delete from S3 (original image)
-	if img.OriginalURL != "" {
-		if err := s.s3Service.DeleteFile(ctx, img.OriginalURL); err != nil {
-			// Log error but don't fail - file might already be deleted
-			fmt.Printf("Warning: failed to delete original image from S3 (%s): %v\n", img.OriginalURL, err)
+	// Only attempt S3 deletion if image is not in queued state
+	// Queued images have a presigned upload URL but file was never actually uploaded
+	if img.Status != "queued" {
+		// Delete from S3 (original image)
+		if img.OriginalURL != "" {
+			if err := s.s3Service.DeleteFile(ctx, img.OriginalURL); err != nil {
+				// Log error but don't fail - file might already be deleted
+				fmt.Printf("Warning: failed to delete original image from S3 (%s): %v\n", img.OriginalURL, err)
+			}
 		}
-	}
 
-	// Delete from S3 (staged image if exists)
-	if img.StagedURL != nil && *img.StagedURL != "" {
-		if err := s.s3Service.DeleteFile(ctx, *img.StagedURL); err != nil {
-			// Log error but don't fail - file might already be deleted
-			fmt.Printf("Warning: failed to delete staged image from S3 (%s): %v\n", *img.StagedURL, err)
+		// Delete from S3 (staged image if exists)
+		if img.StagedURL != nil && *img.StagedURL != "" {
+			if err := s.s3Service.DeleteFile(ctx, *img.StagedURL); err != nil {
+				// Log error but don't fail - file might already be deleted
+				fmt.Printf("Warning: failed to delete staged image from S3 (%s): %v\n", *img.StagedURL, err)
+			}
 		}
 	}
 

@@ -268,3 +268,54 @@ func parseUUID(s string) ([16]byte, error) {
 	}
 	return result, nil
 }
+
+// CleanupStuckQueuedImages deletes images stuck in queued status beyond the threshold.
+// Images in queued status have presigned upload URLs but were never actually uploaded.
+func (s *DefaultService) CleanupStuckQueuedImages(ctx context.Context, olderThanHours int) (*CleanupResult, error) {
+	tracer := otel.Tracer("reconcile")
+	ctx, span := tracer.Start(ctx, "reconcile.cleanup_stuck_queued")
+	defer span.End()
+	span.SetAttributes(attribute.Int("older_than_hours", olderThanHours))
+
+	logger := logging.Default()
+
+	// Convert hours to PostgreSQL interval
+	interval := pgtype.Interval{
+		Microseconds: int64(olderThanHours) * 60 * 60 * 1000000, // hours to microseconds
+		Valid:        true,
+	}
+
+	// Delete stuck images
+	deleted, err := s.querier.DeleteStuckQueuedImages(ctx, interval)
+	if err != nil {
+		logger.Error(ctx, fmt.Sprintf("failed to delete stuck queued images: %v", err))
+		return nil, fmt.Errorf("failed to delete stuck queued images: %w", err)
+	}
+
+	// Build result
+	imageIDs := make([]string, len(deleted))
+	for i, img := range deleted {
+		imageIDs[i] = formatUUID(img.ID.Bytes)
+	}
+
+	threshold := fmt.Sprintf("%d hour", olderThanHours)
+	if olderThanHours != 1 {
+		threshold += "s"
+	}
+
+	result := &CleanupResult{
+		Deleted:   len(deleted),
+		ImageIDs:  imageIDs,
+		Threshold: threshold,
+	}
+
+	logger.Info(ctx, fmt.Sprintf("cleaned up %d stuck queued images older than %s", result.Deleted, result.Threshold))
+
+	return result, nil
+}
+
+// formatUUID converts [16]byte UUID to string format.
+func formatUUID(b [16]byte) string {
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+		b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+}

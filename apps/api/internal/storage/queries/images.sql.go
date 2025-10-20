@@ -84,6 +84,39 @@ func (q *Queries) DeleteImagesByProjectID(ctx context.Context, projectID pgtype.
 	return err
 }
 
+const DeleteStuckQueuedImages = `-- name: DeleteStuckQueuedImages :many
+DELETE FROM images
+WHERE status = 'queued'
+  AND created_at < NOW() - $1::interval
+RETURNING id, project_id, created_at
+`
+
+type DeleteStuckQueuedImagesRow struct {
+	ID        pgtype.UUID        `json:"id"`
+	ProjectID pgtype.UUID        `json:"project_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) DeleteStuckQueuedImages(ctx context.Context, dollar_1 pgtype.Interval) ([]*DeleteStuckQueuedImagesRow, error) {
+	rows, err := q.db.Query(ctx, DeleteStuckQueuedImages, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*DeleteStuckQueuedImagesRow{}
+	for rows.Next() {
+		var i DeleteStuckQueuedImagesRow
+		if err := rows.Scan(&i.ID, &i.ProjectID, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const GetImageByID = `-- name: GetImageByID :one
 SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
 FROM images

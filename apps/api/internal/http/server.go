@@ -160,6 +160,7 @@ func NewServer(
 	reconcileSvc := reconcile.NewDefaultService(s.db, s.s3Service)
 	reconcileHandler := reconcile.NewDefaultHandler(reconcileSvc)
 	admin.POST("/reconcile/images", reconcileHandler.ReconcileImages)
+	admin.POST("/reconcile/cleanup-queued", reconcileHandler.CleanupStuckQueuedImages)
 
 	// Admin settings routes
 	settingsRepo := settings.NewDefaultRepository(s.db.Pool())
@@ -266,6 +267,7 @@ func NewTestServer(db storage.Database, s3Service storage.S3Service, imageServic
 	reconcileSvc := reconcile.NewDefaultService(s.db, s.s3Service)
 	reconcileHandler := reconcile.NewDefaultHandler(reconcileSvc)
 	admin.POST("/reconcile/images", reconcileHandler.ReconcileImages)
+	admin.POST("/reconcile/cleanup-queued", reconcileHandler.CleanupStuckQueuedImages)
 
 	// Admin settings routes (test server)
 	settingsRepo := settings.NewDefaultRepository(s.db.Pool())

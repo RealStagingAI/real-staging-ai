@@ -40,6 +40,12 @@ WHERE id = $1;
 DELETE FROM images
 WHERE project_id = $1;
 
+-- name: DeleteStuckQueuedImages :many
+DELETE FROM images
+WHERE status = 'queued'
+  AND created_at < NOW() - $1::interval
+RETURNING id, project_id, created_at;
+
 -- name: ListImagesForReconcile :many
 SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
 FROM images

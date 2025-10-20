@@ -29,6 +29,7 @@ type Querier interface {
 	DeleteOldProcessedEvents(ctx context.Context, receivedAt pgtype.Timestamptz) error
 	DeleteProject(ctx context.Context, id pgtype.UUID) error
 	DeleteProjectByUserID(ctx context.Context, arg DeleteProjectByUserIDParams) error
+	DeleteStuckQueuedImages(ctx context.Context, dollar_1 pgtype.Interval) ([]*DeleteStuckQueuedImagesRow, error)
 	DeleteSubscriptionByStripeID(ctx context.Context, stripeSubscriptionID string) error
 	DeleteUser(ctx context.Context, id pgtype.UUID) error
 	FailJob(ctx context.Context, arg FailJobParams) (*Job, error)

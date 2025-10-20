@@ -96,3 +96,54 @@ func (h *DefaultHandler) ReconcileImages(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, result)
 }
+
+// CleanupStuckQueuedImagesRequest contains request parameters for cleanup.
+type CleanupStuckQueuedImagesRequest struct {
+	OlderThanHours int `json:"older_than_hours" query:"older_than_hours"`
+}
+
+// CleanupStuckQueuedImages handles POST /api/v1/admin/reconcile/cleanup-queued.
+// Deletes images stuck in queued status beyond the threshold (default 1 hour).
+func (h *DefaultHandler) CleanupStuckQueuedImages(c echo.Context) error {
+	// Feature flag check
+	if os.Getenv("RECONCILE_ENABLED") != "1" {
+		return c.JSON(http.StatusNotImplemented, map[string]string{
+			"error": "reconciliation is not enabled",
+		})
+	}
+
+	// TODO: Add role-gated auth check when admin roles are implemented
+	// For now, we rely on the RECONCILE_ENABLED flag for access control
+
+	var req CleanupStuckQueuedImagesRequest
+
+	// Try binding JSON body first
+	if c.Request().Header.Get(echo.HeaderContentType) == echo.MIMEApplicationJSON {
+		if err := c.Bind(&req); err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": "invalid request",
+			})
+		}
+	}
+
+	// Then bind query parameters (they can override JSON)
+	if err := (&echo.DefaultBinder{}).BindQueryParams(c, &req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "invalid query parameters",
+		})
+	}
+
+	// Default to 1 hour if not specified
+	if req.OlderThanHours <= 0 {
+		req.OlderThanHours = 1
+	}
+
+	result, err := h.service.CleanupStuckQueuedImages(c.Request().Context(), req.OlderThanHours)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(http.StatusOK, result)
+}

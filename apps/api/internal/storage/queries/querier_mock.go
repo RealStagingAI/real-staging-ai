@@ -67,6 +67,9 @@ var _ Querier = &QuerierMock{}
 //			DeleteProjectByUserIDFunc: func(ctx context.Context, arg DeleteProjectByUserIDParams) error {
 //				panic("mock out the DeleteProjectByUserID method")
 //			},
+//			DeleteStuckQueuedImagesFunc: func(ctx context.Context, dollar_1 pgtype.Interval) ([]*DeleteStuckQueuedImagesRow, error) {
+//				panic("mock out the DeleteStuckQueuedImages method")
+//			},
 //			DeleteSubscriptionByStripeIDFunc: func(ctx context.Context, stripeSubscriptionID string) error {
 //				panic("mock out the DeleteSubscriptionByStripeID method")
 //			},
@@ -244,6 +247,9 @@ type QuerierMock struct {
 
 	// DeleteProjectByUserIDFunc mocks the DeleteProjectByUserID method.
 	DeleteProjectByUserIDFunc func(ctx context.Context, arg DeleteProjectByUserIDParams) error
+
+	// DeleteStuckQueuedImagesFunc mocks the DeleteStuckQueuedImages method.
+	DeleteStuckQueuedImagesFunc func(ctx context.Context, dollar_1 pgtype.Interval) ([]*DeleteStuckQueuedImagesRow, error)
 
 	// DeleteSubscriptionByStripeIDFunc mocks the DeleteSubscriptionByStripeID method.
 	DeleteSubscriptionByStripeIDFunc func(ctx context.Context, stripeSubscriptionID string) error
@@ -479,6 +485,13 @@ type QuerierMock struct {
 			Ctx context.Context
 			// Arg is the arg argument value.
 			Arg DeleteProjectByUserIDParams
+		}
+		// DeleteStuckQueuedImages holds details about calls to the DeleteStuckQueuedImages method.
+		DeleteStuckQueuedImages []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Dollar_1 is the dollar_1 argument value.
+			Dollar_1 pgtype.Interval
 		}
 		// DeleteSubscriptionByStripeID holds details about calls to the DeleteSubscriptionByStripeID method.
 		DeleteSubscriptionByStripeID []struct {
@@ -780,6 +793,7 @@ type QuerierMock struct {
 	lockDeleteOldProcessedEvents             sync.RWMutex
 	lockDeleteProject                        sync.RWMutex
 	lockDeleteProjectByUserID                sync.RWMutex
+	lockDeleteStuckQueuedImages              sync.RWMutex
 	lockDeleteSubscriptionByStripeID         sync.RWMutex
 	lockDeleteUser                           sync.RWMutex
 	lockFailJob                              sync.RWMutex
@@ -1392,6 +1406,42 @@ func (mock *QuerierMock) DeleteProjectByUserIDCalls() []struct {
 	mock.lockDeleteProjectByUserID.RLock()
 	calls = mock.calls.DeleteProjectByUserID
 	mock.lockDeleteProjectByUserID.RUnlock()
+	return calls
+}
+
+// DeleteStuckQueuedImages calls DeleteStuckQueuedImagesFunc.
+func (mock *QuerierMock) DeleteStuckQueuedImages(ctx context.Context, dollar_1 pgtype.Interval) ([]*DeleteStuckQueuedImagesRow, error) {
+	if mock.DeleteStuckQueuedImagesFunc == nil {
+		panic("QuerierMock.DeleteStuckQueuedImagesFunc: method is nil but Querier.DeleteStuckQueuedImages was just called")
+	}
+	callInfo := struct {
+		Ctx      context.Context
+		Dollar_1 pgtype.Interval
+	}{
+		Ctx:      ctx,
+		Dollar_1: dollar_1,
+	}
+	mock.lockDeleteStuckQueuedImages.Lock()
+	mock.calls.DeleteStuckQueuedImages = append(mock.calls.DeleteStuckQueuedImages, callInfo)
+	mock.lockDeleteStuckQueuedImages.Unlock()
+	return mock.DeleteStuckQueuedImagesFunc(ctx, dollar_1)
+}
+
+// DeleteStuckQueuedImagesCalls gets all the calls that were made to DeleteStuckQueuedImages.
+// Check the length with:
+//
+//	len(mockedQuerier.DeleteStuckQueuedImagesCalls())
+func (mock *QuerierMock) DeleteStuckQueuedImagesCalls() []struct {
+	Ctx      context.Context
+	Dollar_1 pgtype.Interval
+} {
+	var calls []struct {
+		Ctx      context.Context
+		Dollar_1 pgtype.Interval
+	}
+	mock.lockDeleteStuckQueuedImages.RLock()
+	calls = mock.calls.DeleteStuckQueuedImages
+	mock.lockDeleteStuckQueuedImages.RUnlock()
 	return calls
 }
 

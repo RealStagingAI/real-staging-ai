@@ -18,6 +18,9 @@ var _ Handler = &HandlerMock{}
 //
 //		// make and configure a mocked Handler
 //		mockedHandler := &HandlerMock{
+//			CleanupStuckQueuedImagesFunc: func(c echo.Context) error {
+//				panic("mock out the CleanupStuckQueuedImages method")
+//			},
 //			ReconcileImagesFunc: func(c echo.Context) error {
 //				panic("mock out the ReconcileImages method")
 //			},
@@ -28,18 +31,59 @@ var _ Handler = &HandlerMock{}
 //
 //	}
 type HandlerMock struct {
+	// CleanupStuckQueuedImagesFunc mocks the CleanupStuckQueuedImages method.
+	CleanupStuckQueuedImagesFunc func(c echo.Context) error
+
 	// ReconcileImagesFunc mocks the ReconcileImages method.
 	ReconcileImagesFunc func(c echo.Context) error
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// CleanupStuckQueuedImages holds details about calls to the CleanupStuckQueuedImages method.
+		CleanupStuckQueuedImages []struct {
+			// C is the c argument value.
+			C echo.Context
+		}
 		// ReconcileImages holds details about calls to the ReconcileImages method.
 		ReconcileImages []struct {
 			// C is the c argument value.
 			C echo.Context
 		}
 	}
-	lockReconcileImages sync.RWMutex
+	lockCleanupStuckQueuedImages sync.RWMutex
+	lockReconcileImages          sync.RWMutex
+}
+
+// CleanupStuckQueuedImages calls CleanupStuckQueuedImagesFunc.
+func (mock *HandlerMock) CleanupStuckQueuedImages(c echo.Context) error {
+	if mock.CleanupStuckQueuedImagesFunc == nil {
+		panic("HandlerMock.CleanupStuckQueuedImagesFunc: method is nil but Handler.CleanupStuckQueuedImages was just called")
+	}
+	callInfo := struct {
+		C echo.Context
+	}{
+		C: c,
+	}
+	mock.lockCleanupStuckQueuedImages.Lock()
+	mock.calls.CleanupStuckQueuedImages = append(mock.calls.CleanupStuckQueuedImages, callInfo)
+	mock.lockCleanupStuckQueuedImages.Unlock()
+	return mock.CleanupStuckQueuedImagesFunc(c)
+}
+
+// CleanupStuckQueuedImagesCalls gets all the calls that were made to CleanupStuckQueuedImages.
+// Check the length with:
+//
+//	len(mockedHandler.CleanupStuckQueuedImagesCalls())
+func (mock *HandlerMock) CleanupStuckQueuedImagesCalls() []struct {
+	C echo.Context
+} {
+	var calls []struct {
+		C echo.Context
+	}
+	mock.lockCleanupStuckQueuedImages.RLock()
+	calls = mock.calls.CleanupStuckQueuedImages
+	mock.lockCleanupStuckQueuedImages.RUnlock()
+	return calls
 }
 
 // ReconcileImages calls ReconcileImagesFunc.

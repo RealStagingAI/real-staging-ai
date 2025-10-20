@@ -18,6 +18,9 @@ var _ Service = &ServiceMock{}
 //
 //		// make and configure a mocked Service
 //		mockedService := &ServiceMock{
+//			CleanupStuckQueuedImagesFunc: func(ctx context.Context, olderThanHours int) (*CleanupResult, error) {
+//				panic("mock out the CleanupStuckQueuedImages method")
+//			},
 //			ReconcileImagesFunc: func(ctx context.Context, opts ReconcileOptions) (*ReconcileResult, error) {
 //				panic("mock out the ReconcileImages method")
 //			},
@@ -28,11 +31,21 @@ var _ Service = &ServiceMock{}
 //
 //	}
 type ServiceMock struct {
+	// CleanupStuckQueuedImagesFunc mocks the CleanupStuckQueuedImages method.
+	CleanupStuckQueuedImagesFunc func(ctx context.Context, olderThanHours int) (*CleanupResult, error)
+
 	// ReconcileImagesFunc mocks the ReconcileImages method.
 	ReconcileImagesFunc func(ctx context.Context, opts ReconcileOptions) (*ReconcileResult, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// CleanupStuckQueuedImages holds details about calls to the CleanupStuckQueuedImages method.
+		CleanupStuckQueuedImages []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// OlderThanHours is the olderThanHours argument value.
+			OlderThanHours int
+		}
 		// ReconcileImages holds details about calls to the ReconcileImages method.
 		ReconcileImages []struct {
 			// Ctx is the ctx argument value.
@@ -41,7 +54,44 @@ type ServiceMock struct {
 			Opts ReconcileOptions
 		}
 	}
-	lockReconcileImages sync.RWMutex
+	lockCleanupStuckQueuedImages sync.RWMutex
+	lockReconcileImages          sync.RWMutex
+}
+
+// CleanupStuckQueuedImages calls CleanupStuckQueuedImagesFunc.
+func (mock *ServiceMock) CleanupStuckQueuedImages(ctx context.Context, olderThanHours int) (*CleanupResult, error) {
+	if mock.CleanupStuckQueuedImagesFunc == nil {
+		panic("ServiceMock.CleanupStuckQueuedImagesFunc: method is nil but Service.CleanupStuckQueuedImages was just called")
+	}
+	callInfo := struct {
+		Ctx            context.Context
+		OlderThanHours int
+	}{
+		Ctx:            ctx,
+		OlderThanHours: olderThanHours,
+	}
+	mock.lockCleanupStuckQueuedImages.Lock()
+	mock.calls.CleanupStuckQueuedImages = append(mock.calls.CleanupStuckQueuedImages, callInfo)
+	mock.lockCleanupStuckQueuedImages.Unlock()
+	return mock.CleanupStuckQueuedImagesFunc(ctx, olderThanHours)
+}
+
+// CleanupStuckQueuedImagesCalls gets all the calls that were made to CleanupStuckQueuedImages.
+// Check the length with:
+//
+//	len(mockedService.CleanupStuckQueuedImagesCalls())
+func (mock *ServiceMock) CleanupStuckQueuedImagesCalls() []struct {
+	Ctx            context.Context
+	OlderThanHours int
+} {
+	var calls []struct {
+		Ctx            context.Context
+		OlderThanHours int
+	}
+	mock.lockCleanupStuckQueuedImages.RLock()
+	calls = mock.calls.CleanupStuckQueuedImages
+	mock.lockCleanupStuckQueuedImages.RUnlock()
+	return calls
 }
 
 // ReconcileImages calls ReconcileImagesFunc.

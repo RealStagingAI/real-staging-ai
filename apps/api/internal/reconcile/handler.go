@@ -10,4 +10,5 @@ import (
 // Implementations should be wired to Echo routes in the server.
 type Handler interface {
 	ReconcileImages(c echo.Context) error
+	CleanupStuckQueuedImages(c echo.Context) error
 }

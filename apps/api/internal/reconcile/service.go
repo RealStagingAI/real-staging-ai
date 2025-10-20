@@ -7,6 +7,7 @@ import "context"
 // Service defines the interface for storage reconciliation operations.
 type Service interface {
 	ReconcileImages(ctx context.Context, opts ReconcileOptions) (*ReconcileResult, error)
+	CleanupStuckQueuedImages(ctx context.Context, olderThanHours int) (*CleanupResult, error)
 }
 
 // ReconcileOptions configures a reconciliation run.
@@ -34,4 +35,11 @@ type ReconcileError struct {
 	ImageID string `json:"image_id"`
 	Status  string `json:"status"`
 	Error   string `json:"error"`
+}
+
+// CleanupResult summarizes cleanup of stuck queued images.
+type CleanupResult struct {
+	Deleted   int      `json:"deleted"`
+	ImageIDs  []string `json:"image_ids,omitempty"` // IDs of deleted images
+	Threshold string   `json:"threshold"`           // Human-readable threshold (e.g., "1 hour")
 }
