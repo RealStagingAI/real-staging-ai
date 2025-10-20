@@ -55,6 +55,7 @@ export default function ImagesPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [selectedImageIds, setSelectedImageIds] = useState<Set<string>>(new Set());
+  const [focusedImageId, setFocusedImageId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingImages, setLoadingImages] = useState(false);
@@ -411,6 +412,9 @@ export default function ImagesPage() {
         newSet.delete(imageId);
         return newSet;
       });
+      if (focusedImageId === imageId) {
+        setFocusedImageId(null);
+      }
       
       setStatusMessage('Image deleted successfully');
       setTimeout(() => setStatusMessage(''), 3000);
@@ -419,7 +423,117 @@ export default function ImagesPage() {
       const message = err instanceof Error ? err.message : String(err);
       setStatusMessage(`Delete failed: ${message}`);
     }
-  }, []);
+  }, [focusedImageId]);
+
+  // Delete selected images
+  const deleteSelected = useCallback(async () => {
+    const count = selectedImageIds.size;
+    if (count === 0) return;
+
+    if (!confirm(`Are you sure you want to delete ${count} image${count > 1 ? 's' : ''}? They will not be recoverable.`)) {
+      return;
+    }
+
+    try {
+      setStatusMessage(`Deleting ${count} image${count > 1 ? 's' : ''}...`);
+      
+      // Delete all selected images
+      await Promise.all(
+        Array.from(selectedImageIds).map(imageId =>
+          apiFetch(`/v1/images/${imageId}`, { method: 'DELETE' })
+        )
+      );
+      
+      // Remove from local state
+      setImages(prev => prev.filter(img => !selectedImageIds.has(img.id)));
+      setImageUrls(prev => {
+        const newUrls = { ...prev };
+        selectedImageIds.forEach(id => delete newUrls[id]);
+        return newUrls;
+      });
+      setSelectedImageIds(new Set());
+      setFocusedImageId(null);
+      
+      setStatusMessage(`Successfully deleted ${count} image${count > 1 ? 's' : ''}`);
+      setTimeout(() => setStatusMessage(''), 3000);
+    } catch (err: unknown) {
+      console.error('Failed to delete images:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setStatusMessage(`Delete failed: ${message}`);
+    }
+  }, [selectedImageIds]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (images.length === 0) return;
+
+      const currentIndex = focusedImageId 
+        ? images.findIndex(img => img.id === focusedImageId)
+        : -1;
+
+      switch (e.key) {
+        case 'ArrowRight':
+        case 'ArrowDown': {
+          e.preventDefault();
+          const nextIndex = viewMode === 'grid'
+            ? (currentIndex + 1) % images.length
+            : (currentIndex + 1) % images.length;
+          setFocusedImageId(images[nextIndex].id);
+          break;
+        }
+        case 'ArrowLeft':
+        case 'ArrowUp': {
+          e.preventDefault();
+          const prevIndex = currentIndex <= 0 
+            ? images.length - 1 
+            : currentIndex - 1;
+          setFocusedImageId(images[prevIndex].id);
+          break;
+        }
+        case ' ': { // Space bar
+          e.preventDefault();
+          if (focusedImageId) {
+            toggleImageSelection(focusedImageId);
+          } else if (images.length > 0) {
+            setFocusedImageId(images[0].id);
+          }
+          break;
+        }
+        case 'Delete':
+        case 'Backspace': {
+          e.preventDefault();
+          if (selectedImageIds.size > 0) {
+            deleteSelected();
+          } else if (focusedImageId) {
+            deleteImage(focusedImageId);
+          }
+          break;
+        }
+        case 'Escape': {
+          e.preventDefault();
+          setFocusedImageId(null);
+          setSelectedImageIds(new Set());
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [images, focusedImageId, selectedImageIds, viewMode, toggleImageSelection, deleteImage, deleteSelected]);
+
+  // Set initial focus when images load
+  useEffect(() => {
+    if (images.length > 0 && !focusedImageId) {
+      setFocusedImageId(images[0].id);
+    }
+  }, [images, focusedImageId]);
 
   // Auto-polling for processing images
   useEffect(() => {
@@ -631,6 +745,13 @@ export default function ImagesPage() {
                       <Download className="h-4 w-4" />
                       Download {downloadType} ({selectedImageIds.size})
                     </button>
+                    <button
+                      onClick={deleteSelected}
+                      className="btn btn-ghost text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete ({selectedImageIds.size})
+                    </button>
                   </>
                 )}
                 <div className="flex rounded-lg border border-gray-200 p-1">
@@ -704,7 +825,8 @@ export default function ImagesPage() {
                 key={image.id}
                 className={cn(
                   "card group cursor-pointer transition-all duration-200",
-                  selectedImageIds.has(image.id) && "ring-2 ring-blue-500 shadow-xl"
+                  selectedImageIds.has(image.id) && "ring-2 ring-blue-500 shadow-xl",
+                  focusedImageId === image.id && !selectedImageIds.has(image.id) && "ring-2 ring-blue-300 shadow-lg"
                 )}
                 onClick={() => toggleImageSelection(image.id)}
                 onMouseEnter={() => handleImageHover(image.id)}
@@ -872,18 +994,18 @@ export default function ImagesPage() {
         <div className="card">
           <div className="card-body p-0">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
                     <th className="w-12 px-4 py-3"></th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preview</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Updated</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Preview</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Details</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Updated</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                   {images.map((image) => {
                     const thumbSrc = imageUrls[image.id]?.staged ?? null;
 
@@ -891,8 +1013,9 @@ export default function ImagesPage() {
                       <tr
                         key={image.id}
                         className={cn(
-                          "hover:bg-gray-50 transition-colors cursor-pointer",
-                          selectedImageIds.has(image.id) && "bg-blue-50"
+                          "hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer",
+                          selectedImageIds.has(image.id) && "bg-blue-50 dark:bg-blue-950/30",
+                          focusedImageId === image.id && !selectedImageIds.has(image.id) && "bg-blue-50/50 dark:bg-blue-950/10"
                         )}
                         onClick={() => toggleImageSelection(image.id)}
                       >
@@ -941,11 +1064,11 @@ export default function ImagesPage() {
                       </td>
                       <td className="px-4 py-4">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {image.room_type || 'Untitled'}
                           </p>
                           {image.style && (
-                            <p className="text-xs text-gray-500">{image.style}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{image.style}</p>
                           )}
                         </div>
                       </td>
@@ -954,12 +1077,12 @@ export default function ImagesPage() {
                           {image.status}
                         </span>
                         {image.error && (
-                          <p className="text-xs text-red-600 mt-1 max-w-xs truncate">
+                          <p className="text-xs text-red-600 dark:text-red-400 mt-1 max-w-xs truncate">
                             {image.error}
                           </p>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-sm text-gray-600">
+                      <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
                         {formatRelativeTime(image.updated_at)}
                       </td>
                       <td className="px-4 py-4 text-right">
@@ -969,7 +1092,7 @@ export default function ImagesPage() {
                               e.stopPropagation();
                               openPresigned(image.id, 'original');
                             }}
-                            className="text-gray-600 hover:text-blue-600 transition-colors"
+                            className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             title="View Original"
                           >
                             <ExternalLink className="h-4 w-4" />
@@ -980,7 +1103,7 @@ export default function ImagesPage() {
                                 e.stopPropagation();
                                 openPresigned(image.id, 'staged');
                               }}
-                              className="text-blue-600 hover:text-blue-700 transition-colors"
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                               title="View Staged"
                             >
                               <CheckCircle2 className="h-4 w-4" />
@@ -991,7 +1114,7 @@ export default function ImagesPage() {
                               e.stopPropagation();
                               deleteImage(image.id);
                             }}
-                            className="text-red-600 hover:text-red-700 transition-colors"
+                            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
                             title="Delete image"
                           >
                             <Trash2 className="h-4 w-4" />
