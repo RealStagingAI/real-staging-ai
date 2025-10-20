@@ -297,7 +297,7 @@ func TestPresignUpload(t *testing.T) {
 
 			s3ServiceMock := SetupTestS3Service(t, context.Background())
 			imageServiceMock := &image.ServiceMock{}
-			server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock)
+			server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 			// Prepare request body
 			var body []byte
@@ -348,7 +348,7 @@ func TestPresignUpload_ValidationErrorDetails(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, context.Background())
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 	testCases := []struct {
 		name                 string
@@ -450,7 +450,7 @@ func TestPresignUpload_Integration(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, context.Background())
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 	// Test with valid request
 	requestBody := PresignUploadRequest{

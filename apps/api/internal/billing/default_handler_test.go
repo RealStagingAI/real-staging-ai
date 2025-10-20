@@ -44,7 +44,7 @@ func TestGetMySubscriptions(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 	}
-	handler := NewDefaultHandler(nil, nil)
+	handler := NewDefaultHandler(nil, nil, "")
 	runHandlerTableTest(t, handler.GetMySubscriptions, tests)
 }
 
@@ -68,7 +68,7 @@ func testCreateUserWhenMissing(t *testing.T, getHandler func(*DefaultHandler) fu
 			return &rowsIterStub{}, nil
 		},
 	}
-	h := NewDefaultHandler(db, nil)
+	h := NewDefaultHandler(db, nil, "sk_test_fake")
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("X-Test-User", "auth0|testuser")
@@ -186,7 +186,7 @@ func runHandlerTableTest(t *testing.T, handlerFunc func(echo.Context) error, tes
 
 // Unauthorized when db != nil and JWT sub is empty (no X-Test-User header)
 func TestGetMySubscriptions_DB_Unauthorized(t *testing.T) {
-	h := NewDefaultHandler(&storage.DatabaseMock{}, nil)
+	h := NewDefaultHandler(&storage.DatabaseMock{}, nil, "sk_test_fake")
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
@@ -207,7 +207,7 @@ func TestGetMySubscriptions_DB_UserResolveError(t *testing.T) {
 			return rowStub{scan: func(dest ...any) error { return errBoom() }}
 		},
 	}
-	h := NewDefaultHandler(db, nil)
+	h := NewDefaultHandler(db, nil, "sk_test_fake")
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("X-Test-User", "auth0|testuser")
@@ -249,7 +249,7 @@ func testDBListError(t *testing.T, getHandler func(*storage.DatabaseMock) func(e
 
 func TestGetMySubscriptions_DB_ListError(t *testing.T) {
 	testDBListError(t, func(db *storage.DatabaseMock) func(echo.Context) error {
-		return NewDefaultHandler(db, nil).GetMySubscriptions
+		return NewDefaultHandler(db, nil, "sk_test_fake").GetMySubscriptions
 	}, "limit=9999&offset=-5")
 }
 
@@ -303,7 +303,7 @@ func TestGetMySubscriptions_DB_SuccessMapping(t *testing.T) {
 			return rows, nil
 		},
 	}
-	h := NewDefaultHandler(db, nil)
+	h := NewDefaultHandler(db, nil, "sk_test_fake")
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/?limit=100000&offset=-10", nil)
 	req.Header.Set("X-Test-User", "auth0|testuser")
@@ -321,7 +321,7 @@ func TestGetMySubscriptions_DB_SuccessMapping(t *testing.T) {
 // --- Invoices: DB-backed tests ---
 
 func TestGetMyInvoices_DB_Unauthorized(t *testing.T) {
-	h := NewDefaultHandler(&storage.DatabaseMock{}, nil)
+	h := NewDefaultHandler(&storage.DatabaseMock{}, nil, "sk_test_fake")
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
@@ -342,7 +342,7 @@ func TestGetMyInvoices_DB_UserResolveError(t *testing.T) {
 			return rowStub{scan: func(dest ...any) error { return errBoom() }}
 		},
 	}
-	h := NewDefaultHandler(db, nil)
+	h := NewDefaultHandler(db, nil, "sk_test_fake")
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("X-Test-User", "auth0|testuser")
@@ -359,7 +359,7 @@ func TestGetMyInvoices_DB_UserResolveError(t *testing.T) {
 
 func TestGetMyInvoices_DB_ListError(t *testing.T) {
 	testDBListError(t, func(db *storage.DatabaseMock) func(echo.Context) error {
-		return NewDefaultHandler(db, nil).GetMyInvoices
+		return NewDefaultHandler(db, nil, "sk_test_fake").GetMyInvoices
 	}, "limit=0&offset=-1")
 }
 
@@ -411,7 +411,7 @@ func TestGetMyInvoices_DB_SuccessMapping(t *testing.T) {
 			return rows, nil
 		},
 	}
-	h := NewDefaultHandler(db, nil)
+	h := NewDefaultHandler(db, nil, "sk_test_fake")
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/?limit=3&offset=2", nil)
 	req.Header.Set("X-Test-User", "auth0|testuser")
@@ -428,7 +428,7 @@ func TestGetMyInvoices_DB_SuccessMapping(t *testing.T) {
 
 // --- parseLimitOffset direct tests ---
 func Test_parseLimitOffset(t *testing.T) {
-	h := NewDefaultHandler(nil, nil)
+	h := NewDefaultHandler(nil, nil, "")
 	cases := []struct {
 		name       string
 		query      string
@@ -493,14 +493,14 @@ func TestGetMyInvoices(t *testing.T) {
 		},
 	}
 
-	handler := NewDefaultHandler(nil, nil)
+	handler := NewDefaultHandler(nil, nil, "")
 	runHandlerTableTest(t, handler.GetMyInvoices, tests)
 }
 
 // Tests for CreateCheckoutSession
 func TestCreateCheckoutSession(t *testing.T) {
 	t.Run("fail: missing price_id", func(t *testing.T) {
-		h := NewDefaultHandler(nil, nil)
+		h := NewDefaultHandler(nil, nil, "")
 		e := echo.New()
 		req := httptest.NewRequest(http.MethodPost, "/", nil)
 		req.Header.Set("Content-Type", "application/json")
@@ -539,7 +539,7 @@ func TestCreatePortalSession(t *testing.T) {
 				}
 			},
 		}
-		h := NewDefaultHandler(db, nil)
+		h := NewDefaultHandler(db, nil, "sk_test_fake")
 		e := echo.New()
 		req := httptest.NewRequest(http.MethodPost, "/", nil)
 		req.Header.Set("X-Test-User", "auth0|testuser")
@@ -553,8 +553,6 @@ func TestCreatePortalSession(t *testing.T) {
 	})
 
 	t.Run("fail: missing STRIPE_SECRET_KEY", func(t *testing.T) {
-		t.Setenv("STRIPE_SECRET_KEY", "")
-
 		now := time.Now()
 		db := &storage.DatabaseMock{
 			QueryRowFunc: func(ctx context.Context, sql string, args ...interface{}) pgx.Row {
@@ -572,7 +570,7 @@ func TestCreatePortalSession(t *testing.T) {
 				}
 			},
 		}
-		h := NewDefaultHandler(db, nil)
+		h := NewDefaultHandler(db, nil, "")
 		e := echo.New()
 		req := httptest.NewRequest(http.MethodPost, "/", nil)
 		req.Header.Set("X-Test-User", "auth0|testuser")

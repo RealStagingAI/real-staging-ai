@@ -25,11 +25,10 @@ import (
 
 // Server holds the dependencies for the HTTP server.
 type Server struct {
-	ctx       context.Context
-	echo      *echo.Echo
-	db        storage.Database
-	s3Service storage.S3Service
-
+	ctx                 context.Context
+	echo                *echo.Echo
+	db                  storage.Database
+	s3Service           storage.S3Service
 	imageService        image.Service
 	subscriptionChecker billing.SubscriptionChecker
 	authConfig          *auth.Auth0Config
@@ -44,6 +43,7 @@ func NewServer(
 	db storage.Database,
 	imageService image.Service,
 	s3Service storage.S3Service,
+	stripeSecretKey string,
 ) *Server {
 	e := echo.New()
 
@@ -142,7 +142,7 @@ func NewServer(
 	})
 
 	// Billing routes
-	bh := billing.NewDefaultHandler(s.db, usageService)
+	bh := billing.NewDefaultHandler(s.db, usageService, stripeSecretKey)
 	protected.GET("/billing/subscriptions", bh.GetMySubscriptions)
 	protected.GET("/billing/invoices", bh.GetMyInvoices)
 	protected.GET("/billing/usage", bh.GetMyUsage)
@@ -180,7 +180,12 @@ func NewServer(
 }
 
 // NewTestServer creates a new Echo server for testing without Auth0 middleware.
-func NewTestServer(db storage.Database, s3Service storage.S3Service, imageService image.Service) *Server {
+func NewTestServer(
+	db storage.Database,
+	s3Service storage.S3Service,
+	imageService image.Service,
+	stripeSecretKey string,
+) *Server {
 	e := echo.New()
 
 	// Add basic middleware (no Auth0 for testing)
@@ -249,7 +254,7 @@ func NewTestServer(db storage.Database, s3Service storage.S3Service, imageServic
 	})
 
 	// Billing routes (public in test server)
-	bh := billing.NewDefaultHandler(s.db, usageService)
+	bh := billing.NewDefaultHandler(s.db, usageService, stripeSecretKey)
 	api.GET("/billing/subscriptions", withTestUser(bh.GetMySubscriptions))
 	api.GET("/billing/invoices", withTestUser(bh.GetMyInvoices))
 	api.GET("/billing/usage", withTestUser(bh.GetMyUsage))

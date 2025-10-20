@@ -23,15 +23,17 @@ import (
 // DefaultHandler implements the billing Handler by wrapping existing repositories
 // and user resolution logic (Auth0 sub -> ensure users row).
 type DefaultHandler struct {
-	db           storage.Database
-	usageService UsageService
+	db              storage.Database
+	usageService    UsageService
+	stripeSecretKey string
 }
 
 // NewDefaultHandler constructs a DefaultHandler.
-func NewDefaultHandler(db storage.Database, usageService UsageService) *DefaultHandler {
+func NewDefaultHandler(db storage.Database, usageService UsageService, stripeSecretKey string) *DefaultHandler {
 	return &DefaultHandler{
-		db:           db,
-		usageService: usageService,
+		db:              db,
+		usageService:    usageService,
+		stripeSecretKey: stripeSecretKey,
 	}
 }
 
@@ -296,8 +298,8 @@ func (h *DefaultHandler) CreateCheckoutSession(c echo.Context) error {
 		}
 	}
 
-	// Set Stripe API key from environment
-	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+	// Set Stripe API key from config
+	stripe.Key = h.stripeSecretKey
 	if stripe.Key == "" {
 		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
 			Error:   "service_unavailable",
@@ -394,8 +396,8 @@ func (h *DefaultHandler) CreatePortalSession(c echo.Context) error {
 		})
 	}
 
-	// Set Stripe API key from environment
-	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
+	// Set Stripe API key from config
+	stripe.Key = h.stripeSecretKey
 	if stripe.Key == "" {
 		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
 			Error:   "service_unavailable",

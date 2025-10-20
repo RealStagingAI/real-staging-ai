@@ -28,7 +28,7 @@ func TestGetProfile_Integration(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, ctx)
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 	testCases := []struct {
 		name           string
@@ -106,7 +106,7 @@ func TestUpdateProfile_Integration(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, ctx)
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 	testCases := []struct {
 		name           string

@@ -21,6 +21,7 @@ type Config struct {
 	OTEL    OTEL    `yaml:"otel"`
 	Redis   Redis   `yaml:"redis"`
 	S3      S3      `yaml:"s3"`
+	Stripe  Stripe  `yaml:"stripe"`
 }
 
 type App struct {
@@ -70,6 +71,11 @@ type S3 struct {
 	Region         string `yaml:"region" env:"S3_REGION" env-default:"us-west-1"`
 	SecretKey      string `yaml:"secret_key" env:"S3_SECRET_KEY"`
 	UsePathStyle   bool   `yaml:"use_path_style" env:"S3_USE_PATH_STYLE"`
+}
+
+type Stripe struct {
+	SecretKey     string `yaml:"secret_key" env:"STRIPE_SECRET_KEY"`
+	WebhookSecret string `yaml:"webhook_secret" env:"STRIPE_WEBHOOK_SECRET"`
 }
 
 // Load loads configuration from YAML files based on APP_ENV.

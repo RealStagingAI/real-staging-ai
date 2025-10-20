@@ -26,7 +26,7 @@ func TestCreateProjectRoute_HTTP(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, context.Background())
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 	testCases := []struct {
 		name         string
@@ -79,7 +79,7 @@ func TestGetProjectsRoute_HTTP(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, context.Background())
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/projects", nil)
 	req.Header.Set("X-Test-User", "auth0|testuser")
 	rec := httptest.NewRecorder()
@@ -118,7 +118,7 @@ func TestGetProjectByIDRoute_HTTP(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, context.Background())
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 	// Test case 1: Get an existing project
 	t.Run("success: happy path", func(t *testing.T) {
