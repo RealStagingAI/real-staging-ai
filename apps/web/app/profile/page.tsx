@@ -187,10 +187,11 @@ function ProfilePageContent() {
   }, [formData, fetchProfileAndSubscription]);
 
   const handleSubscribe = async (planCode: 'free' | 'pro' | 'business') => {
+    // Get the price ID based on plan code
     const priceIds = {
-      free: 'price_1SK67rLpUWppqPSl2XfvuIlh',
-      pro: 'price_1SJmy5LpUWppqPSlNElnvowM',
-      business: 'price_1SJmyqLpUWppqPSlGhxfz2oQ',
+      free: process.env.NEXT_PUBLIC_STRIPE_PRICE_FREE || 'price_1SK67rLpUWppqPSl2XfvuIlh',
+      pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || 'price_1SJmy5LpUWppqPSlNElnvowM',
+      business: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS || 'price_1SJmyqLpUWppqPSlGhxfz2oQ',
     };
     
     try {
