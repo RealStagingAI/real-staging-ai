@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch } from '@/lib/api';
 import { Clock, CreditCard, Loader2, Package, TrendingUp, AlertCircle } from 'lucide-react';
 
 interface UsageStats {
