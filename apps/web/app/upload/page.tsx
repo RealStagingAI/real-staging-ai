@@ -287,9 +287,9 @@ export default function UploadPage() {
         setDefaultStyle("")
       }, 3000)
     } else if (successCount === 0) {
-      setStatus(`Upload failed for all ${errorCount} images. See individual errors below.`)
+      setStatus(`Upload failed for all ${errorCount} images. See individual errors above.`)
     } else {
-      setStatus(`Partial success: ${successCount} succeeded, ${errorCount} failed. See details below.`)
+      setStatus(`Partial success: ${successCount} succeeded, ${errorCount} failed. See details above.`)
     }
     
     setIsUploading(false)

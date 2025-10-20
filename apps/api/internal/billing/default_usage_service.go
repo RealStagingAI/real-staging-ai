@@ -57,29 +57,23 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 		plan = freePlan
 	}
 
-	// Calculate billing period
-	// For free users: calendar month (1st to last day of current month)
-	// For paid users: subscription period (tracked in subscription table)
+	// Calculate billing period from subscription (both free and paid)
+	// All users (including free tier) should have a Stripe subscription that tracks their period
 	now := time.Now().UTC()
 	var periodStart, periodEnd time.Time
 
-	if hasSubscription {
-		// For paid users, try to get subscription period
-		// If we can't find it, fall back to calendar month
-		subs, err := q.ListSubscriptionsByUserIDAndStatuses(ctx, queries.ListSubscriptionsByUserIDAndStatusesParams{
-			UserID:  userUUID,
-			Column2: []string{"active", "trialing"},
-		})
-		if err == nil && len(subs) > 0 && subs[0].CurrentPeriodStart.Valid && subs[0].CurrentPeriodEnd.Valid {
-			periodStart = subs[0].CurrentPeriodStart.Time
-			periodEnd = subs[0].CurrentPeriodEnd.Time
-		} else {
-			// Fallback to calendar month
-			periodStart = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-			periodEnd = periodStart.AddDate(0, 1, 0)
-		}
+	// Try to get subscription period for all users (free and paid)
+	subs, err := q.ListSubscriptionsByUserIDAndStatuses(ctx, queries.ListSubscriptionsByUserIDAndStatusesParams{
+		UserID:  userUUID,
+		Column2: []string{"active", "trialing"},
+	})
+	if err == nil && len(subs) > 0 && subs[0].CurrentPeriodStart.Valid && subs[0].CurrentPeriodEnd.Valid {
+		// Use subscription period from Stripe (free tier subscriptions have $0.00 price)
+		periodStart = subs[0].CurrentPeriodStart.Time
+		periodEnd = subs[0].CurrentPeriodEnd.Time
 	} else {
-		// Free users: calendar month
+		// Fallback to calendar month if no subscription found
+		// (shouldn't happen for properly onboarded users)
 		periodStart = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 		periodEnd = periodStart.AddDate(0, 1, 0)
 	}
