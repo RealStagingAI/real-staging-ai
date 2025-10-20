@@ -711,6 +711,27 @@ paths:
           $ref: "#/components/responses/UnauthorizedError"
         "500":
           $ref: "#/components/responses/InternalServerError"
+  /api/v1/billing/usage:
+    get:
+      summary: Get current user's usage statistics
+      description: |
+        Retrieve usage statistics for the authenticated user including images used,
+        monthly limit, billing period dates, and remaining images.
+      tags:
+        - Billing
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current usage statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UsageStats"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /api/v1/billing/create-checkout:
     post:
       summary: Create Stripe Checkout session
@@ -1586,3 +1607,54 @@ components:
                 - scandinavian
                 - industrial
                 - bohemian
+    UsageStats:
+      type: object
+      description: User's current usage statistics and plan limits
+      required:
+        - images_used
+        - monthly_limit
+        - plan_code
+        - period_start
+        - period_end
+        - has_subscription
+        - is_unlimited
+        - remaining_images
+      properties:
+        images_used:
+          type: integer
+          description: Number of images created in current billing period
+          example: 5
+        monthly_limit:
+          type: integer
+          description: Monthly image limit for user's plan
+          example: 10
+        plan_code:
+          type: string
+          description: Current plan code
+          example: "free"
+          enum:
+            - free
+            - pro
+            - business
+        period_start:
+          type: string
+          format: date-time
+          description: Start of current billing period (ISO 8601)
+          example: "2025-10-01T00:00:00Z"
+        period_end:
+          type: string
+          format: date-time
+          description: End of current billing period (ISO 8601)
+          example: "2025-11-01T00:00:00Z"
+        has_subscription:
+          type: boolean
+          description: Whether user has an active paid subscription
+          example: false
+        is_unlimited:
+          type: boolean
+          description: Whether plan has unlimited images
+          example: false
+        remaining_images:
+          type: integer
+          description: Remaining images in current period
+          example: 5

@@ -553,17 +553,17 @@ Refresh the profile page - subscription should appear.
 
 Before deploying to production:
 
-- [ ] Use live API keys (`sk_live_...`)
-- [ ] Configure webhook endpoint in Stripe dashboard (not CLI)
-- [ ] Use production webhook secret
-- [ ] Store secrets in secure vault (not files)
-- [ ] Enable HTTPS on webhook endpoint
-- [ ] Create real products with actual prices
-- [ ] Update frontend with live price IDs
-- [ ] Test with real credit cards (your own)
+- [x] Use live API keys (`sk_live_...`)
+- [x] Configure webhook endpoint in Stripe dashboard (not CLI)
+- [x] Use production webhook secret
+- [x] Store secrets as environment variables in Render
+- [x] Enable HTTPS on webhook endpoint
+- [x] Create real products with actual prices
+- [x] Update frontend with live price IDs
+- [x] Test with real credit cards (your own)
 - [ ] Set up monitoring for webhook failures
 - [ ] Configure email notifications for failed payments
-- [ ] Review Stripe tax settings if applicable
+- [x] Review Stripe tax settings if applicable
 - [ ] Enable 3D Secure for fraud prevention
 - [ ] Set up invoice email templates
 - [ ] Test subscription cancellation flow
@@ -604,6 +604,53 @@ Before deploying to production:
    - Stripe retries failed webhooks
    - Use exponential backoff
 
+## Usage Tracking & Enforcement
+
+The billing system tracks image creation usage and enforces monthly limits based on subscription tiers:
+
+### Plan Limits
+
+| Plan | Monthly Limit | Price |
+|------|---------------|-------|
+| Free | 10 images | $0 |
+| Pro | 100 images | $29/month |
+| Business | 500 images | $99/month |
+
+### Enforcement
+
+- **Image Creation Check**: Before creating an image, the system checks if the user has remaining images in their billing period
+- **402 Payment Required**: Returns when limit is exceeded with upgrade prompt
+- **Billing Periods**: 
+  - Free users: Calendar month (1st to end of month)
+  - Paid users: Subscription period (from `current_period_start` to `current_period_end`)
+
+### API Endpoint
+
+**GET `/api/v1/billing/usage`** - Returns current usage statistics:
+
+```json
+{
+  "images_used": 5,
+  "monthly_limit": 10,
+  "plan_code": "free",
+  "period_start": "2025-10-01T00:00:00Z",
+  "period_end": "2025-11-01T00:00:00Z",
+  "has_subscription": false,
+  "is_unlimited": false,
+  "remaining_images": 5
+}
+```
+
+### Frontend Integration
+
+The `/billing` page displays real-time usage with:
+- Progress bar showing images used vs limit
+- Color-coded status (green/amber/red)
+- Period dates and reset information
+- Upgrade options for free tier users
+
+See [Billing and Usage](../features/billing-and-usage.md) for detailed technical documentation.
+
 ## Additional Resources
 
 - **Stripe Documentation:** [stripe.com/docs](https://stripe.com/docs)
@@ -619,3 +666,4 @@ Before deploying to production:
 - [Configuration](configuration.md) - Environment variables and settings
 - [Testing](testing.md) - Unit and integration testing
 - [Local Development](local-development.md) - Development environment setup
+- [Billing and Usage](../features/billing-and-usage.md) - Usage tracking technical details
