@@ -67,16 +67,21 @@ func NewServer(
 	// Initialize Auth0 config
 	authConfig := auth.NewAuth0Config(ctx, auth0Domain, auth0Audience)
 
-	imgHandler := image.NewDefaultHandler(imageService)
+	// Initialize billing services
+	usageService := billing.NewDefaultUsageService(db)
+	subscriptionChecker := billing.NewDefaultSubscriptionChecker(db)
+
+	// Initialize user repository for usage checks
+	userRepo := user.NewDefaultRepository(db)
+
+	// Initialize image handler with usage checking
+	imgHandler := image.NewDefaultHandler(imageService, usageService, userRepo)
 
 	// Initialize Pub/Sub (Redis) if configured
 	var ps PubSub
 	if p, err := NewDefaultPubSubFromEnv(); err == nil {
 		ps = p
 	}
-
-	// Initialize subscription checker
-	subscriptionChecker := billing.NewDefaultSubscriptionChecker(db)
 
 	s := &Server{
 		ctx:                 ctx,
@@ -137,14 +142,14 @@ func NewServer(
 	})
 
 	// Billing routes
-	bh := billing.NewDefaultHandler(s.db)
+	bh := billing.NewDefaultHandler(s.db, usageService)
 	protected.GET("/billing/subscriptions", bh.GetMySubscriptions)
 	protected.GET("/billing/invoices", bh.GetMyInvoices)
+	protected.GET("/billing/usage", bh.GetMyUsage)
 	protected.POST("/billing/create-checkout", bh.CreateCheckoutSession)
 	protected.POST("/billing/portal", bh.CreatePortalSession)
 
 	// User profile routes
-	userRepo := user.NewDefaultRepository(s.db)
 	profileService := user.NewDefaultProfileService(userRepo)
 	profileHandler := NewProfileHandler(profileService, userRepo, logging.Default())
 	protected.GET("/user/profile", profileHandler.GetProfile)
@@ -182,9 +187,22 @@ func NewTestServer(db storage.Database, s3Service storage.S3Service, imageServic
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
 
-	imgHandler := image.NewDefaultHandler(imageService)
+	// Initialize billing services for test server
+	usageService := billing.NewDefaultUsageService(db)
+	userRepo := user.NewDefaultRepository(db)
+	subscriptionChecker := billing.NewDefaultSubscriptionChecker(db)
 
-	s := &Server{db: db, s3Service: s3Service, imageService: imageService, echo: e, authConfig: nil}
+	// Initialize image handler with usage checking
+	imgHandler := image.NewDefaultHandler(imageService, usageService, userRepo)
+
+	s := &Server{
+		db:                  db,
+		s3Service:           s3Service,
+		imageService:        imageService,
+		subscriptionChecker: subscriptionChecker,
+		echo:                e,
+		authConfig:          nil,
+	}
 
 	// Health check route (same as main server)
 	e.GET("/health", s.healthCheck)
@@ -207,15 +225,15 @@ func NewTestServer(db storage.Database, s3Service storage.S3Service, imageServic
 	api.DELETE("/projects/:id", withTestUser(ph.Delete))
 
 	// Upload routes
-	api.POST("/uploads/presign", s.presignUploadHandler)
+	api.POST("/uploads/presign", withTestUser(s.presignUploadHandler))
 
 	// Image routes
-	api.POST("/images", imgHandler.CreateImage)
-	api.GET("/images/:id", imgHandler.GetImage)
-	api.GET("/images/:id/presign", s.presignImageDownloadHandler)
-	api.DELETE("/images/:id", s.deleteImageHandler)
-	api.GET("/projects/:project_id/images", imgHandler.GetProjectImages)
-	api.GET("/projects/:project_id/cost", imgHandler.GetProjectCost)
+	api.POST("/images", withTestUser(imgHandler.CreateImage))
+	api.GET("/images/:id", withTestUser(imgHandler.GetImage))
+	api.GET("/images/:id/presign", withTestUser(s.presignImageDownloadHandler))
+	api.DELETE("/images/:id", withTestUser(s.deleteImageHandler))
+	api.GET("/projects/:project_id/images", withTestUser(imgHandler.GetProjectImages))
+	api.GET("/projects/:project_id/cost", withTestUser(imgHandler.GetProjectCost))
 
 	// SSE routes
 	api.GET("/events", func(c echo.Context) error {
@@ -230,14 +248,14 @@ func NewTestServer(db storage.Database, s3Service storage.S3Service, imageServic
 	})
 
 	// Billing routes (public in test server)
-	bh := billing.NewDefaultHandler(s.db)
+	bh := billing.NewDefaultHandler(s.db, usageService)
 	api.GET("/billing/subscriptions", withTestUser(bh.GetMySubscriptions))
 	api.GET("/billing/invoices", withTestUser(bh.GetMyInvoices))
+	api.GET("/billing/usage", withTestUser(bh.GetMyUsage))
 	api.POST("/billing/create-checkout", withTestUser(bh.CreateCheckoutSession))
 	api.POST("/billing/portal", withTestUser(bh.CreatePortalSession))
 
 	// User profile routes (test server)
-	userRepo := user.NewDefaultRepository(s.db)
 	profileService := user.NewDefaultProfileService(userRepo)
 	profileHandler := NewProfileHandler(profileService, userRepo, logging.Default())
 	api.GET("/user/profile", withTestUser(profileHandler.GetProfile))

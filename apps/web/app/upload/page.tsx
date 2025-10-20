@@ -311,7 +311,7 @@ export default function UploadPage() {
                 Subscription Required
               </h3>
               <p className="text-amber-800 dark:text-amber-400">
-                An active paid subscription is required to upload and process images. Upgrade your plan to unlock unlimited image staging.
+                An active paid subscription is required to upload and process images. Upgrade your plan to unlock 500 images and priority support.
               </p>
               <button
                 onClick={() => router.push('/profile')}

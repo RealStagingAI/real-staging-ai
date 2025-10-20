@@ -452,7 +452,7 @@ function ProfilePageContent() {
                   No active subscription
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
-                  Subscribe to unlock unlimited image staging and priority support
+                  Subscribe to unlock 500 images and priority support
                 </p>
                 <button
                   onClick={handleSubscribe}
@@ -469,7 +469,7 @@ function ProfilePageContent() {
                   <p className="font-medium mb-1">Free Tier</p>
                   <p className="text-2xl font-bold text-gray-600 mb-2">$0<span className="text-sm text-gray-500">/mo</span></p>
                   <ul className="space-y-1 text-gray-600 dark:text-gray-400">
-                    <li>✓ 5 images/month</li>
+                    <li>✓ 10 images/month</li>
                     <li>✓ Standard processing</li>
                     <li>✓ Email support</li>
                   </ul>

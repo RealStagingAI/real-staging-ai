@@ -12,6 +12,8 @@ import (
 
 type Querier interface {
 	CompleteJob(ctx context.Context, id pgtype.UUID) (*Job, error)
+	// Count how many images a user created within a specific date range
+	CountImagesCreatedInPeriod(ctx context.Context, arg CountImagesCreatedInPeriodParams) (int32, error)
 	CountProjectsByUserID(ctx context.Context, userID pgtype.UUID) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	CreateImage(ctx context.Context, arg CreateImageParams) (*CreateImageRow, error)
@@ -37,17 +39,26 @@ type Querier interface {
 	GetJobByID(ctx context.Context, id pgtype.UUID) (*Job, error)
 	GetJobsByImageID(ctx context.Context, imageID pgtype.UUID) ([]*Job, error)
 	GetPendingJobs(ctx context.Context, limit int32) ([]*Job, error)
+	// Get a plan by its code (free, pro, business, etc.)
+	GetPlanByCode(ctx context.Context, code string) (*Plan, error)
+	// Get a plan by its Stripe price ID
+	GetPlanByPriceID(ctx context.Context, priceID string) (*Plan, error)
 	// Processed Events (Stripe Idempotency)
 	// sqlc queries for processed_events and subscriptions
 	GetProcessedEventByStripeID(ctx context.Context, stripeEventID string) (*ProcessedEvent, error)
 	GetProjectByID(ctx context.Context, id pgtype.UUID) (*GetProjectByIDRow, error)
 	GetProjectsByUserID(ctx context.Context, userID pgtype.UUID) ([]*GetProjectsByUserIDRow, error)
 	GetSubscriptionByStripeID(ctx context.Context, stripeSubscriptionID string) (*Subscription, error)
+	// Get the user's current active plan based on their subscription
+	// Returns the plan for active/trialing subscriptions, or NULL if no active subscription
+	GetUserActivePlan(ctx context.Context, userID pgtype.UUID) (*Plan, error)
 	GetUserByAuth0Sub(ctx context.Context, auth0Sub string) (*GetUserByAuth0SubRow, error)
 	GetUserByID(ctx context.Context, id pgtype.UUID) (*GetUserByIDRow, error)
 	GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID pgtype.Text) (*GetUserByStripeCustomerIDRow, error)
 	GetUserProfileByAuth0Sub(ctx context.Context, auth0Sub string) (*GetUserProfileByAuth0SubRow, error)
 	GetUserProfileByID(ctx context.Context, id pgtype.UUID) (*GetUserProfileByIDRow, error)
+	// List all available plans
+	ListAllPlans(ctx context.Context) ([]*Plan, error)
 	ListImagesForReconcile(ctx context.Context, arg ListImagesForReconcileParams) ([]*ListImagesForReconcileRow, error)
 	ListInvoicesByUserID(ctx context.Context, arg ListInvoicesByUserIDParams) ([]*Invoice, error)
 	ListSubscriptionsByUserID(ctx context.Context, arg ListSubscriptionsByUserIDParams) ([]*Subscription, error)

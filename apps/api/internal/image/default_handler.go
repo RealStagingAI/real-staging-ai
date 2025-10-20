@@ -1,23 +1,38 @@
 package image
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"slices"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+
+	"github.com/real-staging-ai/api/internal/auth"
+	"github.com/real-staging-ai/api/internal/user"
 )
+
+//go:generate go run github.com/matryer/moq@v0.5.3 -out usage_checker_mock.go . UsageChecker
+
+// UsageChecker provides methods to check if a user can create images.
+type UsageChecker interface {
+	CanCreateImage(ctx context.Context, userID string) (bool, error)
+}
 
 // DefaultHandler contains the HTTP handlers for image operations.
 type DefaultHandler struct {
-	service Service
+	service      Service
+	usageChecker UsageChecker
+	userRepo     user.Repository
 }
 
 // NewDefaultHandler creates a new Handler instance.
-func NewDefaultHandler(service Service) *DefaultHandler {
+func NewDefaultHandler(service Service, usageChecker UsageChecker, userRepo user.Repository) *DefaultHandler {
 	return &DefaultHandler{
-		service: service,
+		service:      service,
+		usageChecker: usageChecker,
+		userRepo:     userRepo,
 	}
 }
 
@@ -38,6 +53,26 @@ func (h *DefaultHandler) CreateImage(c echo.Context) error {
 			Message:          "The provided data is invalid",
 			ValidationErrors: validationErrs,
 		})
+	}
+
+	// Check usage limits if usage checker is configured
+	if h.usageChecker != nil && h.userRepo != nil {
+		// Get user ID from auth
+		auth0Sub, err := auth.GetUserIDOrDefault(c)
+		if err == nil && auth0Sub != "" {
+			// Get user from database
+			userRow, err := h.userRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+			if err == nil {
+				// Check if user can create image
+				canCreate, err := h.usageChecker.CanCreateImage(c.Request().Context(), userRow.ID.String())
+				if err == nil && !canCreate {
+					return c.JSON(http.StatusPaymentRequired, ErrorResponse{
+						Error:   "usage_limit_exceeded",
+						Message: "You have reached your monthly image limit. Please upgrade your plan to continue.",
+					})
+				}
+			}
+		}
 	}
 
 	// Create the image
@@ -104,6 +139,26 @@ func (h *DefaultHandler) BatchCreateImages(c echo.Context) error {
 			Message:          "One or more images have invalid data",
 			ValidationErrors: allValidationErrors,
 		})
+	}
+
+	// Check usage limits for batch if usage checker is configured
+	if h.usageChecker != nil && h.userRepo != nil {
+		// Get user ID from auth
+		auth0Sub, err := auth.GetUserIDOrDefault(c)
+		if err == nil && auth0Sub != "" {
+			// Get user from database
+			userRow, err := h.userRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+			if err == nil {
+				// Check if user can create image (checks overall limit)
+				canCreate, err := h.usageChecker.CanCreateImage(c.Request().Context(), userRow.ID.String())
+				if err == nil && !canCreate {
+					return c.JSON(http.StatusPaymentRequired, ErrorResponse{
+						Error:   "usage_limit_exceeded",
+						Message: "You have reached your monthly image limit. Please upgrade your plan to continue.",
+					})
+				}
+			}
+		}
 	}
 
 	// Create the images in batch

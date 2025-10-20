@@ -66,7 +66,7 @@ func TestBatchCreateImages_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewDefaultHandler(serviceMock)
+	handler := NewDefaultHandler(serviceMock, nil, nil)
 	err := handler.BatchCreateImages(c)
 
 	assert.NoError(t, err)
@@ -125,7 +125,7 @@ func TestBatchCreateImages_PartialSuccess(t *testing.T) {
 		},
 	}
 
-	handler := NewDefaultHandler(serviceMock)
+	handler := NewDefaultHandler(serviceMock, nil, nil)
 	err := handler.BatchCreateImages(c)
 
 	assert.NoError(t, err)
@@ -154,7 +154,7 @@ func TestBatchCreateImages_EmptyRequest(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	serviceMock := &ServiceMock{}
-	handler := NewDefaultHandler(serviceMock)
+	handler := NewDefaultHandler(serviceMock, nil, nil)
 	err := handler.BatchCreateImages(c)
 
 	assert.NoError(t, err)
@@ -188,7 +188,7 @@ func TestBatchCreateImages_TooManyImages(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	serviceMock := &ServiceMock{}
-	handler := NewDefaultHandler(serviceMock)
+	handler := NewDefaultHandler(serviceMock, nil, nil)
 	err := handler.BatchCreateImages(c)
 
 	assert.NoError(t, err)
@@ -220,7 +220,7 @@ func TestBatchCreateImages_InvalidImageData(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	serviceMock := &ServiceMock{}
-	handler := NewDefaultHandler(serviceMock)
+	handler := NewDefaultHandler(serviceMock, nil, nil)
 	err := handler.BatchCreateImages(c)
 
 	assert.NoError(t, err)

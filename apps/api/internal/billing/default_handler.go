@@ -23,12 +23,16 @@ import (
 // DefaultHandler implements the billing Handler by wrapping existing repositories
 // and user resolution logic (Auth0 sub -> ensure users row).
 type DefaultHandler struct {
-	db storage.Database
+	db           storage.Database
+	usageService UsageService
 }
 
 // NewDefaultHandler constructs a DefaultHandler.
-func NewDefaultHandler(db storage.Database) *DefaultHandler {
-	return &DefaultHandler{db: db}
+func NewDefaultHandler(db storage.Database, usageService UsageService) *DefaultHandler {
+	return &DefaultHandler{
+		db:           db,
+		usageService: usageService,
+	}
 }
 
 // ErrorResponse is a simple JSON error envelope for handler responses.
@@ -420,4 +424,50 @@ func (h *DefaultHandler) CreatePortalSession(c echo.Context) error {
 	return c.JSON(http.StatusOK, map[string]string{
 		"url": sess.URL,
 	})
+}
+
+// GetMyUsage returns the current user's usage statistics.
+// GET /api/v1/billing/usage
+func (h *DefaultHandler) GetMyUsage(c echo.Context) error {
+	// Resolve current user
+	auth0Sub, err := auth.GetUserIDOrDefault(c)
+	if err != nil || auth0Sub == "" {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Unable to resolve current user",
+		})
+	}
+
+	// Get or create user
+	uRepo := user.NewDefaultRepository(h.db)
+	userRow, err := uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+	if err != nil {
+		// Create user on first access
+		_, createErr := uRepo.Create(c.Request().Context(), auth0Sub, "", "user")
+		if createErr != nil {
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "internal_server_error",
+				Message: "Failed to resolve user",
+			})
+		}
+		// Get the newly created user
+		userRow, err = uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "internal_server_error",
+				Message: "Failed to resolve user after creation",
+			})
+		}
+	}
+
+	// Get usage statistics
+	usage, err := h.usageService.GetUsage(c.Request().Context(), userRow.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: fmt.Sprintf("Failed to get usage: %v", err),
+		})
+	}
+
+	return c.JSON(http.StatusOK, usage)
 }

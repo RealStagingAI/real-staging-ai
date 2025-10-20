@@ -22,6 +22,9 @@ var _ Querier = &QuerierMock{}
 //			CompleteJobFunc: func(ctx context.Context, id pgtype.UUID) (*Job, error) {
 //				panic("mock out the CompleteJob method")
 //			},
+//			CountImagesCreatedInPeriodFunc: func(ctx context.Context, arg CountImagesCreatedInPeriodParams) (int32, error) {
+//				panic("mock out the CountImagesCreatedInPeriod method")
+//			},
 //			CountProjectsByUserIDFunc: func(ctx context.Context, userID pgtype.UUID) (int64, error) {
 //				panic("mock out the CountProjectsByUserID method")
 //			},
@@ -94,6 +97,12 @@ var _ Querier = &QuerierMock{}
 //			GetPendingJobsFunc: func(ctx context.Context, limit int32) ([]*Job, error) {
 //				panic("mock out the GetPendingJobs method")
 //			},
+//			GetPlanByCodeFunc: func(ctx context.Context, code string) (*Plan, error) {
+//				panic("mock out the GetPlanByCode method")
+//			},
+//			GetPlanByPriceIDFunc: func(ctx context.Context, priceID string) (*Plan, error) {
+//				panic("mock out the GetPlanByPriceID method")
+//			},
 //			GetProcessedEventByStripeIDFunc: func(ctx context.Context, stripeEventID string) (*ProcessedEvent, error) {
 //				panic("mock out the GetProcessedEventByStripeID method")
 //			},
@@ -105,6 +114,9 @@ var _ Querier = &QuerierMock{}
 //			},
 //			GetSubscriptionByStripeIDFunc: func(ctx context.Context, stripeSubscriptionID string) (*Subscription, error) {
 //				panic("mock out the GetSubscriptionByStripeID method")
+//			},
+//			GetUserActivePlanFunc: func(ctx context.Context, userID pgtype.UUID) (*Plan, error) {
+//				panic("mock out the GetUserActivePlan method")
 //			},
 //			GetUserByAuth0SubFunc: func(ctx context.Context, auth0Sub string) (*GetUserByAuth0SubRow, error) {
 //				panic("mock out the GetUserByAuth0Sub method")
@@ -120,6 +132,9 @@ var _ Querier = &QuerierMock{}
 //			},
 //			GetUserProfileByIDFunc: func(ctx context.Context, id pgtype.UUID) (*GetUserProfileByIDRow, error) {
 //				panic("mock out the GetUserProfileByID method")
+//			},
+//			ListAllPlansFunc: func(ctx context.Context) ([]*Plan, error) {
+//				panic("mock out the ListAllPlans method")
 //			},
 //			ListImagesForReconcileFunc: func(ctx context.Context, arg ListImagesForReconcileParams) ([]*ListImagesForReconcileRow, error) {
 //				panic("mock out the ListImagesForReconcile method")
@@ -184,6 +199,9 @@ var _ Querier = &QuerierMock{}
 type QuerierMock struct {
 	// CompleteJobFunc mocks the CompleteJob method.
 	CompleteJobFunc func(ctx context.Context, id pgtype.UUID) (*Job, error)
+
+	// CountImagesCreatedInPeriodFunc mocks the CountImagesCreatedInPeriod method.
+	CountImagesCreatedInPeriodFunc func(ctx context.Context, arg CountImagesCreatedInPeriodParams) (int32, error)
 
 	// CountProjectsByUserIDFunc mocks the CountProjectsByUserID method.
 	CountProjectsByUserIDFunc func(ctx context.Context, userID pgtype.UUID) (int64, error)
@@ -257,6 +275,12 @@ type QuerierMock struct {
 	// GetPendingJobsFunc mocks the GetPendingJobs method.
 	GetPendingJobsFunc func(ctx context.Context, limit int32) ([]*Job, error)
 
+	// GetPlanByCodeFunc mocks the GetPlanByCode method.
+	GetPlanByCodeFunc func(ctx context.Context, code string) (*Plan, error)
+
+	// GetPlanByPriceIDFunc mocks the GetPlanByPriceID method.
+	GetPlanByPriceIDFunc func(ctx context.Context, priceID string) (*Plan, error)
+
 	// GetProcessedEventByStripeIDFunc mocks the GetProcessedEventByStripeID method.
 	GetProcessedEventByStripeIDFunc func(ctx context.Context, stripeEventID string) (*ProcessedEvent, error)
 
@@ -268,6 +292,9 @@ type QuerierMock struct {
 
 	// GetSubscriptionByStripeIDFunc mocks the GetSubscriptionByStripeID method.
 	GetSubscriptionByStripeIDFunc func(ctx context.Context, stripeSubscriptionID string) (*Subscription, error)
+
+	// GetUserActivePlanFunc mocks the GetUserActivePlan method.
+	GetUserActivePlanFunc func(ctx context.Context, userID pgtype.UUID) (*Plan, error)
 
 	// GetUserByAuth0SubFunc mocks the GetUserByAuth0Sub method.
 	GetUserByAuth0SubFunc func(ctx context.Context, auth0Sub string) (*GetUserByAuth0SubRow, error)
@@ -283,6 +310,9 @@ type QuerierMock struct {
 
 	// GetUserProfileByIDFunc mocks the GetUserProfileByID method.
 	GetUserProfileByIDFunc func(ctx context.Context, id pgtype.UUID) (*GetUserProfileByIDRow, error)
+
+	// ListAllPlansFunc mocks the ListAllPlans method.
+	ListAllPlansFunc func(ctx context.Context) ([]*Plan, error)
 
 	// ListImagesForReconcileFunc mocks the ListImagesForReconcile method.
 	ListImagesForReconcileFunc func(ctx context.Context, arg ListImagesForReconcileParams) ([]*ListImagesForReconcileRow, error)
@@ -346,6 +376,13 @@ type QuerierMock struct {
 			Ctx context.Context
 			// ID is the id argument value.
 			ID pgtype.UUID
+		}
+		// CountImagesCreatedInPeriod holds details about calls to the CountImagesCreatedInPeriod method.
+		CountImagesCreatedInPeriod []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Arg is the arg argument value.
+			Arg CountImagesCreatedInPeriodParams
 		}
 		// CountProjectsByUserID holds details about calls to the CountProjectsByUserID method.
 		CountProjectsByUserID []struct {
@@ -511,6 +548,20 @@ type QuerierMock struct {
 			// Limit is the limit argument value.
 			Limit int32
 		}
+		// GetPlanByCode holds details about calls to the GetPlanByCode method.
+		GetPlanByCode []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Code is the code argument value.
+			Code string
+		}
+		// GetPlanByPriceID holds details about calls to the GetPlanByPriceID method.
+		GetPlanByPriceID []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// PriceID is the priceID argument value.
+			PriceID string
+		}
 		// GetProcessedEventByStripeID holds details about calls to the GetProcessedEventByStripeID method.
 		GetProcessedEventByStripeID []struct {
 			// Ctx is the ctx argument value.
@@ -538,6 +589,13 @@ type QuerierMock struct {
 			Ctx context.Context
 			// StripeSubscriptionID is the stripeSubscriptionID argument value.
 			StripeSubscriptionID string
+		}
+		// GetUserActivePlan holds details about calls to the GetUserActivePlan method.
+		GetUserActivePlan []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// UserID is the userID argument value.
+			UserID pgtype.UUID
 		}
 		// GetUserByAuth0Sub holds details about calls to the GetUserByAuth0Sub method.
 		GetUserByAuth0Sub []struct {
@@ -573,6 +631,11 @@ type QuerierMock struct {
 			Ctx context.Context
 			// ID is the id argument value.
 			ID pgtype.UUID
+		}
+		// ListAllPlans holds details about calls to the ListAllPlans method.
+		ListAllPlans []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
 		}
 		// ListImagesForReconcile holds details about calls to the ListImagesForReconcile method.
 		ListImagesForReconcile []struct {
@@ -702,6 +765,7 @@ type QuerierMock struct {
 		}
 	}
 	lockCompleteJob                          sync.RWMutex
+	lockCountImagesCreatedInPeriod           sync.RWMutex
 	lockCountProjectsByUserID                sync.RWMutex
 	lockCountUsers                           sync.RWMutex
 	lockCreateImage                          sync.RWMutex
@@ -726,15 +790,19 @@ type QuerierMock struct {
 	lockGetJobByID                           sync.RWMutex
 	lockGetJobsByImageID                     sync.RWMutex
 	lockGetPendingJobs                       sync.RWMutex
+	lockGetPlanByCode                        sync.RWMutex
+	lockGetPlanByPriceID                     sync.RWMutex
 	lockGetProcessedEventByStripeID          sync.RWMutex
 	lockGetProjectByID                       sync.RWMutex
 	lockGetProjectsByUserID                  sync.RWMutex
 	lockGetSubscriptionByStripeID            sync.RWMutex
+	lockGetUserActivePlan                    sync.RWMutex
 	lockGetUserByAuth0Sub                    sync.RWMutex
 	lockGetUserByID                          sync.RWMutex
 	lockGetUserByStripeCustomerID            sync.RWMutex
 	lockGetUserProfileByAuth0Sub             sync.RWMutex
 	lockGetUserProfileByID                   sync.RWMutex
+	lockListAllPlans                         sync.RWMutex
 	lockListImagesForReconcile               sync.RWMutex
 	lockListInvoicesByUserID                 sync.RWMutex
 	lockListSubscriptionsByUserID            sync.RWMutex
@@ -788,6 +856,42 @@ func (mock *QuerierMock) CompleteJobCalls() []struct {
 	mock.lockCompleteJob.RLock()
 	calls = mock.calls.CompleteJob
 	mock.lockCompleteJob.RUnlock()
+	return calls
+}
+
+// CountImagesCreatedInPeriod calls CountImagesCreatedInPeriodFunc.
+func (mock *QuerierMock) CountImagesCreatedInPeriod(ctx context.Context, arg CountImagesCreatedInPeriodParams) (int32, error) {
+	if mock.CountImagesCreatedInPeriodFunc == nil {
+		panic("QuerierMock.CountImagesCreatedInPeriodFunc: method is nil but Querier.CountImagesCreatedInPeriod was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Arg CountImagesCreatedInPeriodParams
+	}{
+		Ctx: ctx,
+		Arg: arg,
+	}
+	mock.lockCountImagesCreatedInPeriod.Lock()
+	mock.calls.CountImagesCreatedInPeriod = append(mock.calls.CountImagesCreatedInPeriod, callInfo)
+	mock.lockCountImagesCreatedInPeriod.Unlock()
+	return mock.CountImagesCreatedInPeriodFunc(ctx, arg)
+}
+
+// CountImagesCreatedInPeriodCalls gets all the calls that were made to CountImagesCreatedInPeriod.
+// Check the length with:
+//
+//	len(mockedQuerier.CountImagesCreatedInPeriodCalls())
+func (mock *QuerierMock) CountImagesCreatedInPeriodCalls() []struct {
+	Ctx context.Context
+	Arg CountImagesCreatedInPeriodParams
+} {
+	var calls []struct {
+		Ctx context.Context
+		Arg CountImagesCreatedInPeriodParams
+	}
+	mock.lockCountImagesCreatedInPeriod.RLock()
+	calls = mock.calls.CountImagesCreatedInPeriod
+	mock.lockCountImagesCreatedInPeriod.RUnlock()
 	return calls
 }
 
@@ -1647,6 +1751,78 @@ func (mock *QuerierMock) GetPendingJobsCalls() []struct {
 	return calls
 }
 
+// GetPlanByCode calls GetPlanByCodeFunc.
+func (mock *QuerierMock) GetPlanByCode(ctx context.Context, code string) (*Plan, error) {
+	if mock.GetPlanByCodeFunc == nil {
+		panic("QuerierMock.GetPlanByCodeFunc: method is nil but Querier.GetPlanByCode was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		Code string
+	}{
+		Ctx:  ctx,
+		Code: code,
+	}
+	mock.lockGetPlanByCode.Lock()
+	mock.calls.GetPlanByCode = append(mock.calls.GetPlanByCode, callInfo)
+	mock.lockGetPlanByCode.Unlock()
+	return mock.GetPlanByCodeFunc(ctx, code)
+}
+
+// GetPlanByCodeCalls gets all the calls that were made to GetPlanByCode.
+// Check the length with:
+//
+//	len(mockedQuerier.GetPlanByCodeCalls())
+func (mock *QuerierMock) GetPlanByCodeCalls() []struct {
+	Ctx  context.Context
+	Code string
+} {
+	var calls []struct {
+		Ctx  context.Context
+		Code string
+	}
+	mock.lockGetPlanByCode.RLock()
+	calls = mock.calls.GetPlanByCode
+	mock.lockGetPlanByCode.RUnlock()
+	return calls
+}
+
+// GetPlanByPriceID calls GetPlanByPriceIDFunc.
+func (mock *QuerierMock) GetPlanByPriceID(ctx context.Context, priceID string) (*Plan, error) {
+	if mock.GetPlanByPriceIDFunc == nil {
+		panic("QuerierMock.GetPlanByPriceIDFunc: method is nil but Querier.GetPlanByPriceID was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		PriceID string
+	}{
+		Ctx:     ctx,
+		PriceID: priceID,
+	}
+	mock.lockGetPlanByPriceID.Lock()
+	mock.calls.GetPlanByPriceID = append(mock.calls.GetPlanByPriceID, callInfo)
+	mock.lockGetPlanByPriceID.Unlock()
+	return mock.GetPlanByPriceIDFunc(ctx, priceID)
+}
+
+// GetPlanByPriceIDCalls gets all the calls that were made to GetPlanByPriceID.
+// Check the length with:
+//
+//	len(mockedQuerier.GetPlanByPriceIDCalls())
+func (mock *QuerierMock) GetPlanByPriceIDCalls() []struct {
+	Ctx     context.Context
+	PriceID string
+} {
+	var calls []struct {
+		Ctx     context.Context
+		PriceID string
+	}
+	mock.lockGetPlanByPriceID.RLock()
+	calls = mock.calls.GetPlanByPriceID
+	mock.lockGetPlanByPriceID.RUnlock()
+	return calls
+}
+
 // GetProcessedEventByStripeID calls GetProcessedEventByStripeIDFunc.
 func (mock *QuerierMock) GetProcessedEventByStripeID(ctx context.Context, stripeEventID string) (*ProcessedEvent, error) {
 	if mock.GetProcessedEventByStripeIDFunc == nil {
@@ -1788,6 +1964,42 @@ func (mock *QuerierMock) GetSubscriptionByStripeIDCalls() []struct {
 	mock.lockGetSubscriptionByStripeID.RLock()
 	calls = mock.calls.GetSubscriptionByStripeID
 	mock.lockGetSubscriptionByStripeID.RUnlock()
+	return calls
+}
+
+// GetUserActivePlan calls GetUserActivePlanFunc.
+func (mock *QuerierMock) GetUserActivePlan(ctx context.Context, userID pgtype.UUID) (*Plan, error) {
+	if mock.GetUserActivePlanFunc == nil {
+		panic("QuerierMock.GetUserActivePlanFunc: method is nil but Querier.GetUserActivePlan was just called")
+	}
+	callInfo := struct {
+		Ctx    context.Context
+		UserID pgtype.UUID
+	}{
+		Ctx:    ctx,
+		UserID: userID,
+	}
+	mock.lockGetUserActivePlan.Lock()
+	mock.calls.GetUserActivePlan = append(mock.calls.GetUserActivePlan, callInfo)
+	mock.lockGetUserActivePlan.Unlock()
+	return mock.GetUserActivePlanFunc(ctx, userID)
+}
+
+// GetUserActivePlanCalls gets all the calls that were made to GetUserActivePlan.
+// Check the length with:
+//
+//	len(mockedQuerier.GetUserActivePlanCalls())
+func (mock *QuerierMock) GetUserActivePlanCalls() []struct {
+	Ctx    context.Context
+	UserID pgtype.UUID
+} {
+	var calls []struct {
+		Ctx    context.Context
+		UserID pgtype.UUID
+	}
+	mock.lockGetUserActivePlan.RLock()
+	calls = mock.calls.GetUserActivePlan
+	mock.lockGetUserActivePlan.RUnlock()
 	return calls
 }
 
@@ -1968,6 +2180,38 @@ func (mock *QuerierMock) GetUserProfileByIDCalls() []struct {
 	mock.lockGetUserProfileByID.RLock()
 	calls = mock.calls.GetUserProfileByID
 	mock.lockGetUserProfileByID.RUnlock()
+	return calls
+}
+
+// ListAllPlans calls ListAllPlansFunc.
+func (mock *QuerierMock) ListAllPlans(ctx context.Context) ([]*Plan, error) {
+	if mock.ListAllPlansFunc == nil {
+		panic("QuerierMock.ListAllPlansFunc: method is nil but Querier.ListAllPlans was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockListAllPlans.Lock()
+	mock.calls.ListAllPlans = append(mock.calls.ListAllPlans, callInfo)
+	mock.lockListAllPlans.Unlock()
+	return mock.ListAllPlansFunc(ctx)
+}
+
+// ListAllPlansCalls gets all the calls that were made to ListAllPlans.
+// Check the length with:
+//
+//	len(mockedQuerier.ListAllPlansCalls())
+func (mock *QuerierMock) ListAllPlansCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockListAllPlans.RLock()
+	calls = mock.calls.ListAllPlans
+	mock.lockListAllPlans.RUnlock()
 	return calls
 }
 
