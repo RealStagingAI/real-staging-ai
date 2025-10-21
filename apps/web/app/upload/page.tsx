@@ -40,6 +40,16 @@ type SubscriptionResponse = {
   items: Subscription[]
 }
 
+type UsageStats = {
+  images_used: number
+  monthly_limit: number
+  plan_code: string
+  period_start: string
+  period_end: string
+  has_subscription: boolean
+  remaining_images: number
+}
+
 export default function UploadPage() {
   const router = useRouter()
   const [files, setFiles] = useState<FileWithOverrides[]>([])
@@ -54,20 +64,30 @@ export default function UploadPage() {
   const [uploadProgress, setUploadProgress] = useState<Record<string, UploadProgress>>({})
   const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean | null>(null)
   const [subscriptionLoading, setSubscriptionLoading] = useState(true)
+  const [usage, setUsage] = useState<UsageStats | null>(null)
+  const [usageLoading, setUsageLoading] = useState(true)
 
-  async function checkSubscription() {
+  async function checkSubscriptionAndUsage() {
     try {
       setSubscriptionLoading(true)
-      const res = await apiFetch<SubscriptionResponse>("/v1/billing/subscriptions")
-      const activeSubscription = res.items?.some(
+      setUsageLoading(true)
+      
+      const [subsRes, usageRes] = await Promise.all([
+        apiFetch<SubscriptionResponse>("/v1/billing/subscriptions"),
+        apiFetch<UsageStats>("/v1/billing/usage")
+      ])
+      
+      const activeSubscription = subsRes.items?.some(
         sub => sub.status === "active" || sub.status === "trialing"
       )
       setHasActiveSubscription(activeSubscription || false)
+      setUsage(usageRes)
     } catch (err: unknown) {
-      console.error("Failed to check subscription:", err)
+      console.error("Failed to check subscription and usage:", err)
       setHasActiveSubscription(false)
     } finally {
       setSubscriptionLoading(false)
+      setUsageLoading(false)
     }
   }
 
@@ -108,7 +128,7 @@ export default function UploadPage() {
   }
 
   useEffect(() => {
-    checkSubscription()
+    checkSubscriptionAndUsage()
     loadProjects()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -270,6 +290,18 @@ export default function UploadPage() {
       setIsUploading(false)
       return
     }
+    
+    // Check usage limit
+    if (usage && usage.remaining_images <= 0) {
+      setStatus("You have reached your monthly image limit. Please upgrade your plan to continue.")
+      setIsUploading(false)
+      return
+    }
+    
+    // Warn if uploading more than remaining
+    if (usage && files.length > usage.remaining_images) {
+      setStatus(`Warning: You are trying to upload ${files.length} images but only have ${usage.remaining_images} remaining this month. Only ${usage.remaining_images} will be processed.`)
+    }
 
     // Upload all files concurrently
     const results = await Promise.all(files.map(uploadSingleFile))
@@ -297,10 +329,47 @@ export default function UploadPage() {
 
   const successfulUploads = Object.values(uploadProgress).filter(p => p.status === 'success')
 
+  const isAtLimit = !usageLoading && usage && usage.remaining_images <= 0
+  const canUpload = !subscriptionLoading && !usageLoading && hasActiveSubscription !== false && !isAtLimit
+
   return (
     <div className="container max-w-7xl py-8 space-y-8">
+      {/* Usage Limit Reached Banner */}
+      {isAtLimit && (
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0">
+              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <h3 className="text-lg font-semibold text-red-900 dark:text-red-300">
+                Monthly Limit Reached
+              </h3>
+              <p className="text-red-800 dark:text-red-400">
+                You have used all {usage?.monthly_limit} images in your {usage?.plan_code?.toUpperCase() || 'FREE'} plan for this billing period. Upgrade to continue staging more properties.
+              </p>
+              <div className="flex gap-3 mt-3">
+                <button
+                  onClick={() => router.push('/profile')}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  Upgrade Plan
+                </button>
+                <button
+                  onClick={() => router.push('/billing')}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                >
+                  View Usage
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Subscription Required Banner */}
-      {!subscriptionLoading && hasActiveSubscription === false && (
+      {!subscriptionLoading && !usageLoading && hasActiveSubscription === false && !isAtLimit && (
         <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl p-6 shadow-sm">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
@@ -416,12 +485,12 @@ export default function UploadPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Property Images</label>
             <div
-              onDragOver={hasActiveSubscription !== false ? handleDragOver : undefined}
-              onDragLeave={hasActiveSubscription !== false ? handleDragLeave : undefined}
-              onDrop={hasActiveSubscription !== false ? handleDrop : undefined}
+              onDragOver={canUpload ? handleDragOver : undefined}
+              onDragLeave={canUpload ? handleDragLeave : undefined}
+              onDrop={canUpload ? handleDrop : undefined}
               className={cn(
                 "relative rounded-xl border-2 border-dashed transition-all duration-200 p-8",
-                hasActiveSubscription === false ? "opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-800" :
+                !canUpload ? "opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-800" :
                 isDragging 
                   ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/30" 
                   : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500",
@@ -434,7 +503,7 @@ export default function UploadPage() {
                 accept="image/*"
                 className="hidden"
                 onChange={handleFileSelect}
-                disabled={hasActiveSubscription === false}
+                disabled={!canUpload}
               />
               <div className="flex flex-col items-center justify-center text-center space-y-3">
                 <div className={cn(
@@ -668,7 +737,7 @@ export default function UploadPage() {
             <button 
               className="btn btn-primary w-full sm:w-auto" 
               type="submit"
-              disabled={isUploading || files.length === 0 || !projectId}
+              disabled={isUploading || files.length === 0 || !projectId || !canUpload}
             >
               {isUploading ? (
                 <>
