@@ -30,6 +30,8 @@ test: ## Run unit tests
 	cd apps/worker && APP_ENV=../../config go test -timeout 60s -v ./internal/repository ./internal/events ./...
 	@echo "--> Running web tests"
 	cd apps/web && npm run test
+	@echo "--> Running cloudflare-cdn-worker tests"
+	cd cloudflare-cdn-worker && npm run test
 
 test-cover: ## Run unit tests with coverage
 	@echo "Running unit tests with coverage..."

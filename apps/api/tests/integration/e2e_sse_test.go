@@ -91,7 +91,7 @@ func newAPITestServer(t *testing.T, db *storage.DefaultDatabase) (*httptest.Serv
 	jobRepo := job.NewDefaultRepository(db)
 	imgSvc := image.NewDefaultService(cfg, imgRepo, jobRepo)
 
-	srv := httpLib.NewTestServer(&config.Config{S3: SecretKey: "sk_test_fake"}}, db, s3, imgSvc)
+	srv := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3, imgSvc)
 	return httptest.NewServer(srv), s3
 }
 
@@ -103,7 +103,7 @@ func TestE2E_SSE_ProcessingReady(t *testing.T) {
 	db := SetupTestDatabase(t)
 	defer db.Close()
 	require.NoError(t, ResetDatabase(context.Background(), db.Pool()))
-	
+
 	// Create active subscription for test user (required for image uploads)
 	_, err := db.Pool().Exec(context.Background(), `
 		INSERT INTO subscriptions (user_id, stripe_subscription_id, status, current_period_start, current_period_end)
@@ -174,7 +174,7 @@ func TestE2E_SSE_ProcessingError(t *testing.T) {
 	db := SetupTestDatabase(t)
 	defer db.Close()
 	require.NoError(t, ResetDatabase(context.Background(), db.Pool()))
-	
+
 	// Create active subscription for test user (required for image uploads)
 	_, err := db.Pool().Exec(context.Background(), `
 		INSERT INTO subscriptions (user_id, stripe_subscription_id, status, current_period_start, current_period_end)

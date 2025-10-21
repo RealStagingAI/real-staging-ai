@@ -3,7 +3,6 @@
 package integration
 
 import (
-	"github.com/real-staging-ai/api/internal/config"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/real-staging-ai/api/internal/config"
 
 	"github.com/google/uuid"
 	httpLib "github.com/real-staging-ai/api/internal/http"
@@ -150,7 +151,7 @@ func TestCreateProject_Handlers(t *testing.T) {
 			SeedDatabase(ctx, db.Pool())
 			s3ServiceMock := SetupTestS3Service(t, context.Background())
 			imageServiceMock := &image.ServiceMock{}
-			server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+			server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
 
 			// Prepare request body
 			var body []byte
@@ -254,7 +255,7 @@ func TestGetProjects_Handlers(t *testing.T) {
 
 			s3ServiceMock := SetupTestS3Service(t, context.Background())
 			imageServiceMock := &image.ServiceMock{}
-			server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+			server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
 
 			// Create request
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/projects", nil)
@@ -340,7 +341,7 @@ func TestGetProjectByID_Handlers(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s3ServiceMock := SetupTestS3Service(t, context.Background())
 			imageServiceMock := &image.ServiceMock{}
-			server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+			server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
 
 			// Create request
 			url := fmt.Sprintf("/api/v1/projects/%s", tc.projectID)
@@ -464,7 +465,7 @@ func TestUpdateProject_Handlers(t *testing.T) {
 
 			s3ServiceMock := SetupTestS3Service(t, context.Background())
 			imageServiceMock := &image.ServiceMock{}
-			server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+			server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
 
 			// Prepare request body
 			body, err := json.Marshal(tc.requestBody)
@@ -559,7 +560,7 @@ func TestDeleteProject_Handlers(t *testing.T) {
 
 			s3ServiceMock := SetupTestS3Service(t, context.Background())
 			imageServiceMock := &image.ServiceMock{}
-			server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+			server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
 
 			// Create request
 			url := fmt.Sprintf("/api/v1/projects/%s", tc.projectID)
@@ -601,7 +602,7 @@ func TestProjectCRUDFlow_Handlers(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, context.Background())
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+	server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
 
 	// Step 1: Create a project
 	createBody := map[string]any{

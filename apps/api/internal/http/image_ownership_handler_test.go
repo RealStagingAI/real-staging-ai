@@ -11,11 +11,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"github.com/real-staging-ai/api/internal/config"
 	"github.com/real-staging-ai/api/internal/image"
 	"github.com/real-staging-ai/api/internal/storage"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetImageOwnerHandler(t *testing.T) {

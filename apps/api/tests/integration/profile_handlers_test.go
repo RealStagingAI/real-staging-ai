@@ -3,13 +3,14 @@
 package integration
 
 import (
-	"github.com/real-staging-ai/api/internal/config"
 	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/real-staging-ai/api/internal/config"
 
 	httpLib "github.com/real-staging-ai/api/internal/http"
 	"github.com/real-staging-ai/api/internal/image"
@@ -29,7 +30,7 @@ func TestGetProfile_Integration(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, ctx)
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+	server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
 
 	testCases := []struct {
 		name           string
@@ -107,7 +108,7 @@ func TestUpdateProfile_Integration(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, ctx)
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+	server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
 
 	testCases := []struct {
 		name           string
@@ -194,7 +195,7 @@ func TestUpdateProfile_Integration(t *testing.T) {
 				err := json.Unmarshal(response, &profile)
 				require.NoError(t, err)
 				assert.NotNil(t, profile.BillingAddress)
-				
+
 				var addr map[string]string
 				err = json.Unmarshal(profile.BillingAddress, &addr)
 				require.NoError(t, err)
