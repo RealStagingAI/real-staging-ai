@@ -30,12 +30,23 @@ interface Subscription {
   currentPeriodEnd?: string;
 }
 
+interface UsageStats {
+  images_used: number;
+  monthly_limit: number;
+  plan_code: string;
+  period_start: string;
+  period_end: string;
+  has_subscription: boolean;
+  remaining_images: number;
+}
+
 function ProfilePageContent() {
   const { user, isLoading: authLoading } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -60,14 +71,16 @@ function ProfilePageContent() {
   // Define functions before they're used in useEffect
   const fetchProfileAndSubscription = useCallback(async () => {
     try {
-      // Fetch both in parallel
-      const [profileData, subscriptionData] = await Promise.all([
+      // Fetch profile, usage, and subscription in parallel
+      const [profileData, usageData, subscriptionData] = await Promise.all([
         apiFetch<BackendProfile>('/v1/user/profile'),
+        apiFetch<UsageStats>('/v1/billing/usage'),
         apiFetch<{ items: Subscription[] }>('/v1/billing/subscriptions')
       ]);
 
       // Populate form from backend (snake_case) using mapper
       setFormData(toFormData(profileData));
+      setUsage(usageData);
       
       // Set subscription if available and active
       if (subscriptionData.items && subscriptionData.items.length > 0) {
@@ -427,35 +440,143 @@ function ProfilePageContent() {
             Manage your subscription and payment methods
           </p>
         </div>
-        <div className="card-body space-y-4">
-          {subscription ? (
+        <div className="card-body space-y-6">
+          {usage && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+              {/* Current Plan Display */}
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <div>
-                  <p className="font-medium text-green-900 dark:text-green-300">Active Subscription</p>
-                  <p className="text-sm text-green-700 dark:text-green-400 mt-1">
-                    Status: {subscription.status}
+                  <p className="text-sm font-medium text-blue-700 dark:text-blue-400">Current Plan</p>
+                  <p className="text-2xl font-bold text-blue-900 dark:text-blue-300 mt-1">
+                    {usage.plan_code === 'free' ? 'Free' : usage.plan_code === 'pro' ? 'Pro' : 'Business'} Plan
                   </p>
-                  {subscription.currentPeriodEnd && (
-                    <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                      Renews on {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                  <p className="text-sm text-blue-600 dark:text-blue-500 mt-1">
+                    {usage.monthly_limit} images per month • {usage.images_used} used
+                  </p>
+                  {subscription?.currentPeriodEnd && (
+                    <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
+                      Renews on {new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </p>
                   )}
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div className="text-right">
+                  {usage.plan_code === 'free' && (
+                    <div className="text-3xl font-bold text-blue-900 dark:text-blue-300">$0<span className="text-lg text-blue-600 dark:text-blue-500">/mo</span></div>
+                  )}
+                  {usage.plan_code === 'pro' && (
+                    <div className="text-3xl font-bold text-blue-900 dark:text-blue-300">$29<span className="text-lg text-blue-600 dark:text-blue-500">/mo</span></div>
+                  )}
+                  {usage.plan_code === 'business' && (
+                    <div className="text-3xl font-bold text-blue-900 dark:text-blue-300">$99<span className="text-lg text-blue-600 dark:text-blue-500">/mo</span></div>
+                  )}
+                </div>
               </div>
 
-              <button
-                onClick={handleManageBilling}
-                className="w-full btn btn-outline flex items-center justify-center gap-2"
-              >
-                <Receipt className="h-4 w-4" />
-                Manage Subscription & Payment Methods
-              </button>
+              {/* Manage Subscription Button (for paid plans) */}
+              {subscription && usage.plan_code !== 'free' && (
+                <button
+                  onClick={handleManageBilling}
+                  className="w-full btn btn-outline flex items-center justify-center gap-2"
+                >
+                  <Receipt className="h-4 w-4" />
+                  Manage Subscription & Payment Methods
+                </button>
+              )}
+
+              {/* Upgrade Options */}
+              {usage.plan_code !== 'business' && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    {usage.plan_code === 'free' ? 'Upgrade Your Plan' : 'Available Upgrades'}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Show Pro if on Free */}
+                    {usage.plan_code === 'free' && (
+                      <div className="border border-blue-200 dark:border-blue-700 rounded-lg p-5 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pro</h4>
+                            <p className="text-2xl font-bold text-blue-600 mt-1">$29<span className="text-sm font-normal text-gray-600 dark:text-gray-400">/month</span></p>
+                          </div>
+                        </div>
+                        <ul className="space-y-2 mb-4">
+                          <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <CheckCircle className="h-4 w-4 text-blue-600" />
+                            100 images per month
+                          </li>
+                          <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <CheckCircle className="h-4 w-4 text-blue-600" />
+                            Priority processing
+                          </li>
+                          <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                            <CheckCircle className="h-4 w-4 text-blue-600" />
+                            Chat support
+                          </li>
+                        </ul>
+                        <button
+                          onClick={() => handleSubscribe('pro')}
+                          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                        >
+                          Upgrade to Pro
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Show Business (available for both Free and Pro) */}
+                    <div className="border-2 border-purple-300 dark:border-purple-600 rounded-lg p-5 relative hover:border-purple-400 dark:hover:border-purple-500 transition-colors">
+                      <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg rounded-tr-lg">
+                        Best Value
+                      </div>
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business</h4>
+                          <p className="text-2xl font-bold text-purple-600 mt-1">$99<span className="text-sm font-normal text-gray-600 dark:text-gray-400">/month</span></p>
+                        </div>
+                      </div>
+                      <ul className="space-y-2 mb-4">
+                        <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <CheckCircle className="h-4 w-4 text-purple-600" />
+                          500 images per month
+                        </li>
+                        <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <CheckCircle className="h-4 w-4 text-purple-600" />
+                          Fastest processing
+                        </li>
+                        <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <CheckCircle className="h-4 w-4 text-purple-600" />
+                          Priority support
+                        </li>
+                      </ul>
+                      <button
+                        onClick={() => handleSubscribe('business')}
+                        className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                      >
+                        Upgrade to Business
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Top Tier Message */}
+              {usage.plan_code === 'business' && (
+                <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 border border-purple-200 dark:border-purple-800 rounded-lg text-center">
+                  <p className="text-purple-900 dark:text-purple-300 font-medium">
+                    🎉 You&apos;re on our top tier plan!
+                  </p>
+                  <p className="text-sm text-purple-700 dark:text-purple-400 mt-1">
+                    Thank you for your business. You have access to all premium features.
+                  </p>
+                </div>
+              )}
             </div>
-          ) : (
+          )}
+
+          {/* No usage data available - show all plans */}
+          {!usage && !subscription && (
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Choose a Plan
               </h3>
               
