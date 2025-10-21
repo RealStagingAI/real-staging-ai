@@ -240,7 +240,15 @@ export default function BillingPage() {
                   {usage?.plan_code ? `${usage.plan_code.toUpperCase()} Plan` : 'Loading...'}
                   {subscription && ` • ${subscription.status === 'trialing' ? 'Trial' : 'Active'}`}
                 </p>
-                {usage?.plan_code === 'free' && (
+                {subscription && subscription.current_period_start && subscription.current_period_end && (
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    Billing period: {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
+                  </p>
+                )}
+                {usage?.plan_code === 'free' && !subscription && (
                   <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
                     <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />

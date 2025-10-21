@@ -27,6 +27,7 @@ interface Subscription {
   id: string;
   status: string;
   priceId?: string;
+  currentPeriodStart?: string;
   currentPeriodEnd?: string;
 }
 
@@ -453,9 +454,9 @@ function ProfilePageContent() {
                   <p className="text-sm text-blue-600 dark:text-blue-500 mt-1">
                     {usage.monthly_limit} images per month • {usage.images_used} used
                   </p>
-                  {subscription?.currentPeriodEnd && (
+                  {subscription && subscription.currentPeriodStart && subscription.currentPeriodEnd && (
                     <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
-                      Renews on {new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      Billing period: {new Date(subscription.currentPeriodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} - {new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   )}
                 </div>
