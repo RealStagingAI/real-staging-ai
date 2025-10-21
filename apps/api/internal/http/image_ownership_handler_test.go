@@ -11,21 +11,28 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
+	"github.com/real-staging-ai/api/internal/config"
 	"github.com/real-staging-ai/api/internal/image"
 	"github.com/real-staging-ai/api/internal/storage"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetImageOwnerHandler(t *testing.T) {
-	// Set worker secret for tests
-	t.Setenv("WORKER_SECRET", "test-worker-secret")
-
 	imageID := uuid.New()
 	projectID := uuid.New()
 	userID := uuid.New()
 	otherUserID := uuid.New()
+
+	// Mock config
+	mockConfig := &config.Config{
+		Worker: config.Worker{
+			Secret: "test-worker-secret",
+		},
+		S3: config.S3{
+			BucketName: "realstaging-prod",
+		},
+	}
 
 	t.Run("success: returns ownership info with s3 key for owned original image", func(t *testing.T) {
 		e := echo.New()
@@ -73,6 +80,7 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		server := &Server{
 			imageService: mockImageService,
 			db:           mockDB,
+			config:       mockConfig,
 		}
 
 		err := server.getImageOwnerHandler(c)
@@ -130,6 +138,7 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		server := &Server{
 			imageService: mockImageService,
 			db:           mockDB,
+			config:       mockConfig,
 		}
 
 		err := server.getImageOwnerHandler(c)
@@ -180,6 +189,7 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		server := &Server{
 			imageService: mockImageService,
 			db:           mockDB,
+			config:       mockConfig,
 		}
 
 		err := server.getImageOwnerHandler(c)
@@ -190,8 +200,6 @@ func TestGetImageOwnerHandler(t *testing.T) {
 	})
 
 	t.Run("fail: missing worker secret", func(t *testing.T) {
-		t.Setenv("WORKER_SECRET", "")
-
 		e := echo.New()
 		req := httptest.NewRequest(http.MethodGet, "/v1/images/"+imageID.String()+"/owner", nil)
 		req.Header.Set("X-Internal-Auth", "test-worker-secret")
@@ -202,7 +210,16 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues(imageID.String())
 
-		server := &Server{}
+		// Config with empty worker secret
+		emptySecretConfig := &config.Config{
+			Worker: config.Worker{
+				Secret: "",
+			},
+		}
+
+		server := &Server{
+			config: emptySecretConfig,
+		}
 
 		err := server.getImageOwnerHandler(c)
 		require.NoError(t, err)
@@ -221,7 +238,9 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues(imageID.String())
 
-		server := &Server{}
+		server := &Server{
+			config: mockConfig,
+		}
 
 		err := server.getImageOwnerHandler(c)
 		require.NoError(t, err)
@@ -240,7 +259,9 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues("")
 
-		server := &Server{}
+		server := &Server{
+			config: mockConfig,
+		}
 
 		err := server.getImageOwnerHandler(c)
 		require.NoError(t, err)
@@ -259,7 +280,9 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues("invalid-uuid")
 
-		server := &Server{}
+		server := &Server{
+			config: mockConfig,
+		}
 
 		err := server.getImageOwnerHandler(c)
 		require.NoError(t, err)
@@ -278,7 +301,9 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues(imageID.String())
 
-		server := &Server{}
+		server := &Server{
+			config: mockConfig,
+		}
 
 		err := server.getImageOwnerHandler(c)
 		require.NoError(t, err)
@@ -298,7 +323,9 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		c.SetParamNames("id")
 		c.SetParamValues(imageID.String())
 
-		server := &Server{}
+		server := &Server{
+			config: mockConfig,
+		}
 
 		err := server.getImageOwnerHandler(c)
 		require.NoError(t, err)
@@ -326,6 +353,7 @@ func TestGetImageOwnerHandler(t *testing.T) {
 
 		server := &Server{
 			imageService: mockImageService,
+			config:       mockConfig,
 		}
 
 		err := server.getImageOwnerHandler(c)
@@ -372,6 +400,7 @@ func TestGetImageOwnerHandler(t *testing.T) {
 		server := &Server{
 			imageService: mockImageService,
 			db:           mockDB,
+			config:       mockConfig,
 		}
 
 		err := server.getImageOwnerHandler(c)

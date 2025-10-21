@@ -2,7 +2,6 @@ package http
 
 import (
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/google/uuid"
@@ -22,7 +21,7 @@ type ImageOwnershipResponse struct {
 // and retrieve S3 key for authorized access
 func (s *Server) getImageOwnerHandler(c echo.Context) error {
 	// Verify internal auth from worker
-	workerSecret := os.Getenv("WORKER_SECRET")
+	workerSecret := s.config.Worker.Secret
 	if workerSecret == "" {
 		return c.JSON(http.StatusUnauthorized, ErrorResponse{
 			Error:   "unauthorized",
@@ -112,7 +111,7 @@ func (s *Server) getImageOwnerHandler(c echo.Context) error {
 	if hasAccess {
 		// Extract S3 key from the stored URL
 		var s3Key string
-		bucketName := os.Getenv("S3_BUCKET_NAME")
+		bucketName := s.config.S3.BucketName
 		if bucketName == "" {
 			bucketName = "realstaging-prod"
 		}

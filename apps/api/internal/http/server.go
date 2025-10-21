@@ -11,6 +11,7 @@ import (
 
 	"github.com/real-staging-ai/api/internal/auth"
 	"github.com/real-staging-ai/api/internal/billing"
+	"github.com/real-staging-ai/api/internal/config"
 	"github.com/real-staging-ai/api/internal/image"
 	"github.com/real-staging-ai/api/internal/logging"
 	"github.com/real-staging-ai/api/internal/project"
@@ -33,17 +34,16 @@ type Server struct {
 	subscriptionChecker billing.SubscriptionChecker
 	authConfig          *auth.Auth0Config
 	pubsub              PubSub
+	config              *config.Config
 }
 
 // NewServer creates and configures a new Echo server.
 func NewServer(
-	auth0Audience string,
-	auth0Domain string,
+	cfg *config.Config,
 	ctx context.Context,
 	db storage.Database,
 	imageService image.Service,
 	s3Service storage.S3Service,
-	stripeSecretKey string,
 ) *Server {
 	e := echo.New()
 
@@ -65,7 +65,7 @@ func NewServer(
 	}))
 
 	// Initialize Auth0 config
-	authConfig := auth.NewAuth0Config(ctx, auth0Domain, auth0Audience)
+	authConfig := auth.NewAuth0Config(ctx, cfg.Auth0.Domain, cfg.Auth0.Audience)
 
 	// Initialize billing services
 	usageService := billing.NewDefaultUsageService(db)
@@ -92,6 +92,7 @@ func NewServer(
 		echo:                e,
 		authConfig:          authConfig,
 		pubsub:              ps,
+		config:              cfg,
 	}
 
 	// Health check route
@@ -146,7 +147,7 @@ func NewServer(
 	})
 
 	// Billing routes
-	bh := billing.NewDefaultHandler(s.db, usageService, stripeSecretKey)
+	bh := billing.NewDefaultHandler(s.db, usageService, cfg.Stripe.SecretKey)
 	protected.GET("/billing/subscriptions", bh.GetMySubscriptions)
 	protected.GET("/billing/invoices", bh.GetMyInvoices)
 	protected.GET("/billing/usage", bh.GetMyUsage)
@@ -185,10 +186,10 @@ func NewServer(
 
 // NewTestServer creates a new Echo server for testing without Auth0 middleware.
 func NewTestServer(
+	cfg *config.Config,
 	db storage.Database,
 	s3Service storage.S3Service,
 	imageService image.Service,
-	stripeSecretKey string,
 ) *Server {
 	e := echo.New()
 
@@ -212,6 +213,7 @@ func NewTestServer(
 		subscriptionChecker: subscriptionChecker,
 		echo:                e,
 		authConfig:          nil,
+		config:              cfg,
 	}
 
 	// Health check route (same as main server)
@@ -258,7 +260,7 @@ func NewTestServer(
 	})
 
 	// Billing routes (public in test server)
-	bh := billing.NewDefaultHandler(s.db, usageService, stripeSecretKey)
+	bh := billing.NewDefaultHandler(s.db, usageService, cfg.Stripe.SecretKey)
 	api.GET("/billing/subscriptions", withTestUser(bh.GetMySubscriptions))
 	api.GET("/billing/invoices", withTestUser(bh.GetMyInvoices))
 	api.GET("/billing/usage", withTestUser(bh.GetMyUsage))

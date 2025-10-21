@@ -13,16 +13,16 @@ import (
 // Config represents the application configuration.
 
 type Config struct {
-	App          App     `yaml:"app"`
-	Auth0        Auth0   `yaml:"auth0"`
-	DB           DB      `yaml:"db"`
-	Job          Job     `yaml:"job"`
-	Logging      Logging `yaml:"logging"`
-	OTEL         OTEL    `yaml:"otel"`
-	Redis        Redis   `yaml:"redis"`
-	S3           S3      `yaml:"s3"`
-	Stripe       Stripe  `yaml:"stripe"`
-	WorkerSecret string  `yaml:"worker_secret" env:"WORKER_SECRET"`
+	App     App     `yaml:"app"`
+	Auth0   Auth0   `yaml:"auth0"`
+	DB      DB      `yaml:"db"`
+	Job     Job     `yaml:"job"`
+	Logging Logging `yaml:"logging"`
+	OTEL    OTEL    `yaml:"otel"`
+	Redis   Redis   `yaml:"redis"`
+	S3      S3      `yaml:"s3"`
+	Stripe  Stripe  `yaml:"stripe"`
+	Worker  Worker  `yaml:"worker"`
 }
 
 type App struct {
@@ -77,6 +77,10 @@ type S3 struct {
 type Stripe struct {
 	SecretKey     string `yaml:"secret_key" env:"STRIPE_SECRET_KEY"`
 	WebhookSecret string `yaml:"webhook_secret" env:"STRIPE_WEBHOOK_SECRET"`
+}
+
+type Worker struct {
+	Secret string `yaml:"secret" env:"WORKER_SECRET"`
 }
 
 // Load loads configuration from YAML files based on APP_ENV.

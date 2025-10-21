@@ -3,6 +3,7 @@
 package integration
 
 import (
+	"github.com/real-staging-ai/api/internal/config"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -28,7 +29,7 @@ func TestGetProfile_Integration(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, ctx)
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+	server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 	testCases := []struct {
 		name           string
@@ -106,7 +107,7 @@ func TestUpdateProfile_Integration(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, ctx)
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(db, s3ServiceMock, imageServiceMock, "sk_test_fake")
+	server := httpLib.NewTestServer(&config.Config{}, db, s3ServiceMock, imageServiceMock, "sk_test_fake")
 
 	testCases := []struct {
 		name           string
