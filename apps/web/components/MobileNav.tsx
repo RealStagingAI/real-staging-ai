@@ -104,17 +104,18 @@ export default function MobileNav() {
         className={cn(
           'fixed top-0 right-0 h-screen w-80 max-w-[85vw] bg-white dark:bg-slate-950 z-40 md:hidden',
           'shadow-2xl transform transition-transform duration-300 ease-out',
+          'flex flex-col', // Use flexbox for proper layout
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
         aria-label="Mobile navigation"
       >
         {/* Menu Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Menu</h2>
         </div>
 
-        {/* Navigation Links - Scrollable with padding for footer */}
-        <div className="overflow-y-auto pb-24">
+        {/* Navigation Links - Scrollable area that takes remaining space */}
+        <div className="flex-1 overflow-y-auto min-h-0">
           <div className="px-3 py-4 space-y-1">
             {navLinks.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href;
@@ -141,8 +142,8 @@ export default function MobileNav() {
           </div>
         </div>
 
-        {/* Auth Button - Fixed at bottom */}
-        <div className="fixed bottom-0 left-0 right-0 w-80 max-w-[85vw] px-4 pt-4 pb-6 border-t border-gray-200 dark:border-gray-800 space-y-2 bg-white dark:bg-slate-950">
+        {/* Auth Button - Always visible at bottom */}
+        <div className="flex-shrink-0 px-4 pt-4 pb-safe pb-6 border-t border-gray-200 dark:border-gray-800 space-y-2 bg-white dark:bg-slate-950">
           {user ? (
             <a
               href="/auth/logout"
