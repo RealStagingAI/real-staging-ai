@@ -298,11 +298,11 @@ function ProfilePageContent() {
   if (!user) return null;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Profile Settings</h1>
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
           Manage your account information, billing, and preferences
         </p>
       </div>
@@ -337,7 +337,7 @@ function ProfilePageContent() {
           </p>
         </div>
         <div className="card-body space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Full Name</label>
               <div className="relative">
@@ -346,7 +346,7 @@ function ProfilePageContent() {
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                  className="w-full pl-10 pr-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                   placeholder="John Doe"
                 />
               </div>
@@ -360,7 +360,7 @@ function ProfilePageContent() {
                   type="email"
                   value={user.email || ''}
                   disabled
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-800 text-gray-500 cursor-not-allowed"
+                  className="w-full pl-10 pr-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-slate-800 text-gray-500 cursor-not-allowed text-base"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-1">Email is managed by your Auth0 account</p>
@@ -374,7 +374,7 @@ function ProfilePageContent() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                  className="w-full pl-10 pr-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
@@ -403,7 +403,7 @@ function ProfilePageContent() {
                 type="text"
                 value={formData.companyName}
                 onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                className="w-full pl-10 pr-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                 placeholder="Acme Real Estate"
               />
             </div>
@@ -417,7 +417,7 @@ function ProfilePageContent() {
                 type="text"
                 value={formData.addressLine1}
                 onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                className="w-full px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                 placeholder="Street address"
               />
             </div>
@@ -427,18 +427,18 @@ function ProfilePageContent() {
                 type="text"
                 value={formData.addressLine2}
                 onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                className="w-full px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                 placeholder="Apartment, suite, etc. (optional)"
               />
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="col-span-2">
                 <input
                   type="text"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                  className="w-full px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                   placeholder="City"
                 />
               </div>
@@ -448,7 +448,7 @@ function ProfilePageContent() {
                   type="text"
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                  className="w-full px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                   placeholder="State"
                 />
               </div>
@@ -458,7 +458,7 @@ function ProfilePageContent() {
                   type="text"
                   value={formData.postalCode}
                   onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                  className="w-full px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                   placeholder="ZIP"
                 />
               </div>
@@ -528,7 +528,7 @@ function ProfilePageContent() {
                     {usage.plan_code === 'free' ? 'Upgrade Your Plan' : 'Available Upgrades'}
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Show Pro if on Free */}
                     {usage.plan_code === 'free' && (
                       <div className="border border-blue-200 dark:border-blue-700 rounded-lg p-5 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
@@ -767,7 +767,7 @@ function ProfilePageContent() {
                 <select
                   value={formData.defaultRoomType}
                   onChange={(e) => setFormData({ ...formData, defaultRoomType: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                  className="w-full px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                 >
                   <option value="living_room">Living Room</option>
                   <option value="bedroom">Bedroom</option>
@@ -786,7 +786,7 @@ function ProfilePageContent() {
                 <select
                   value={formData.defaultStyle}
                   onChange={(e) => setFormData({ ...formData, defaultStyle: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900"
+                  className="w-full px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-slate-900 text-base"
                 >
                   <option value="modern">Modern</option>
                   <option value="contemporary">Contemporary</option>
@@ -802,13 +802,13 @@ function ProfilePageContent() {
       </div>
 
       {/* Spacer for sticky button bar */}
-      <div className="h-24" />
+      <div className="h-20 sm:h-24" />
 
       {/* Sticky Save Button Bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-950/60">
-        <div className="container max-w-5xl mx-auto py-4 flex justify-between items-center">
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-950/60 pb-safe">
+        <div className="container max-w-5xl mx-auto py-3 sm:py-4 flex justify-between items-center">
           {/* Keyboard shortcut hint */}
-          <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="hidden md:flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
             <kbd className="px-2 py-1 bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-gray-700 rounded text-xs font-mono">
               {typeof navigator !== 'undefined' && navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
             </kbd>
@@ -819,17 +819,17 @@ function ProfilePageContent() {
             <span>to save</span>
           </div>
           
-          <div className="flex gap-3 ml-auto">
+          <div className="flex gap-2 sm:gap-3 ml-auto w-full sm:w-auto">
             <button
               onClick={() => router.push('/')}
-              className="btn btn-outline"
+              className="btn btn-secondary flex-1 sm:flex-none"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="btn btn-primary flex items-center gap-2"
+              className="btn btn-primary flex items-center justify-center gap-2 flex-1 sm:flex-none"
             >
               {saving ? (
                 <>

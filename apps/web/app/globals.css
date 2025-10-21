@@ -52,12 +52,41 @@
 @layer base {
   html {
     @apply antialiased scroll-smooth;
+    /* Enable smooth scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+    /* Prevent text size adjustment on orientation change */
+    -webkit-text-size-adjust: 100%;
   }
   
   body {
     @apply bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950 min-h-screen;
     font-feature-settings: "rlig" 1, "calt" 1;
     color: hsl(var(--foreground));
+    /* Disable pull-to-refresh on mobile when it interferes with scroll */
+    overscroll-behavior-y: none;
+  }
+
+  /* Ensure inputs are properly styled on iOS */
+  input,
+  textarea,
+  select,
+  button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  /* Prevent iOS from zooming on input focus */
+  @media (max-width: 640px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="password"],
+    textarea,
+    select {
+      font-size: 16px;
+    }
   }
 }
 
@@ -66,11 +95,23 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
+  /* Touch-optimized button variant */
+  .btn-touch {
+    @apply min-h-[44px] min-w-[44px] touch-manipulation;
+  }
+
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-medium text-sm
            transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
-           active:scale-95;
+           active:scale-95 touch-manipulation;
+  }
+
+  /* Mobile-optimized button sizes */
+  @media (max-width: 640px) {
+    .btn {
+      @apply px-4 py-3 text-sm min-h-[44px];
+    }
   }
   
   .btn-primary {
@@ -100,17 +141,24 @@
            disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 dark:disabled:bg-gray-800;
   }
 
+  /* Mobile-optimized input with better touch target */
+  @media (max-width: 640px) {
+    .input {
+      @apply py-3 min-h-[44px];
+    }
+  }
+
   .card {
     @apply rounded-2xl border border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm shadow-lg shadow-gray-200/50 dark:shadow-gray-900/50
            transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/70 dark:hover:shadow-gray-900/70;
   }
 
   .card-header {
-    @apply px-6 py-4 border-b border-gray-100 dark:border-gray-800 font-semibold text-gray-900 dark:text-gray-100 flex items-center justify-between;
+    @apply px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-800 font-semibold text-base sm:text-lg text-gray-900 dark:text-gray-100 flex items-center justify-between;
   }
 
   .card-body {
-    @apply p-6;
+    @apply p-4 sm:p-6;
   }
   
   .badge {
@@ -157,5 +205,78 @@
   
   .glass {
     @apply bg-white/60 backdrop-blur-md border border-white/20;
+  }
+
+  /* Safe area utilities for devices with notches */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Touch manipulation for better mobile interaction */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Prevent text selection on buttons/interactive elements */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
+  /* Smooth scrolling container for mobile */
+  .scroll-smooth-mobile {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Mobile grid optimizations */
+  .grid-auto-fill-sm {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  @media (min-width: 640px) {
+    .grid-auto-fill-sm {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+  }
+
+  /* Truncate text utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }

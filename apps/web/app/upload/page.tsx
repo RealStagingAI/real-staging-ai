@@ -333,32 +333,32 @@ export default function UploadPage() {
   const canUpload = !subscriptionLoading && !usageLoading && hasActiveSubscription !== false && !isAtLimit
 
   return (
-    <div className="container max-w-7xl py-8 space-y-8">
+    <div className="container max-w-7xl py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Usage Limit Reached Banner */}
       {isAtLimit && (
-        <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6 shadow-sm">
-          <div className="flex items-start gap-4">
+        <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
             <div className="flex-shrink-0">
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+              <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 dark:text-red-400" />
             </div>
             <div className="flex-1 space-y-2">
-              <h3 className="text-lg font-semibold text-red-900 dark:text-red-300">
+              <h3 className="text-base sm:text-lg font-semibold text-red-900 dark:text-red-300">
                 Monthly Limit Reached
               </h3>
-              <p className="text-red-800 dark:text-red-400">
+              <p className="text-sm sm:text-base text-red-800 dark:text-red-400">
                 You have used all {usage?.monthly_limit} images in your {usage?.plan_code?.toUpperCase() || 'FREE'} plan for this billing period. Upgrade to continue staging more properties.
               </p>
-              <div className="flex gap-3 mt-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-3">
                 <button
                   onClick={() => router.push('/profile')}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors touch-manipulation w-full sm:w-auto"
                 >
                   <CreditCard className="h-4 w-4" />
                   Upgrade Plan
                 </button>
                 <button
                   onClick={() => router.push('/billing')}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 font-medium rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors touch-manipulation w-full sm:w-auto"
                 >
                   View Usage
                 </button>
@@ -370,21 +370,21 @@ export default function UploadPage() {
 
       {/* Subscription Required Banner */}
       {!subscriptionLoading && !usageLoading && hasActiveSubscription === false && !isAtLimit && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl p-6 shadow-sm">
-          <div className="flex items-start gap-4">
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl p-4 sm:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
             <div className="flex-shrink-0">
-              <Lock className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+              <Lock className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600 dark:text-amber-400" />
             </div>
             <div className="flex-1 space-y-2">
-              <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-300">
+              <h3 className="text-base sm:text-lg font-semibold text-amber-900 dark:text-amber-300">
                 Subscription Required
               </h3>
-              <p className="text-amber-800 dark:text-amber-400">
+              <p className="text-sm sm:text-base text-amber-800 dark:text-amber-400">
                 An active subscription is required to upload and process images. Upgrade your plan to unlock 500 images and priority support.
               </p>
               <button
                 onClick={() => router.push('/profile')}
-                className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors"
+                className="mt-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg transition-colors touch-manipulation w-full sm:w-auto"
               >
                 <CreditCard className="h-4 w-4" />
                 View Subscription Plans
@@ -396,10 +396,10 @@ export default function UploadPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
           <span className="gradient-text">Upload & Stage</span>
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
           Upload multiple property photos and transform them with AI-powered virtual staging
         </p>
       </div>
@@ -415,7 +415,7 @@ export default function UploadPage() {
         <div className="card-body space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Create New Project</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Create New Project</label>
               <input
                 className="input"
                 value={newProjectName}
@@ -426,7 +426,7 @@ export default function UploadPage() {
             </div>
             <button 
               type="button" 
-              className="btn btn-secondary sm:mt-7" 
+              className="btn btn-secondary sm:mt-7 w-full sm:w-auto" 
               onClick={createProject}
               disabled={!newProjectName.trim()}
             >
@@ -455,7 +455,7 @@ export default function UploadPage() {
             </div>
             <button 
               type="button" 
-              className="btn btn-ghost sm:mt-7" 
+              className="btn btn-ghost sm:mt-7 w-full sm:w-auto" 
               onClick={loadProjects}
             >
               <RefreshCw className="h-4 w-4" />
@@ -489,7 +489,7 @@ export default function UploadPage() {
               onDragLeave={canUpload ? handleDragLeave : undefined}
               onDrop={canUpload ? handleDrop : undefined}
               className={cn(
-                "relative rounded-xl border-2 border-dashed transition-all duration-200 p-8",
+                "relative rounded-xl border-2 border-dashed transition-all duration-200 p-6 sm:p-8",
                 !canUpload ? "opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-800" :
                 isDragging 
                   ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/30" 
@@ -511,7 +511,7 @@ export default function UploadPage() {
                   files.length > 0 ? "bg-green-100 dark:bg-green-900/50" : "bg-blue-100 dark:bg-blue-900/50"
                 )}>
                   <FileImage className={cn(
-                    "h-8 w-8",
+                    "h-6 w-6 sm:h-8 sm:w-8",
                     files.length > 0 ? "text-green-600 dark:text-green-500" : "text-blue-600 dark:text-blue-500"
                   )} />
                 </div>
@@ -592,38 +592,38 @@ export default function UploadPage() {
           {files.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Selected Files</h3>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+              <div className="space-y-3 max-h-[60vh] sm:max-h-96 overflow-y-auto scroll-smooth-mobile">
                 {files.map((fileData) => {
                   const progress = uploadProgress[fileData.id]
                   return (
                     <div 
                       key={fileData.id} 
                       className={cn(
-                        "border rounded-lg p-4 transition-all",
+                        "border rounded-lg p-3 sm:p-4 transition-all",
                         progress?.status === 'success' && "border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
                         progress?.status === 'error' && "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30",
                         !progress && "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800/50"
                       )}
                     >
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-3 sm:gap-4">
                         {/* Image Preview with Status Overlay */}
                         <div className="flex-shrink-0 relative">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={fileData.previewUrl} 
                             alt={fileData.file.name}
-                            className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600"
+                            className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600"
                           />
                           {progress && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
                               {progress.status === 'success' && (
-                                <CheckCircle2 className="h-8 w-8 text-green-400" />
+                                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-400" />
                               )}
                               {progress.status === 'error' && (
-                                <AlertCircle className="h-8 w-8 text-red-400" />
+                                <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-red-400" />
                               )}
                               {!['success', 'error'].includes(progress.status) && (
-                                <Loader2 className="h-8 w-8 text-blue-400 animate-spin" />
+                                <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400 animate-spin" />
                               )}
                             </div>
                           )}
@@ -733,9 +733,9 @@ export default function UploadPage() {
           )}
 
           {/* Submit Button */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2 border-t">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pt-3 sm:pt-4 border-t">
             <button 
-              className="btn btn-primary w-full sm:w-auto" 
+              className="btn btn-primary w-full sm:w-auto order-1 sm:order-none" 
               type="submit"
               disabled={isUploading || files.length === 0 || !projectId || !canUpload}
             >
@@ -754,7 +754,7 @@ export default function UploadPage() {
             
             {status && (
               <div className={cn(
-                "text-sm font-medium px-4 py-2 rounded-lg",
+                "text-xs sm:text-sm font-medium px-3 sm:px-4 py-2 rounded-lg order-2 sm:order-none",
                 status.includes("Success") || status.includes("succeeded")
                   ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                   : status.includes("failed") || status.includes("error")

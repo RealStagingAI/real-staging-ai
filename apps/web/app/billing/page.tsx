@@ -144,13 +144,13 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="container max-w-7xl py-12 space-y-8">
+    <div className="container max-w-7xl py-6 sm:py-8 lg:py-12 space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
           Billing & Usage
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
           Manage your subscription and track your monthly usage
         </p>
       </div>
@@ -176,24 +176,24 @@ export default function BillingPage() {
             </div>
 
             {/* Usage Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Images Used</p>
-                <p className={`text-3xl font-bold ${getUsageColor()}`}>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Images Used</p>
+                <p className={`text-2xl sm:text-3xl font-bold ${getUsageColor()}`}>
                   {usage.images_used.toLocaleString()}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Limit</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Limit</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {usage.monthly_limit.toLocaleString()}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Remaining</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Remaining</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {usage.remaining_images.toLocaleString()}
                 </p>
               </div>
@@ -262,18 +262,18 @@ export default function BillingPage() {
             {subscription && (
               <button
                 onClick={handleManageSubscription}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors touch-manipulation w-full sm:w-auto"
               >
                 <CreditCard className="h-4 w-4" />
-                Manage Subscription
+                <span className="text-sm sm:text-base">Manage Subscription</span>
               </button>
             )}
           </div>
 
           {/* Subscription Details */}
           {subscription && (
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {subscription.current_period_start && (
                   <div className="flex items-center gap-3">
                     <Clock className="h-5 w-5 text-gray-400" />
@@ -302,8 +302,8 @@ export default function BillingPage() {
               </div>
 
               {subscription.cancel_at_period_end && (
-                <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                  <p className="text-sm text-amber-800 dark:text-amber-300">
+                <div className="mt-4 p-3 sm:p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-300">
                     <strong>Notice:</strong> Your subscription will be canceled at the end of the current billing period.
                   </p>
                 </div>
@@ -313,19 +313,19 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* Upgrade Options (if on free plan or no active subscription) */}
-      {usage && (!subscription || usage.plan_code === 'free') && (
+      {/* Upgrade Options (show for free and pro users, not business) */}
+      {usage && usage.plan_code !== 'business' && (
         <div className="card">
           <div className="card-body">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-              {subscription ? 'Upgrade Your Plan' : 'Choose a Plan'}
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">
+              {usage.plan_code === 'free' ? 'Choose a Plan' : 'Upgrade Your Plan'}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Free Plan */}
-              {!subscription && (
-                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h3>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$0<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
+              {usage.plan_code === 'free' && !subscription && (
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h3>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$0<span className="text-base sm:text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                   <ul className="mt-4 space-y-2">
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
@@ -342,16 +342,17 @@ export default function BillingPage() {
                   </ul>
                   <button
                     onClick={() => handleUpgrade('free')}
-                    className="w-full mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-gray-600 text-white text-sm sm:text-base rounded-lg hover:bg-gray-700 transition-colors touch-manipulation"
                   >
                     Continue with Free
                   </button>
                 </div>
               )}
-              {/* Pro Plan */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pro</h3>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$29<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
+              {/* Pro Plan - only show to free users */}
+              {usage.plan_code === 'free' && (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Pro</h3>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$29<span className="text-base sm:text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                 <ul className="mt-4 space-y-2">
                   <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
@@ -368,19 +369,20 @@ export default function BillingPage() {
                 </ul>
                 <button
                   onClick={() => handleUpgrade('pro')}
-                  className="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
                 >
                   {subscription ? 'Upgrade to Pro' : 'Subscribe to Pro'}
                 </button>
               </div>
+              )}
 
-              {/* Business Plan */}
-              <div className="border-2 border-purple-500 dark:border-purple-400 rounded-lg p-6 relative">
+              {/* Business Plan - show to free and pro users */}
+              <div className="border-2 border-purple-500 dark:border-purple-400 rounded-lg p-4 sm:p-6 relative">
                 <div className="absolute top-0 right-0 bg-purple-500 text-white text-xs font-semibold px-3 py-1 rounded-bl-lg rounded-tr-lg">
                   Best Value
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Business</h3>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$99<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Business</h3>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$99<span className="text-base sm:text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                 <ul className="mt-4 space-y-2">
                   <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <div className="h-1.5 w-1.5 rounded-full bg-purple-600" />
@@ -397,7 +399,7 @@ export default function BillingPage() {
                 </ul>
                 <button
                   onClick={() => handleUpgrade('business')}
-                  className="w-full mt-6 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-purple-600 text-white text-sm sm:text-base rounded-lg hover:bg-purple-700 transition-colors touch-manipulation"
                 >
                   {subscription ? 'Upgrade to Business' : 'Subscribe to Business'}
                 </button>

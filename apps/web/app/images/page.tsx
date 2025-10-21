@@ -728,13 +728,13 @@ export default function ImagesPage() {
   }, [selectedProjectId]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold mb-2">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">
           <span className="gradient-text">Image Gallery</span>
         </h1>
-        <p className="text-gray-600">
+        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
           View and manage your virtually staged images across all projects
         </p>
       </div>
@@ -769,18 +769,18 @@ export default function ImagesPage() {
             </div>
             <button 
               type="button" 
-              className="btn btn-ghost" 
+              className="btn btn-ghost w-full sm:w-auto" 
               onClick={loadProjects}
               disabled={loadingProjects}
             >
               <RefreshCw className={cn("h-4 w-4", loadingProjects && "animate-spin")} />
-              Refresh
+              <span className="sm:inline">Refresh</span>
             </button>
           </div>
           {selectedProject && (
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-3">
-                <p className="text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mt-3">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   Viewing <span className="font-medium">{selectedProject.name}</span> • {images.length} image{images.length !== 1 ? 's' : ''}
                 </p>
                 {pollingInterval && (
@@ -793,11 +793,11 @@ export default function ImagesPage() {
               <button
                 onClick={handleManualRefresh}
                 disabled={isRefreshing || loadingImages}
-                className="btn btn-secondary text-sm"
+                className="btn btn-secondary text-xs sm:text-sm"
                 title="Manually refresh images"
               >
                 <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </button>
             </div>
           )}
@@ -808,38 +808,38 @@ export default function ImagesPage() {
       {images.length > 0 && (
         <div className="card">
           <div className="card-body">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
               {/* Selection Controls */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <button
                   onClick={selectAll}
-                  className="btn btn-ghost text-sm"
+                  className="btn btn-ghost text-xs sm:text-sm px-3 sm:px-4"
                   disabled={images.length === 0}
                 >
                   <Check className="h-4 w-4" />
-                  Select All ({images.length})
+                  <span className="hidden xs:inline">Select All</span> ({images.length})
                 </button>
                 <button
                   onClick={clearSelection}
-                  className="btn btn-ghost text-sm"
+                  className="btn btn-ghost text-xs sm:text-sm px-3 sm:px-4"
                   disabled={selectedImageIds.size === 0}
                 >
                   <X className="h-4 w-4" />
-                  Clear
+                  <span className="hidden xs:inline">Clear</span>
                 </button>
                 {selectedImageIds.size > 0 && (
-                  <span className="text-sm font-medium text-blue-600">
+                  <span className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400">
                     {selectedImageIds.size} selected
                   </span>
                 )}
               </div>
 
               {/* View Mode & Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {selectedImageIds.size > 0 && (
                   <>
                     {/* Download Type Toggle */}
-                    <div className="flex rounded-lg border border-gray-200 p-1 mr-2">
+                    <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 p-1 mr-2">
                       <button
                         onClick={() => setDownloadType('staged')}
                         className={cn(
@@ -867,40 +867,42 @@ export default function ImagesPage() {
                     </div>
                     <button
                       onClick={downloadSelected}
-                      className="btn btn-secondary"
+                      className="btn btn-secondary text-xs sm:text-sm"
                     >
                       <Download className="h-4 w-4" />
-                      Download {downloadType} ({selectedImageIds.size})
+                      <span className="hidden sm:inline">Download {downloadType}</span> ({selectedImageIds.size})
                     </button>
                     <button
                       onClick={deleteSelected}
-                      className="btn btn-ghost text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      className="btn btn-ghost text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 text-xs sm:text-sm"
                     >
                       <Trash2 className="h-4 w-4" />
-                      Delete ({selectedImageIds.size})
+                      <span className="hidden sm:inline">Delete</span> ({selectedImageIds.size})
                     </button>
                   </>
                 )}
-                <div className="flex rounded-lg border border-gray-200 p-1">
+                <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 p-1">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={cn(
-                      "p-2 rounded transition-colors",
+                      "p-2 rounded transition-colors touch-manipulation",
                       viewMode === 'grid' 
-                        ? "bg-blue-100 text-blue-600" 
-                        : "text-gray-600 hover:bg-gray-100"
+                        ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400" 
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                     )}
+                    title="Grid view"
                   >
                     <Grid3x3 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
                     className={cn(
-                      "p-2 rounded transition-colors",
+                      "p-2 rounded transition-colors touch-manipulation",
                       viewMode === 'list' 
-                        ? "bg-blue-100 text-blue-600" 
-                        : "text-gray-600 hover:bg-gray-100"
+                        ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400" 
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
                     )}
+                    title="List view"
                   >
                     <List className="h-4 w-4" />
                   </button>
@@ -941,7 +943,7 @@ export default function ImagesPage() {
 
       {/* Grid View */}
       {!loadingImages && images.length > 0 && viewMode === 'grid' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {images.map((image) => {
             const urls = imageUrls[image.id];
             const stagedSrc = urls?.staged ?? null;
@@ -1041,8 +1043,9 @@ export default function ImagesPage() {
                       e.stopPropagation();
                       deleteImage(image.id);
                     }}
-                    className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg opacity-0 group-hover:opacity-100 sm:opacity-100 md:opacity-0 transition-opacity touch-manipulation"
                     title="Delete image"
+                    aria-label="Delete image"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -1058,7 +1061,7 @@ export default function ImagesPage() {
                 )}
 
                 {/* Quick Actions Bar - Bottom */}
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex items-center justify-center gap-2">
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 sm:opacity-100 md:opacity-0 transition-opacity p-2 sm:p-3 flex items-center justify-center gap-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -1087,7 +1090,7 @@ export default function ImagesPage() {
               </div>
 
               {/* Card Content */}
-              <div className="p-4 space-y-2">
+              <div className="p-3 sm:p-4 space-y-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">
@@ -1121,7 +1124,7 @@ export default function ImagesPage() {
       {!loadingImages && images.length > 0 && viewMode === 'list' && (
         <div className="card">
           <div className="card-body p-0">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-4 sm:mx-0 scroll-smooth-mobile">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
@@ -1259,8 +1262,8 @@ export default function ImagesPage() {
 
       {/* Status Message */}
       {statusMessage && (
-        <div className="fixed bottom-4 right-4 bg-white shadow-lg rounded-lg p-4 border border-gray-200 max-w-sm animate-in">
-          <p className="text-sm text-gray-700">{statusMessage}</p>
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto bg-white dark:bg-gray-900 shadow-lg rounded-lg p-3 sm:p-4 border border-gray-200 dark:border-gray-700 max-w-sm mx-auto sm:mx-0 animate-in z-50">
+          <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{statusMessage}</p>
         </div>
       )}
 
@@ -1275,25 +1278,26 @@ export default function ImagesPage() {
 
         return (
           <div 
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center touch-manipulation"
             onClick={closePreview}
           >
             {/* Close Button */}
             <button
               onClick={closePreview}
-              className="absolute top-4 right-4 z-10 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 p-2 sm:p-2.5 bg-white/10 hover:bg-white/20 active:bg-white/30 rounded-full transition-colors touch-manipulation"
               title="Close (Esc)"
+              aria-label="Close preview"
             >
-              <XCircle className="h-8 w-8 text-white" />
+              <XCircle className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
             </button>
 
             {/* Image Info Overlay - Top */}
-            <div className="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg">
-              <p className="text-white text-sm font-medium">
+            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 bg-black/60 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
+              <p className="text-white text-xs sm:text-sm font-medium">
                 {currentPreviewIndex + 1} / {previewImages.length}
               </p>
               {selectedImageIds.size > 0 && (
-                <p className="text-white/70 text-xs mt-1">
+                <p className="text-white/70 text-xs mt-0.5 sm:mt-1 hidden sm:block">
                   Showing selected images only
                 </p>
               )}
@@ -1306,10 +1310,11 @@ export default function ImagesPage() {
                   e.stopPropagation();
                   goToPreviousImage();
                 }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 p-2 sm:p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 rounded-full transition-colors touch-manipulation"
                 title="Previous (←)"
+                aria-label="Previous image"
               >
-                <ChevronLeft className="h-8 w-8 text-white" />
+                <ChevronLeft className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </button>
             )}
 
@@ -1320,16 +1325,17 @@ export default function ImagesPage() {
                   e.stopPropagation();
                   goToNextImage();
                 }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 p-2 sm:p-3 bg-white/10 hover:bg-white/20 active:bg-white/30 rounded-full transition-colors touch-manipulation"
                 title="Next (→)"
+                aria-label="Next image"
               >
-                <ChevronRight className="h-8 w-8 text-white" />
+                <ChevronRight className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </button>
             )}
 
             {/* Main Image Container */}
             <div 
-              className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center px-20"
+              className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center px-12 sm:px-16 md:px-20"
               onClick={(e) => e.stopPropagation()}
             >
               {displayUrl ? (
@@ -1343,12 +1349,12 @@ export default function ImagesPage() {
                   />
                   
                   {/* Image Type Overlay */}
-                  <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg">
-                    <p className="text-white text-sm font-semibold uppercase tracking-wide">
+                  <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-black/70 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg">
+                    <p className="text-white text-xs sm:text-sm font-semibold uppercase tracking-wide">
                       {previewMode === 'staged' ? 'Staged' : 'Original'}
                     </p>
                     {previewMode === 'staged' && currentImage.style && (
-                      <p className="text-white/80 text-xs mt-1">
+                      <p className="text-white/80 text-xs mt-0.5 sm:mt-1 hidden sm:block">
                         {currentImage.style}
                       </p>
                     )}
@@ -1363,7 +1369,7 @@ export default function ImagesPage() {
             </div>
 
             {/* Bottom Controls */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3">
+            <div className="absolute bottom-4 sm:bottom-8 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
               {/* Toggle Original/Staged */}
               {canShowStaged && (
                 <button
@@ -1371,21 +1377,21 @@ export default function ImagesPage() {
                     e.stopPropagation();
                     togglePreviewMode();
                   }}
-                  className="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-colors flex items-center gap-2"
+                  className="px-4 py-2.5 sm:px-6 sm:py-3 bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm rounded-lg transition-colors flex items-center justify-center gap-2 touch-manipulation"
                   title="Toggle View (Space or T)"
                 >
-                  <span className="text-white font-medium">
+                  <span className="text-white text-sm sm:text-base font-medium">
                     {previewMode === 'original' ? 'Show Staged' : 'Show Original'}
                   </span>
                 </button>
               )}
 
               {/* Image Details */}
-              <div className="px-4 py-3 bg-black/60 backdrop-blur-sm rounded-lg">
-                <p className="text-white text-sm">
+              <div className="px-3 py-2 sm:px-4 sm:py-3 bg-black/60 backdrop-blur-sm rounded-lg">
+                <p className="text-white text-xs sm:text-sm">
                   {currentImage.room_type || 'Untitled'}
                 </p>
-                <p className="text-white/60 text-xs mt-1">
+                <p className="text-white/60 text-xs mt-0.5 sm:mt-1">
                   {formatRelativeTime(currentImage.updated_at)}
                 </p>
               </div>

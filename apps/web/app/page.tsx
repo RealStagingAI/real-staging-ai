@@ -61,20 +61,20 @@ export default function Page() {
 
   if (!user) {
     return (
-      <div className="space-y-16">
+      <div className="space-y-12 sm:space-y-16">
         {/* Hero Section */}
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50 -z-10"></div>
-          <div className="mx-auto max-w-4xl text-center space-y-6 py-12">
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700">
-              <Sparkles className="h-4 w-4" />
+          <div className="mx-auto max-w-4xl text-center space-y-4 sm:space-y-6 py-8 sm:py-12">
+            <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-blue-700">
+              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               AI-Powered Real Staging
             </div>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl px-4 sm:px-0">
               Transform Empty Spaces into
-              <span className="gradient-text block">Stunning Showcase Homes</span>
+              <span className="gradient-text block mt-2">Stunning Showcase Homes</span>
             </h1>
-            <p className="mx-auto max-w-2xl text-lg text-gray-600">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-gray-600 dark:text-gray-400 px-4 sm:px-0">
               Professional virtual staging powered by cutting-edge AI. Turn vacant properties 
               into beautifully furnished spaces in seconds, not days.
             </p>
@@ -107,12 +107,12 @@ export default function Page() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                <a href="/auth/login" className="btn btn-primary group">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 pt-4 px-4 sm:px-0">
+                <a href="/auth/login" className="btn btn-primary group w-full sm:w-auto">
                   Get Started
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </a>
-                <a href="#features" className="btn btn-secondary">
+                <a href="#features" className="btn btn-secondary w-full sm:w-auto">
                   Learn More
                 </a>
               </div>
@@ -121,15 +121,15 @@ export default function Page() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="space-y-8">
-          <div className="text-center space-y-3">
-            <h2 className="text-3xl font-bold">Why Choose Real Staging AI?</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+        <section id="features" className="space-y-6 sm:space-y-8">
+          <div className="text-center space-y-2 sm:space-y-3 px-4 sm:px-0">
+            <h2 className="text-2xl sm:text-3xl font-bold">Why Choose Real Staging AI?</h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Professional results, instant delivery, and a seamless workflow designed for real estate professionals.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="card group cursor-default">
               <div className="card-body space-y-4">
                 <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 p-3 w-fit shadow-lg shadow-blue-500/30 transition-all group-hover:shadow-xl group-hover:shadow-blue-500/40">
@@ -220,26 +220,26 @@ export default function Page() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 sm:space-y-12">
       {/* Welcome Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 opacity-50 rounded-3xl -z-10"></div>
-        <div className="px-8 py-12 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-1.5 text-sm font-medium text-white shadow-lg shadow-blue-500/30">
-            <Sparkles className="h-4 w-4" />
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 opacity-50 rounded-3xl -z-10"></div>
+        <div className="px-4 sm:px-8 py-8 sm:py-12 text-center space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium text-white shadow-lg shadow-blue-500/30">
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Dashboard
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
             Welcome back, <span className="gradient-text">{displayName}</span>!
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Start staging properties or manage your existing projects. Everything you need is right at your fingertips.
           </p>
         </div>
       </section>
 
       {/* Quick Actions */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Link href="/upload" className="card group">
           <div className="card-body space-y-4">
             <div className="flex items-start justify-between">
