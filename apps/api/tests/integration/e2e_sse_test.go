@@ -103,6 +103,13 @@ func TestE2E_SSE_ProcessingReady(t *testing.T) {
 	db := SetupTestDatabase(t)
 	defer db.Close()
 	require.NoError(t, ResetDatabase(context.Background(), db.Pool()))
+	
+	// Create active subscription for test user (required for image uploads)
+	_, err := db.Pool().Exec(context.Background(), `
+		INSERT INTO subscriptions (user_id, stripe_subscription_id, status, current_period_start, current_period_end)
+		VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'sub_test123', 'active', NOW(), NOW() + INTERVAL '30 days')
+	`)
+	require.NoError(t, err)
 
 	stop := startAsynqWorker(t, db, false)
 	defer stop()
@@ -167,6 +174,13 @@ func TestE2E_SSE_ProcessingError(t *testing.T) {
 	db := SetupTestDatabase(t)
 	defer db.Close()
 	require.NoError(t, ResetDatabase(context.Background(), db.Pool()))
+	
+	// Create active subscription for test user (required for image uploads)
+	_, err := db.Pool().Exec(context.Background(), `
+		INSERT INTO subscriptions (user_id, stripe_subscription_id, status, current_period_start, current_period_end)
+		VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'sub_test123', 'active', NOW(), NOW() + INTERVAL '30 days')
+	`)
+	require.NoError(t, err)
 
 	stop := startAsynqWorker(t, db, true)
 	defer stop()

@@ -33,7 +33,7 @@ services:
   redis-test:
     image: redis:8.2
     ports:
-      - "6379:6379"
+      - "6380:6379"
 
   localstack:
     image: localstack/localstack:2.3

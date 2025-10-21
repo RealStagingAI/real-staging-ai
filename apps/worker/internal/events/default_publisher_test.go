@@ -26,7 +26,7 @@ func TestDefaultPublisher_Success_NoRetry(t *testing.T) {
 		BaseDelay:   5 * time.Millisecond,
 		MaxDelay:    20 * time.Millisecond,
 	})
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	imageID := "img-ok"
@@ -35,6 +35,11 @@ func TestDefaultPublisher_Success_NoRetry(t *testing.T) {
 	require.NoError(t, sub.Ping(ctx))
 	defer func() { _ = sub.Close() }()
 	msgCh := sub.Channel()
+
+	// Give subscription a moment to fully establish before publishing
+	// This prevents race conditions where the message is published before
+	// the subscription is ready to receive it
+	time.Sleep(10 * time.Millisecond)
 
 	ev := JobUpdateEvent{JobID: "j1", ImageID: imageID, Status: "processing"}
 	require.NoError(t, pub.PublishJobUpdate(ctx, ev))
