@@ -145,7 +145,7 @@ export default function MobileNav() {
         <div className="fixed bottom-0 left-0 right-0 w-80 max-w-[85vw] px-4 pt-4 pb-6 border-t border-gray-200 dark:border-gray-800 space-y-2 bg-white dark:bg-slate-950">
           {user ? (
             <a
-              href="/api/auth/logout"
+              href="/auth/logout"
               className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-95 touch-manipulation"
             >
               <LogOut className="h-5 w-5" />
@@ -153,7 +153,7 @@ export default function MobileNav() {
             </a>
           ) : (
             <a
-              href="/api/auth/login"
+              href="/auth/login"
               className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all active:scale-95 touch-manipulation"
             >
               <LogIn className="h-5 w-5" />
