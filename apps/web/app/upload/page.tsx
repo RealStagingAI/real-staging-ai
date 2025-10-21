@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Upload as UploadIcon, FolderOpen, Plus, RefreshCw, CheckCircle2, Loader2, FileImage, X, AlertCircle, CreditCard, Lock } from "lucide-react";
 import { apiFetch } from "@/lib/api";
@@ -52,6 +52,7 @@ type UsageStats = {
 
 export default function UploadPage() {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<FileWithOverrides[]>([])
   const [projectId, setProjectId] = useState("")
   const [defaultRoomType, setDefaultRoomType] = useState("")
@@ -485,6 +486,7 @@ export default function UploadPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Property Images</label>
             <div
+              onClick={() => canUpload && fileInputRef.current?.click()}
               onDragOver={canUpload ? handleDragOver : undefined}
               onDragLeave={canUpload ? handleDragLeave : undefined}
               onDrop={canUpload ? handleDrop : undefined}
@@ -492,12 +494,13 @@ export default function UploadPage() {
                 "relative rounded-xl border-2 border-dashed transition-all duration-200 p-6 sm:p-8",
                 !canUpload ? "opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-800" :
                 isDragging 
-                  ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/30" 
-                  : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500",
+                  ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-950/30 cursor-pointer" 
+                  : "border-gray-300 hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500 cursor-pointer",
                 files.length > 0 && "border-green-500 bg-green-50/30 dark:border-green-500 dark:bg-green-950/30"
               )}
             >
               <input
+                ref={fileInputRef}
                 type="file"
                 multiple
                 accept="image/*"
