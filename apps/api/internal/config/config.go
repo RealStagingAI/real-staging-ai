@@ -66,6 +66,7 @@ type Redis struct {
 type S3 struct {
 	AccessKey      string `yaml:"access_key" env:"S3_ACCESS_KEY"`
 	BucketName     string `yaml:"bucket_name" env:"S3_BUCKET_NAME" env-default:"real-staging"`
+	CDNURL         string `yaml:"cdn_url" env:"S3_CDN_URL"`
 	Endpoint       string `yaml:"endpoint" env:"S3_ENDPOINT"`
 	PublicEndpoint string `yaml:"public_endpoint" env:"S3_PUBLIC_ENDPOINT"`
 	Region         string `yaml:"region" env:"S3_REGION" env-default:"us-west-1"`
