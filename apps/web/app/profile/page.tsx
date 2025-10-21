@@ -23,12 +23,26 @@ import { apiFetch } from '@/lib/api';
 import { toFormData, buildUpdatePayload } from '@/lib/profile';
 import type { BackendProfile } from '@/lib/profile';
 
+interface SubscriptionAPI {
+  id: string;
+  status: string;
+  price_id?: string;
+  current_period_start?: string;
+  current_period_end?: string;
+  cancel_at?: string;
+  canceled_at?: string;
+  cancel_at_period_end: boolean;
+}
+
 interface Subscription {
   id: string;
   status: string;
   priceId?: string;
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
+  cancelAt?: string;
+  canceledAt?: string;
+  cancelAtPeriodEnd: boolean;
 }
 
 interface UsageStats {
@@ -76,25 +90,38 @@ function ProfilePageContent() {
       const [profileData, usageData, subscriptionData] = await Promise.all([
         apiFetch<BackendProfile>('/v1/user/profile'),
         apiFetch<UsageStats>('/v1/billing/usage'),
-        apiFetch<{ items: Subscription[] }>('/v1/billing/subscriptions')
+        apiFetch<{ items: SubscriptionAPI[] }>('/v1/billing/subscriptions')
       ]);
 
       // Populate form from backend (snake_case) using mapper
       setFormData(toFormData(profileData));
       setUsage(usageData);
       
-      // Set subscription if available and active
+      // Set subscription if available and active, mapping snake_case to camelCase
       if (subscriptionData.items && subscriptionData.items.length > 0) {
         const activeSub = subscriptionData.items.find(
-          (sub: Subscription) => sub.status === 'active' || sub.status === 'trialing'
+          (sub: SubscriptionAPI) => sub.status === 'active' || sub.status === 'trialing'
         );
-        setSubscription(activeSub || null);
+        if (activeSub) {
+          setSubscription({
+            id: activeSub.id,
+            status: activeSub.status,
+            priceId: activeSub.price_id,
+            currentPeriodStart: activeSub.current_period_start,
+            currentPeriodEnd: activeSub.current_period_end,
+            cancelAt: activeSub.cancel_at,
+            canceledAt: activeSub.canceled_at,
+            cancelAtPeriodEnd: activeSub.cancel_at_period_end
+          });
+        } else {
+          setSubscription(null);
+        }
       }
         
       // If we were polling and now have an active subscription, stop and show success
       if (pollingSubscription && subscriptionData.items && subscriptionData.items.length > 0) {
         const hasActiveSub = subscriptionData.items.some(
-          (sub: Subscription) => sub.status === 'active' || sub.status === 'trialing'
+          (sub: SubscriptionAPI) => sub.status === 'active' || sub.status === 'trialing'
         );
         if (hasActiveSub) {
           setPollingSubscription(false);
@@ -120,9 +147,19 @@ function ProfilePageContent() {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       try {
-        const data = await apiFetch<{ items: Subscription[] }>('/v1/billing/subscriptions');
+        const data = await apiFetch<{ items: SubscriptionAPI[] }>('/v1/billing/subscriptions');
         if (data.items && data.items.length > 0) {
-          setSubscription(data.items[0]);
+          const sub = data.items[0];
+          setSubscription({
+            id: sub.id,
+            status: sub.status,
+            priceId: sub.price_id,
+            currentPeriodStart: sub.current_period_start,
+            currentPeriodEnd: sub.current_period_end,
+            cancelAt: sub.cancel_at,
+            canceledAt: sub.canceled_at,
+            cancelAtPeriodEnd: sub.cancel_at_period_end
+          });
           setPollingSubscription(false);
           setMessage({ 
             type: 'success', 
