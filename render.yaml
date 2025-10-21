@@ -4,11 +4,12 @@ services:
     name: realstaging-api
     runtime: docker
     dockerfilePath: ./apps/api/Dockerfile
-    dockerContext: ./apps/api
+    dockerContext: .
     region: oregon  # Change to your preferred region
     plan: starter  # starter, standard, or pro
     numInstances: 1
     healthCheckPath: /health
+    preDeployCommand: migrate -path /app/migrations -database $DATABASE_URL up
     envVars:
       - key: APP_ENV
         value: production
@@ -58,7 +59,7 @@ services:
     name: realstaging-worker
     runtime: docker
     dockerfilePath: ./apps/worker/Dockerfile
-    dockerContext: ./apps/worker
+    dockerContext: .
     region: oregon  # Same region as API for lower latency
     plan: starter
     numInstances: 1
@@ -99,7 +100,7 @@ services:
     name: realstaging-cleanup
     runtime: docker
     dockerfilePath: ./apps/api/Dockerfile
-    dockerContext: ./apps/api
+    dockerContext: .
     schedule: "0 * * * *"  # Every hour at minute 0
     dockerCommand: /app/reconcile cleanup --older-than-hours=1
     region: oregon
