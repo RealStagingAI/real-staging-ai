@@ -1,7 +1,7 @@
 import './globals.css'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata, Viewport } from 'next'
-import { Sparkles } from 'lucide-react'
 import AuthButton from '@/components/AuthButton'
 import UserProvider from '@/components/UserProvider'
 import ProtectedNav from '@/components/ProtectedNav'
@@ -36,11 +36,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <header className="sticky top-0 z-50 w-full border-b border-gray-200/60 dark:border-gray-800/60 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-950/60">
               <nav className="container flex h-14 sm:h-16 items-center justify-between">
                 <div className="flex items-center gap-4 sm:gap-8 flex-1 min-w-0">
-                  <Link href="/" className="flex items-center gap-2 font-bold text-base sm:text-lg group flex-shrink-0">
-                    <div className="rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 p-1.5 sm:p-2 shadow-lg shadow-blue-500/30 transition-all group-hover:shadow-xl group-hover:shadow-blue-500/40">
-                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </div>
-                    <span className="gradient-text hidden sm:inline truncate">Real Staging AI</span>
+                  <Link href="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
+                    <Image
+                      src="/logo.png"
+                      alt="Real Staging AI Logo"
+                      width={120}
+                      height={40}
+                      className="h-8 w-auto sm:h-10 transition-opacity group-hover:opacity-80"
+                      priority
+                    />
                   </Link>
                   <div className="hidden items-center gap-1 md:flex">
                     <ProtectedNav />
