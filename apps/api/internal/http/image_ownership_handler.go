@@ -11,10 +11,10 @@ import (
 
 // ImageOwnershipResponse represents the response for image ownership checks
 type ImageOwnershipResponse struct {
-	ImageID    string `json:"image_id"`
-	OwnerID    string `json:"owner_id"`
-	HasAccess  bool   `json:"has_access"`
-	S3Key      string `json:"s3_key,omitempty"`
+	ImageID   string `json:"image_id"`
+	OwnerID   string `json:"owner_id"`
+	HasAccess bool   `json:"has_access"`
+	S3Key     string `json:"s3_key,omitempty"`
 }
 
 // getImageOwnerHandler handles GET /v1/images/:id/owner
@@ -29,7 +29,7 @@ func (s *Server) getImageOwnerHandler(c echo.Context) error {
 			Message: "WORKER_SECRET not configured",
 		})
 	}
-	
+
 	internalAuth := c.Request().Header.Get("X-Internal-Auth")
 	if internalAuth != workerSecret {
 		return c.JSON(http.StatusUnauthorized, ErrorResponse{
@@ -116,7 +116,7 @@ func (s *Server) getImageOwnerHandler(c echo.Context) error {
 		if bucketName == "" {
 			bucketName = "realstaging-prod"
 		}
-		
+
 		if kind == "staged" && image.StagedURL != nil && *image.StagedURL != "" {
 			s3Key = extractS3KeyFromURL(*image.StagedURL, bucketName)
 		} else if kind == "original" && image.OriginalURL != "" {
@@ -136,11 +136,11 @@ func extractS3KeyFromURL(rawURL string, bucketName string) string {
 	if idx := strings.Index(rawURL, prefix); idx >= 0 {
 		return rawURL[idx+len(prefix):]
 	}
-	
+
 	// Fallback: extract everything after last slash
 	if idx := strings.LastIndex(rawURL, "/"); idx >= 0 {
 		return rawURL[idx+1:]
 	}
-	
+
 	return ""
 }
