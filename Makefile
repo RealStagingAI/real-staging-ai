@@ -82,20 +82,20 @@ migrate-test: migrate-down-all ## Run database migrations on the test database
 
 migrate-up-all: ## Apply all database migrations on the test database
 	@echo "Applying all database migrations on the test database..."
-	docker compose -f docker-compose.test.yml run --remove-orphans --rm -T migrate -path . -database postgres://testuser:testpassword@postgres-test:5432/testdb?sslmode=disable up
+	docker compose -p virtual-staging-ai-test -f docker-compose.test.yml run --remove-orphans --rm -T migrate -path . -database postgres://testuser:testpassword@postgres-test:5432/testdb?sslmode=disable up
 
 migrate-up: ## Apply one database migration on the test database
 	@echo "Applying one database migration on the test database..."
-	docker compose -f docker-compose.test.yml run --remove-orphans --rm -T migrate -path . -database postgres://testuser:testpassword@postgres-test:5432/testdb?sslmode=disable up $(N)
+	docker compose -p virtual-staging-ai-test -f docker-compose.test.yml run --remove-orphans --rm -T migrate -path . -database postgres://testuser:testpassword@postgres-test:5432/testdb?sslmode=disable up $(N)
 
 migrate-down-all: ## Rollback all database migrations on the test database.
 	@echo "Rolling back all database migrations on the test database..."
-	docker compose -f docker-compose.test.yml run --remove-orphans --rm -T migrate -path . -database postgres://testuser:testpassword@postgres-test:5432/testdb?sslmode=disable down -all
+	docker compose -p virtual-staging-ai-test -f docker-compose.test.yml run --remove-orphans --rm -T migrate -path . -database postgres://testuser:testpassword@postgres-test:5432/testdb?sslmode=disable down -all
 
 migrate-down: ## Rollback database migrations on the test database. Optional N=x to rollback x migrations.
 	@echo "Rolling back database migrations on the test database..."
 ifdef N
-	docker compose -f docker-compose.test.yml run --remove-orphans --rm -T migrate -path . -database postgres://testuser:testpassword@postgres-test:5432/testdb?sslmode=disable down $(N)
+	docker compose -p virtual-staging-ai-test -f docker-compose.test.yml run --remove-orphans --rm -T migrate -path . -database postgres://testuser:testpassword@postgres-test:5432/testdb?sslmode=disable down $(N)
 else
 	$(MAKE) migrate-down-all
 endif
@@ -110,16 +110,16 @@ migrate-down-dev: ## Rollback database migrations on the development database
 
 seed-test: ## Seed the test database with sample data
 	@echo "Seeding the test database..."
-	docker compose -f docker-compose.test.yml run --rm -T -e PGPASSWORD=testpassword -v ./apps/api/tests/integration/testdata:/seed postgres-client -f /seed/seed.sql
+	docker compose -p virtual-staging-ai-test -f docker-compose.test.yml run --rm -T -e PGPASSWORD=testpassword -v ./apps/api/tests/integration/testdata:/seed postgres-client -f /seed/seed.sql
 
 test-integration: migrate-test ## Run integration tests
 	@echo "Starting test infrastructure..."
-	docker compose -f docker-compose.test.yml up -d --remove-orphans postgres-test redis-test localstack
+	docker compose -p virtual-staging-ai-test -f docker-compose.test.yml up -d --remove-orphans postgres-test redis-test localstack
 	@echo "Running integration tests..."
 	cd apps/api && CONFIG_DIR=../../config APP_ENV=test PGHOST=localhost PGPORT=5433 PGUSER=testuser PGPASSWORD=testpassword PGDATABASE=testdb PGSSLMODE=disable REDIS_ADDR=localhost:6380 go test -tags=integration -p 1 ./...
 	cd apps/worker && CONFIG_DIR=../../config APP_ENV=test PGHOST=localhost PGPORT=5433 PGUSER=testuser PGPASSWORD=testpassword PGDATABASE=testdb PGSSLMODE=disable REDIS_ADDR=localhost:6380 go test -tags=integration -p 1 ./...
 	@echo "Stopping test infrastructure..."
-	docker compose -f docker-compose.test.yml down
+	docker compose -p virtual-staging-ai-test -f docker-compose.test.yml down
 
 docs-validate: ## Validate the OpenAPI specification
 	@echo "Validating OpenAPI specification..."
