@@ -6,16 +6,27 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "tail": "wrangler tail",
     "secret:b2-key": "wrangler secret put B2_ACCESS_KEY_ID",
     "secret:b2-secret": "wrangler secret put B2_SECRET_ACCESS_KEY",
     "secret:worker": "wrangler secret put WORKER_SECRET"
   },
-  "keywords": ["cloudflare", "worker", "cdn", "auth", "b2"],
+  "keywords": [
+    "cloudflare",
+    "worker",
+    "cdn",
+    "auth",
+    "b2"
+  ],
   "author": "Real Staging AI",
   "license": "MIT",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "vitest": "^1.0.0",
     "wrangler": "^3.94.0"
   }
 }
