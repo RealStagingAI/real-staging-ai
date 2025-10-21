@@ -2,14 +2,26 @@
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Install Wrangler CLI
+
+Wrangler is installed via npm (no longer available via Homebrew):
+
+```bash
+# Install globally
+npm install -g wrangler
+
+# Verify installation
+wrangler --version
+```
+
+### 2. Install Project Dependencies
 
 ```bash
 cd cloudflare-cdn-worker
 npm install
 ```
 
-### 2. Login to Cloudflare
+### 3. Login to Cloudflare
 
 ```bash
 wrangler login
@@ -17,7 +29,7 @@ wrangler login
 
 This will open a browser to authenticate with Cloudflare.
 
-### 3. Set Secrets
+### 4. Set Secrets
 
 ```bash
 # Set B2 credentials
@@ -32,7 +44,7 @@ npm run secret:worker
 # Enter the same value as WORKER_SECRET in your API environment
 ```
 
-### 4. Update Configuration
+### 5. Update Configuration
 
 Edit `wrangler.toml` and verify:
 - `AUTH0_DOMAIN` - Should match your Auth0 domain
@@ -42,7 +54,7 @@ Edit `wrangler.toml` and verify:
 - `B2_ENDPOINT` - Your B2 S3 endpoint
 - `B2_REGION` - Your B2 region
 
-### 5. Deploy Worker
+### 6. Deploy Worker
 
 ```bash
 npm run deploy
@@ -54,7 +66,7 @@ Published realstaging-cdn-worker
 https://realstaging-cdn-worker.workers.dev
 ```
 
-### 6. Configure Custom Domain
+### 7. Configure Custom Domain
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
 2. Navigate to **Workers & Pages**
@@ -69,7 +81,7 @@ Cloudflare will:
 - Provision SSL certificate
 - Enable CDN caching
 
-### 7. Update Backend API
+### 8. Update Backend API
 
 Set the `WORKER_SECRET` environment variable in your API:
 
@@ -84,7 +96,7 @@ Set the `WORKER_SECRET` environment variable in your API:
 WORKER_SECRET=your-secret-here
 ```
 
-### 8. Test
+### 9. Test
 
 ```bash
 # Get a JWT token from Auth0
