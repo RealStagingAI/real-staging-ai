@@ -13,15 +13,16 @@ import (
 // Config represents the application configuration.
 
 type Config struct {
-	App     App     `yaml:"app"`
-	Auth0   Auth0   `yaml:"auth0"`
-	DB      DB      `yaml:"db"`
-	Job     Job     `yaml:"job"`
-	Logging Logging `yaml:"logging"`
-	OTEL    OTEL    `yaml:"otel"`
-	Redis   Redis   `yaml:"redis"`
-	S3      S3      `yaml:"s3"`
-	Stripe  Stripe  `yaml:"stripe"`
+	App          App     `yaml:"app"`
+	Auth0        Auth0   `yaml:"auth0"`
+	DB           DB      `yaml:"db"`
+	Job          Job     `yaml:"job"`
+	Logging      Logging `yaml:"logging"`
+	OTEL         OTEL    `yaml:"otel"`
+	Redis        Redis   `yaml:"redis"`
+	S3           S3      `yaml:"s3"`
+	Stripe       Stripe  `yaml:"stripe"`
+	WorkerSecret string  `yaml:"worker_secret" env:"WORKER_SECRET"`
 }
 
 type App struct {
@@ -66,7 +67,6 @@ type Redis struct {
 type S3 struct {
 	AccessKey      string `yaml:"access_key" env:"S3_ACCESS_KEY"`
 	BucketName     string `yaml:"bucket_name" env:"S3_BUCKET_NAME" env-default:"real-staging"`
-	CDNURL         string `yaml:"cdn_url" env:"S3_CDN_URL"`
 	Endpoint       string `yaml:"endpoint" env:"S3_ENDPOINT"`
 	PublicEndpoint string `yaml:"public_endpoint" env:"S3_PUBLIC_ENDPOINT"`
 	Region         string `yaml:"region" env:"S3_REGION" env-default:"us-west-1"`

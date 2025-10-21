@@ -128,6 +128,10 @@ func NewServer(
 	protected.DELETE("/images/:id", s.deleteImageHandler)
 	protected.GET("/projects/:project_id/images", imgHandler.GetProjectImages)
 	protected.GET("/projects/:project_id/cost", imgHandler.GetProjectCost)
+	
+	// Internal routes (for Cloudflare Worker)
+	// These use X-Internal-Auth header instead of JWT
+	api.GET("/images/:id/owner", s.getImageOwnerHandler)
 
 	// SSE routes
 	protected.GET("/events", func(c echo.Context) error {
