@@ -17,7 +17,10 @@ import {
   AlertCircle,
   Check,
   X,
-  Trash2
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  XCircle
 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
@@ -67,6 +70,10 @@ export default function ImagesPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const imagesRef = useRef<ImageRecord[]>([]);
   const pollingStartTimeRef = useRef<number | null>(null);
+  
+  // Preview/Lightbox state
+  const [previewImageId, setPreviewImageId] = useState<string | null>(null);
+  const [previewMode, setPreviewMode] = useState<'original' | 'staged'>('staged');
 
   // Keep ref in sync with images state
   useEffect(() => {
@@ -98,6 +105,65 @@ export default function ImagesPage() {
     setSelectedImageIds(new Set());
   }, []);
 
+  // Preview navigation
+  const previewImages = useMemo(() => {
+    // If images are selected, only preview those
+    if (selectedImageIds.size > 0) {
+      return images.filter(img => selectedImageIds.has(img.id));
+    }
+    // Otherwise preview all images
+    return images;
+  }, [images, selectedImageIds]);
+
+  const currentPreviewIndex = useMemo(() => {
+    if (!previewImageId) return -1;
+    return previewImages.findIndex(img => img.id === previewImageId);
+  }, [previewImageId, previewImages]);
+
+  const goToPreviousImage = useCallback(() => {
+    if (currentPreviewIndex > 0) {
+      setPreviewImageId(previewImages[currentPreviewIndex - 1].id);
+    }
+  }, [currentPreviewIndex, previewImages]);
+
+  const goToNextImage = useCallback(() => {
+    if (currentPreviewIndex < previewImages.length - 1) {
+      setPreviewImageId(previewImages[currentPreviewIndex + 1].id);
+    }
+  }, [currentPreviewIndex, previewImages]);
+
+  const togglePreviewMode = useCallback(() => {
+    setPreviewMode(prev => prev === 'original' ? 'staged' : 'original');
+  }, []);
+
+  const closePreview = useCallback(() => {
+    setPreviewImageId(null);
+  }, []);
+
+  // Keyboard navigation for preview
+  useEffect(() => {
+    if (!previewImageId) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPreviousImage();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNextImage();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closePreview();
+      } else if (e.key === ' ' || e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        togglePreviewMode();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewImageId, goToPreviousImage, goToNextImage, closePreview, togglePreviewMode]);
+
   // Fetch presigned URL for viewing
   async function getPresignedUrl(imageId: string, kind: 'original' | 'staged'): Promise<string | null> {
     try {
@@ -110,17 +176,10 @@ export default function ImagesPage() {
     }
   }
 
-  // Open presigned URL in new tab (for download/view)
-  async function openPresigned(imageId: string, kind: 'original' | 'staged') {
-    try {
-      const url = await getPresignedUrl(imageId, kind);
-      if (url) {
-        window.open(url, '_blank', 'noopener,noreferrer');
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      setStatusMessage(message);
-    }
+  // Open image in preview lightbox
+  function openPreview(imageId: string, kind: 'original' | 'staged') {
+    setPreviewImageId(imageId);
+    setPreviewMode(kind);
   }
 
   // Prefetch image URLs for display
@@ -934,10 +993,10 @@ export default function ImagesPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      openPresigned(image.id, 'original');
+                      openPreview(image.id, 'original');
                     }}
                     className="btn btn-secondary btn-sm"
-                    title="Open Original in New Tab"
+                    title="View Original"
                   >
                     <ExternalLink className="h-3 w-3" />
                     <span className="hidden sm:inline">Original</span>
@@ -946,10 +1005,10 @@ export default function ImagesPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        openPresigned(image.id, 'staged');
+                        openPreview(image.id, 'staged');
                       }}
                       className="btn btn-primary btn-sm"
-                      title="Open Staged in New Tab"
+                      title="View Staged"
                     >
                       <ExternalLink className="h-3 w-3" />
                       <span className="hidden sm:inline">Staged</span>
@@ -1088,9 +1147,8 @@ export default function ImagesPage() {
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openPresigned(image.id, 'original');
+                            onClick={() => {
+                              openPreview(image.id, 'original');
                             }}
                             className="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                             title="View Original"
@@ -1099,15 +1157,14 @@ export default function ImagesPage() {
                           </button>
                           {image.staged_url && (
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openPresigned(image.id, 'staged');
+                              onClick={() => {
+                                openPreview(image.id, 'staged');
                               }}
                               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                               title="View Staged"
                             >
                               <CheckCircle2 className="h-4 w-4" />
-                            </button>
+                          </button>
                           )}
                           <button
                             onClick={(e) => {
@@ -1137,6 +1194,136 @@ export default function ImagesPage() {
           <p className="text-sm text-gray-700">{statusMessage}</p>
         </div>
       )}
+
+      {/* Image Preview Lightbox */}
+      {previewImageId && (() => {
+        const currentImage = previewImages[currentPreviewIndex];
+        if (!currentImage) return null;
+
+        const urls = imageUrls[currentImage.id];
+        const displayUrl = previewMode === 'staged' ? urls?.staged : urls?.original;
+        const canShowStaged = currentImage.staged_url && urls?.staged;
+
+        return (
+          <div 
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+            onClick={closePreview}
+          >
+            {/* Close Button */}
+            <button
+              onClick={closePreview}
+              className="absolute top-4 right-4 z-10 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+              title="Close (Esc)"
+            >
+              <XCircle className="h-8 w-8 text-white" />
+            </button>
+
+            {/* Image Info Overlay - Top */}
+            <div className="absolute top-4 left-4 z-10 bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg">
+              <p className="text-white text-sm font-medium">
+                {currentPreviewIndex + 1} / {previewImages.length}
+              </p>
+              {selectedImageIds.size > 0 && (
+                <p className="text-white/70 text-xs mt-1">
+                  Showing selected images only
+                </p>
+              )}
+            </div>
+
+            {/* Navigation - Previous */}
+            {currentPreviewIndex > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPreviousImage();
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                title="Previous (←)"
+              >
+                <ChevronLeft className="h-8 w-8 text-white" />
+              </button>
+            )}
+
+            {/* Navigation - Next */}
+            {currentPreviewIndex < previewImages.length - 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNextImage();
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                title="Next (→)"
+              >
+                <ChevronRight className="h-8 w-8 text-white" />
+              </button>
+            )}
+
+            {/* Main Image Container */}
+            <div 
+              className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center px-20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {displayUrl ? (
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <NextImage
+                    src={displayUrl}
+                    alt={previewMode === 'staged' ? 'Staged' : 'Original'}
+                    fill
+                    className="object-contain"
+                    unoptimized
+                  />
+                  
+                  {/* Image Type Overlay */}
+                  <div className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-4 py-2 rounded-lg">
+                    <p className="text-white text-sm font-semibold uppercase tracking-wide">
+                      {previewMode === 'staged' ? 'Staged' : 'Original'}
+                    </p>
+                    {previewMode === 'staged' && currentImage.style && (
+                      <p className="text-white/80 text-xs mt-1">
+                        {currentImage.style}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-4 text-white">
+                  <Loader2 className="h-12 w-12 animate-spin" />
+                  <p>Loading image...</p>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Controls */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3">
+              {/* Toggle Original/Staged */}
+              {canShowStaged && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePreviewMode();
+                  }}
+                  className="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-colors flex items-center gap-2"
+                  title="Toggle View (Space or T)"
+                >
+                  <span className="text-white font-medium">
+                    {previewMode === 'original' ? 'Show Staged' : 'Show Original'}
+                  </span>
+                </button>
+              )}
+
+              {/* Image Details */}
+              <div className="px-4 py-3 bg-black/60 backdrop-blur-sm rounded-lg">
+                <p className="text-white text-sm">
+                  {currentImage.room_type || 'Untitled'}
+                </p>
+                <p className="text-white/60 text-xs mt-1">
+                  {formatRelativeTime(currentImage.updated_at)}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
