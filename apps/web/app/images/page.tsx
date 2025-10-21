@@ -982,6 +982,7 @@ export default function ImagesPage() {
                           src={stagedSrc}
                           alt="Staged"
                           fill
+                          unoptimized
                           className={cn(
                             "absolute inset-0 object-cover transition-all duration-300",
                             hoveredImageId === image.id ? "opacity-0" : "opacity-100 group-hover:scale-105"
@@ -996,6 +997,7 @@ export default function ImagesPage() {
                           src={originalSrc}
                           alt="Original"
                           fill
+                          unoptimized
                           className={cn(
                             "absolute inset-0 object-cover transition-opacity duration-300",
                             hoveredImageId === image.id ? "opacity-100" : "opacity-0"
@@ -1179,6 +1181,7 @@ export default function ImagesPage() {
                                 alt="Preview"
                                 width={96}
                                 height={64}
+                                unoptimized
                                 className="h-full w-full object-cover"
                               />
                             ) : imageUrls[image.id] ? (
