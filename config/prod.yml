@@ -10,6 +10,10 @@ auth0:
   audience: ${AUTH0_AUDIENCE}
   domain: ${AUTH0_DOMAIN}
 
+# CDN configuration
+cdn:
+  url: ${CDN_URL}
+
 db:
   # Database connection should use DATABASE_URL in production
   # or override these individual settings

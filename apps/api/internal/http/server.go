@@ -11,6 +11,7 @@ import (
 
 	"github.com/real-staging-ai/api/internal/auth"
 	"github.com/real-staging-ai/api/internal/billing"
+	"github.com/real-staging-ai/api/internal/cdn"
 	"github.com/real-staging-ai/api/internal/config"
 	"github.com/real-staging-ai/api/internal/image"
 	"github.com/real-staging-ai/api/internal/logging"
@@ -130,6 +131,10 @@ func NewServer(
 	protected.GET("/projects/:project_id/images", imgHandler.GetProjectImages)
 	protected.GET("/projects/:project_id/cost", imgHandler.GetProjectCost)
 
+	// CDN routes
+	cdnHandler := cdn.NewDefaultHandler(cfg.CDN.URL, s.imageService)
+	protected.GET("/images/:id/cdn/:kind", cdnHandler.ProxyImage)
+
 	// Internal routes (for Cloudflare Worker)
 	// These use X-Internal-Auth header instead of JWT
 	api.GET("/images/:id/owner", s.getImageOwnerHandler)
@@ -246,6 +251,10 @@ func NewTestServer(
 	api.DELETE("/images/:id", withTestUser(s.deleteImageHandler))
 	api.GET("/projects/:project_id/images", withTestUser(imgHandler.GetProjectImages))
 	api.GET("/projects/:project_id/cost", withTestUser(imgHandler.GetProjectCost))
+
+	// CDN routes
+	cdnHandlerTest := cdn.NewDefaultHandler(cfg.CDN.URL, s.imageService)
+	api.GET("/images/:id/cdn/:kind", withTestUser(cdnHandlerTest.ProxyImage))
 
 	// SSE routes
 	api.GET("/events", func(c echo.Context) error {
