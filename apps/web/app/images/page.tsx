@@ -25,6 +25,7 @@ import {
 
 import { apiFetch } from "@/lib/api";
 import { cn, formatRelativeTime } from "@/lib/utils";
+import { getCachedUrl, setCachedUrl, clearExpiredCache } from "@/lib/imageCache";
 
 type Project = {
   id: string;
@@ -75,10 +76,57 @@ export default function ImagesPage() {
   const [previewImageId, setPreviewImageId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<'original' | 'staged'>('staged');
 
+  // Lazy loading state
+  const [visibleImageIds, setVisibleImageIds] = useState<Set<string>>(new Set());
+  const imageObserverRef = useRef<IntersectionObserver | null>(null);
+
   // Keep ref in sync with images state
   useEffect(() => {
     imagesRef.current = images;
   }, [images]);
+  
+  // Clear expired cache entries on mount
+  useEffect(() => {
+    clearExpiredCache();
+  }, []);
+  
+  // Set up Intersection Observer for lazy loading
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    imageObserverRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const imageId = entry.target.getAttribute('data-image-id');
+            if (imageId) {
+              setVisibleImageIds(prev => new Set(prev).add(imageId));
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '50px', // Start loading 50px before entering viewport
+        threshold: 0.01
+      }
+    );
+    
+    return () => {
+      imageObserverRef.current?.disconnect();
+    };
+  }, []);
+
+  // Register image elements with Intersection Observer
+  const registerImageObserver = useCallback((element: HTMLElement | null, imageId: string) => {
+    if (!element || !imageObserverRef.current) return;
+    
+    element.setAttribute('data-image-id', imageId);
+    imageObserverRef.current.observe(element);
+    
+    return () => {
+      imageObserverRef.current?.unobserve(element);
+    };
+  }, []);
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) ?? null,
@@ -164,12 +212,25 @@ export default function ImagesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewImageId, goToPreviousImage, goToNextImage, closePreview, togglePreviewMode]);
 
-  // Fetch presigned URL for viewing
+  // Fetch presigned URL for viewing (with caching)
   async function getPresignedUrl(imageId: string, kind: 'original' | 'staged'): Promise<string | null> {
+    // Check cache first
+    const cached = getCachedUrl(imageId, kind);
+    if (cached) {
+      return cached;
+    }
+    
     try {
       const params = new URLSearchParams({ kind });
       const res = await apiFetch<{ url: string }>(`/v1/images/${imageId}/presign?${params.toString()}`);
-      return res?.url || null;
+      const url = res?.url || null;
+      
+      // Cache the URL if successful
+      if (url) {
+        setCachedUrl(imageId, kind, url);
+      }
+      
+      return url;
     } catch (err: unknown) {
       console.error('Failed to get presigned URL:', err);
       return null;
@@ -182,14 +243,14 @@ export default function ImagesPage() {
     setPreviewMode(kind);
   }
 
-  // Prefetch image URLs for display
+  // Prefetch image URLs for display (only for visible images)
   const prefetchImageUrls = useCallback(async (imageList: ImageRecord[]) => {
     // Start with existing URLs to avoid re-fetching
     const urlMap: Record<string, { original?: string; staged?: string }> = { ...imageUrls };
     
-    // Only fetch URLs for images that have been uploaded (not still processing)
-    // AND don't already have cached URLs
+    // Only fetch URLs for images that are visible, uploaded, and not already cached
     const imagesToFetch = imageList.filter(img => 
+      visibleImageIds.has(img.id) &&
       (img.status !== 'queued' && img.status !== 'processing') &&
       (!urlMap[img.id]?.original || (img.staged_url && !urlMap[img.id]?.staged))
     );
@@ -223,7 +284,14 @@ export default function ImagesPage() {
     }
 
     setImageUrls(urlMap);
-  }, [imageUrls]);
+  }, [imageUrls, visibleImageIds]);
+  
+  // Trigger prefetch when images become visible
+  useEffect(() => {
+    if (visibleImageIds.size > 0 && images.length > 0) {
+      prefetchImageUrls(images);
+    }
+  }, [visibleImageIds, images, prefetchImageUrls]);
 
   // Prefetch image on hover (for smooth transitions)
   const handleImageHover = useCallback((imageId: string) => {
@@ -882,6 +950,7 @@ export default function ImagesPage() {
             return (
               <div
                 key={image.id}
+                ref={(el) => registerImageObserver(el, image.id)}
                 className={cn(
                   "card group cursor-pointer transition-all duration-200",
                   selectedImageIds.has(image.id) && "ring-2 ring-blue-500 shadow-xl",
