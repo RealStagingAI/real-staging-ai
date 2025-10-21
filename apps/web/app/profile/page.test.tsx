@@ -57,8 +57,27 @@ describe('ProfilePage', () => {
         billing_address: { city: 'Metropolis' },
         preferences: { email_notifications: true },
       })
-      // 2) billing subscriptions
-      .mockResolvedValueOnce({ items: [{ id: 'sub_1', status: 'active' }] })
+      // 2) billing usage
+      .mockResolvedValueOnce({
+        images_used: 5,
+        monthly_limit: 100,
+        plan_code: 'pro',
+        period_start: '2025-10-20T00:00:00Z',
+        period_end: '2025-11-20T00:00:00Z',
+        has_subscription: true,
+        remaining_images: 95
+      })
+      // 3) billing subscriptions
+      .mockResolvedValueOnce({ 
+        items: [{ 
+          id: 'sub_1', 
+          status: 'active',
+          price_id: 'price_123',
+          current_period_start: '2025-10-20T00:00:00Z',
+          current_period_end: '2025-11-20T00:00:00Z',
+          cancel_at_period_end: false
+        }] 
+      })
 
     const { container } = render(<ProfilePage />)
 
@@ -69,10 +88,11 @@ describe('ProfilePage', () => {
 
     // Assert calls
     expect(apiFetchMock.mock.calls.some((c) => c[0] === '/v1/user/profile')).toBe(true)
+    expect(apiFetchMock.mock.calls.some((c) => c[0] === '/v1/billing/usage')).toBe(true)
     expect(apiFetchMock.mock.calls.some((c) => c[0] === '/v1/billing/subscriptions')).toBe(true)
 
-    // Renders subscription UI (Active Subscription banner)
-    expect(container.textContent || '').toContain('Active Subscription')
+    // Renders subscription UI (shows plan info)
+    expect(container.textContent || '').toContain('Pro Plan')
 
     // Full name input should reflect mapped value
     const inputs = Array.from(container.querySelectorAll('input')) as HTMLInputElement[]
@@ -89,6 +109,15 @@ describe('ProfilePage', () => {
         created_at: '',
         updated_at: '',
         full_name: 'Snake Case',
+      })
+      .mockResolvedValueOnce({
+        images_used: 0,
+        monthly_limit: 10,
+        plan_code: 'free',
+        period_start: '2025-10-20T00:00:00Z',
+        period_end: '2025-11-20T00:00:00Z',
+        has_subscription: false,
+        remaining_images: 10
       })
       .mockResolvedValueOnce({ items: [] })
       // PATCH update response (return profile)
@@ -132,6 +161,15 @@ describe('ProfilePage', () => {
     // Arrange: profile then no subscriptions -> shows Subscribe button
     apiFetchMock
       .mockResolvedValueOnce({ id: 'id', role: 'user', created_at: '', updated_at: '' })
+      .mockResolvedValueOnce({
+        images_used: 0,
+        monthly_limit: 10,
+        plan_code: 'free',
+        period_start: '2025-10-20T00:00:00Z',
+        period_end: '2025-11-20T00:00:00Z',
+        has_subscription: false,
+        remaining_images: 10
+      })
       .mockResolvedValueOnce({ items: [] })
       .mockResolvedValueOnce({ url: 'https://checkout.example.com' })
 
@@ -145,8 +183,10 @@ describe('ProfilePage', () => {
       await Promise.resolve()
     })
 
-    // Click Subscribe Now button
-    const subscribeBtn = Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.includes('Subscribe Now')) as HTMLButtonElement
+    // Click Subscribe/Upgrade button
+    const subscribeBtn = Array.from(container.querySelectorAll('button')).find((b) => 
+      b.textContent?.includes('Upgrade to') || b.textContent?.includes('Subscribe')
+    ) as HTMLButtonElement
     expect(subscribeBtn).toBeTruthy()
 
     await act(async () => {
@@ -163,35 +203,47 @@ describe('ProfilePage', () => {
     Object.defineProperty(window, 'location', { value: originalLocation, configurable: true })
   })
 
-  it('success: clicking Manage Subscription triggers billing portal call and redirects', async () => {
-    // Arrange: profile then active subscription -> shows Manage button
+  it('success: renders Pro plan with active subscription', async () => {
+    // Arrange: profile with active Pro subscription
     apiFetchMock
       .mockResolvedValueOnce({ id: 'id', role: 'user', created_at: '', updated_at: '' })
-      .mockResolvedValueOnce({ items: [{ id: 'sub_1', status: 'active' }] })
-      .mockResolvedValueOnce({ url: 'https://portal.example.com' })
-
-    const originalLocation = window.location
-    Object.defineProperty(window, 'location', { value: { href: '' } as Location, configurable: true })
+      .mockResolvedValueOnce({
+        images_used: 5,
+        monthly_limit: 100,
+        plan_code: 'pro',
+        period_start: '2025-10-20T00:00:00Z',
+        period_end: '2025-11-20T00:00:00Z',
+        has_subscription: true,
+        remaining_images: 95
+      })
+      .mockResolvedValueOnce({ 
+        items: [{ 
+          id: 'sub_1', 
+          status: 'active',
+          price_id: 'price_123',
+          current_period_start: '2025-10-20T00:00:00Z',
+          current_period_end: '2025-11-20T00:00:00Z',
+          cancel_at_period_end: false
+        }] 
+      })
 
     const { container } = render(<ProfilePage />)
 
+    // Wait for all async effects
     await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
       await Promise.resolve()
     })
 
-    // Click Manage Subscription button
-    const manageBtn = Array.from(container.querySelectorAll('button')).find((b) => b.textContent?.includes('Manage Subscription')) as HTMLButtonElement
-    expect(manageBtn).toBeTruthy()
-
-    await act(async () => {
-      manageBtn.click()
-      await Promise.resolve()
-    })
-
-    const call = apiFetchMock.mock.calls.find((c) => c[0] === '/v1/billing/portal')
-    expect(call).toBeTruthy()
-    expect(call?.[1]?.method).toBe('POST')
-
-    Object.defineProperty(window, 'location', { value: originalLocation, configurable: true })
+    // Verify Pro plan is displayed
+    expect(container.textContent || '').toContain('Pro Plan')
+    expect(container.textContent || '').toContain('100 images per month')
+    expect(container.textContent || '').toContain('5 used')
+    
+    // Verify all API calls were made
+    expect(apiFetchMock.mock.calls.some((c) => c[0] === '/v1/user/profile')).toBe(true)
+    expect(apiFetchMock.mock.calls.some((c) => c[0] === '/v1/billing/usage')).toBe(true)
+    expect(apiFetchMock.mock.calls.some((c) => c[0] === '/v1/billing/subscriptions')).toBe(true)
   })
 })
