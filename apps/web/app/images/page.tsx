@@ -245,14 +245,18 @@ export default function ImagesPage() {
 
   // Prefetch image URLs for display (only for visible images)
   const prefetchImageUrls = useCallback(async (imageList: ImageRecord[]) => {
-    // Start with existing URLs to avoid re-fetching
-    const urlMap: Record<string, { original?: string; staged?: string }> = { ...imageUrls };
+    // Use functional update to get current URLs without depending on imageUrls
+    let currentUrls: Record<string, { original?: string; staged?: string }> = {};
+    setImageUrls(prev => {
+      currentUrls = prev;
+      return prev;
+    });
     
     // Only fetch URLs for images that are visible, uploaded, and not already cached
     const imagesToFetch = imageList.filter(img => 
       visibleImageIds.has(img.id) &&
       (img.status !== 'queued' && img.status !== 'processing') &&
-      (!urlMap[img.id]?.original || (img.staged_url && !urlMap[img.id]?.staged))
+      (!currentUrls[img.id]?.original || (img.staged_url && !currentUrls[img.id]?.staged))
     );
     
     // Skip if no new images to fetch
@@ -266,6 +270,8 @@ export default function ImagesPage() {
       chunks.push(imagesToFetch.slice(i, i + 5));
     }
 
+    const urlMap: Record<string, { original?: string; staged?: string }> = { ...currentUrls };
+    
     for (const chunk of chunks) {
       await Promise.all(
         chunk.map(async (image) => {
@@ -284,7 +290,7 @@ export default function ImagesPage() {
     }
 
     setImageUrls(urlMap);
-  }, [imageUrls, visibleImageIds]);
+  }, [visibleImageIds]);
   
   // Trigger prefetch when images become visible
   useEffect(() => {
