@@ -23,10 +23,13 @@ FROM alpine:latest
 # Install ca-certificates for HTTPS and curl for migrate download
 RUN apk --no-cache add ca-certificates curl
 
-# Download and install golang-migrate
-RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz \
+# Download and install golang-migrate with checksum verification
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz -o migrate.tar.gz \
+    && echo "26c53c9162c9c4aaa84c47cd12455d4a9ac725befbe82850a5937b5ec1e7b8e6  migrate.tar.gz" | sha256sum -c - \
+    && tar xvzf migrate.tar.gz \
     && mv migrate /usr/local/bin/migrate \
-    && chmod +x /usr/local/bin/migrate
+    && chmod +x /usr/local/bin/migrate \
+    && rm migrate.tar.gz
 
 # Set working directory
 WORKDIR /app
