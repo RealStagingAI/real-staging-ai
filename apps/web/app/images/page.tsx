@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useUser } from "@auth0/nextjs-auth0";
 import JSZip from "jszip";
 import NextImage from "next/image";
 
@@ -55,6 +56,8 @@ type ImageListResponse = {
 };
 
 export default function ImagesPage() {
+  const { user } = useUser();
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [images, setImages] = useState<ImageRecord[]>([]);
@@ -71,6 +74,10 @@ export default function ImagesPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const imagesRef = useRef<ImageRecord[]>([]);
   const pollingStartTimeRef = useRef<number | null>(null);
+  
+  // CDN configuration
+  const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL;
+  const useCDN = Boolean(CDN_URL && accessToken);
   
   // Preview/Lightbox state
   const [previewImageId, setPreviewImageId] = useState<string | null>(null);
@@ -89,6 +96,20 @@ export default function ImagesPage() {
   useEffect(() => {
     clearExpiredCache();
   }, []);
+  
+  // Fetch access token for CDN authentication
+  useEffect(() => {
+    if (user) {
+      fetch('/api/auth/token')
+        .then(res => res.json())
+        .then(data => {
+          if (data.accessToken) {
+            setAccessToken(data.accessToken);
+          }
+        })
+        .catch(err => console.error('Failed to fetch access token:', err));
+    }
+  }, [user]);
   
   // Set up Intersection Observer for lazy loading
   useEffect(() => {
@@ -214,7 +235,14 @@ export default function ImagesPage() {
 
   // Fetch presigned URL for viewing (with caching)
   async function getPresignedUrl(imageId: string, kind: 'original' | 'staged'): Promise<string | null> {
-    // Check cache first
+    // If CDN is configured, use the proxy endpoint that adds Authorization headers
+    // The proxy at /api/cdn/* forwards requests to the Cloudflare CDN worker
+    if (useCDN && CDN_URL) {
+      // Use local proxy that adds Authorization header from session
+      return `/api/cdn/${imageId}/${kind}`;
+    }
+    
+    // Check cache first (for presigned URLs)
     const cached = getCachedUrl(imageId, kind);
     if (cached) {
       return cached;
