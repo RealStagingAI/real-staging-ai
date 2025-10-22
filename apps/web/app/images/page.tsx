@@ -212,8 +212,8 @@ export default function ImagesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewImageId, goToPreviousImage, goToNextImage, closePreview, togglePreviewMode]);
 
-  // Fetch presigned URL for viewing (with caching)
-  async function getPresignedUrl(imageId: string, kind: 'original' | 'staged'): Promise<string | null> {
+  // Get CDN URL for viewing (with caching)
+  async function getCdnUrl(imageId: string, kind: 'original' | 'staged'): Promise<string | null> {
     // Check cache first
     const cached = getCachedUrl(imageId, kind);
     if (cached) {
@@ -221,18 +221,16 @@ export default function ImagesPage() {
     }
     
     try {
-      const params = new URLSearchParams({ kind });
-      const res = await apiFetch<{ url: string }>(`/v1/images/${imageId}/presign?${params.toString()}`);
-      const url = res?.url || null;
+      // Use CDN proxy endpoint instead of presigned URLs
+      // This endpoint authenticates with the Cloudflare CDN Worker
+      const url = `/api/v1/images/${imageId}/cdn/${kind}`;
       
-      // Cache the URL if successful
-      if (url) {
-        setCachedUrl(imageId, kind, url);
-      }
+      // Cache the URL (CDN URLs are stable, don't expire like presigned URLs)
+      setCachedUrl(imageId, kind, url);
       
       return url;
     } catch (err: unknown) {
-      console.error('Failed to get presigned URL:', err);
+      console.error('Failed to get CDN URL:', err);
       return null;
     }
   }
@@ -276,9 +274,9 @@ export default function ImagesPage() {
       await Promise.all(
         chunk.map(async (image) => {
           // Only fetch if we don't have it cached
-          const originalUrl = urlMap[image.id]?.original || await getPresignedUrl(image.id, 'original');
+          const originalUrl = urlMap[image.id]?.original || await getCdnUrl(image.id, 'original');
           const stagedUrl = image.staged_url 
-            ? (urlMap[image.id]?.staged || await getPresignedUrl(image.id, 'staged'))
+            ? (urlMap[image.id]?.staged || await getCdnUrl(image.id, 'staged'))
             : null;
           
           urlMap[image.id] = {
