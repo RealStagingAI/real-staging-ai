@@ -27,6 +27,8 @@ type CountImagesCreatedInPeriodParams struct {
 }
 
 // Count how many images a user created within a specific date range
+// IMPORTANT: This counts ALL images (including soft-deleted) to prevent gaming the system
+// Users cannot reduce their usage count by deleting images
 func (q *Queries) CountImagesCreatedInPeriod(ctx context.Context, arg CountImagesCreatedInPeriodParams) (int32, error) {
 	row := q.db.QueryRow(ctx, CountImagesCreatedInPeriod, arg.UserID, arg.CreatedAt, arg.CreatedAt_2)
 	var column_1 int32

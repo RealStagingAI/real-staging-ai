@@ -36,7 +36,8 @@ type Repository interface {
 	// UpdateImageWithError updates an image with an error status and message.
 	UpdateImageWithError(ctx context.Context, imageID string, errorMsg string) (*queries.Image, error)
 
-	// DeleteImage deletes an image from the database.
+	// DeleteImage soft deletes an image from the database.
+	// The image is marked as deleted but kept for usage tracking.
 	DeleteImage(ctx context.Context, imageID string) error
 
 	// DeleteImagesByProjectID deletes all images for a specific project.

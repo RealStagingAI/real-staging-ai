@@ -1,5 +1,7 @@
 -- name: CountImagesCreatedInPeriod :one
 -- Count how many images a user created within a specific date range
+-- IMPORTANT: This counts ALL images (including soft-deleted) to prevent gaming the system
+-- Users cannot reduce their usage count by deleting images
 SELECT COUNT(*)::int
 FROM images i
 JOIN projects p ON i.project_id = p.id

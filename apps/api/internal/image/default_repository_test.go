@@ -64,7 +64,7 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 					WillReturnRows(
 						pgxmock.NewRows([]string{
 							"id", "project_id", "original_url", "staged_url",
-							"room_type", "style", "seed", "status", "error", "created_at", "updated_at",
+							"room_type", "style", "seed", "status", "error", "created_at", "updated_at", "deleted_at",
 						}).
 							AddRow(
 								pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -73,7 +73,7 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 								pgtype.Text{String: "living_room", Valid: true},
 								pgtype.Text{String: "modern", Valid: true},
 								pgtype.Int8{Int64: 123, Valid: true},
-								"queued", pgtype.Text{}, pgtype.Timestamptz{}, pgtype.Timestamptz{},
+								"queued", pgtype.Text{}, pgtype.Timestamptz{}, pgtype.Timestamptz{}, pgtype.Timestamptz{},
 							))
 			},
 			expectError: false,
@@ -154,7 +154,7 @@ func TestDefaultRepository_GetImageByID(t *testing.T) {
 					WillReturnRows(
 						pgxmock.NewRows([]string{
 							"id", "project_id", "original_url", "staged_url",
-							"room_type", "style", "seed", "status", "error", "created_at", "updated_at",
+							"room_type", "style", "seed", "status", "error", "created_at", "updated_at", "deleted_at",
 						}).
 							AddRow(
 								pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -163,7 +163,7 @@ func TestDefaultRepository_GetImageByID(t *testing.T) {
 								pgtype.Text{String: "living_room", Valid: true},
 								pgtype.Text{String: "modern", Valid: true},
 								pgtype.Int8{Int64: 123, Valid: true},
-								"queued", pgtype.Text{}, pgtype.Timestamptz{}, pgtype.Timestamptz{},
+								"queued", pgtype.Text{}, pgtype.Timestamptz{}, pgtype.Timestamptz{}, pgtype.Timestamptz{},
 							))
 			},
 			expectError: false,
@@ -254,7 +254,8 @@ func TestDefaultRepository_GetImagesByProjectID(t *testing.T) {
 			projectID: projectID.String(),
 			setupMock: func(mock pgxmock.PgxPoolIface) {
 				mock.ExpectQuery(
-					`-- name: GetImagesByProjectID :many\s+SELECT .+ FROM images\s+WHERE project_id = \$1\s+ORDER BY`,
+					`-- name: GetImagesByProjectID :many\s+SELECT .+ FROM images\s+` +
+						`WHERE project_id = \$1\s+AND deleted_at IS NULL\s+ORDER BY`,
 				).
 					WithArgs(pgtype.UUID{Bytes: projectID, Valid: true}).
 					WillReturnRows(pgxmock.NewRows([]string{"id"}))
@@ -272,7 +273,8 @@ func TestDefaultRepository_GetImagesByProjectID(t *testing.T) {
 			projectID: projectID.String(),
 			setupMock: func(mock pgxmock.PgxPoolIface) {
 				mock.ExpectQuery(
-					`-- name: GetImagesByProjectID :many\s+SELECT .+ FROM images\s+WHERE project_id = \$1\s+ORDER BY`,
+					`-- name: GetImagesByProjectID :many\s+SELECT .+ FROM images\s+` +
+						`WHERE project_id = \$1\s+AND deleted_at IS NULL\s+ORDER BY`,
 				).
 					WithArgs(pgtype.UUID{Bytes: projectID, Valid: true}).
 					WillReturnError(errors.New("db error"))
@@ -328,7 +330,7 @@ func TestDefaultRepository_UpdateImageStatus(t *testing.T) {
 					WithArgs(pgtype.UUID{Bytes: imageID, Valid: true}, queries.ImageStatusProcessing).
 					WillReturnRows(pgxmock.NewRows(
 						[]string{"id", "project_id", "original_url", "staged_url", "room_type", "style",
-							"seed", "status", "error", "created_at", "updated_at"}).
+							"seed", "status", "error", "created_at", "updated_at", "deleted_at"}).
 						AddRow(
 							pgtype.UUID{Bytes: imageID, Valid: true},
 							pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -339,6 +341,7 @@ func TestDefaultRepository_UpdateImageStatus(t *testing.T) {
 							pgtype.Int8{Int64: 123, Valid: true},
 							"processing",
 							pgtype.Text{},
+							pgtype.Timestamptz{},
 							pgtype.Timestamptz{},
 							pgtype.Timestamptz{}))
 
@@ -419,7 +422,7 @@ func TestDefaultRepository_UpdateImageWithStagedURL(t *testing.T) {
 						queries.ImageStatusReady).
 					WillReturnRows(pgxmock.NewRows(
 						[]string{"id", "project_id", "original_url", "staged_url", "room_type", "style",
-							"seed", "status", "error", "created_at", "updated_at"}).
+							"seed", "status", "error", "created_at", "updated_at", "deleted_at"}).
 						AddRow(
 							pgtype.UUID{Bytes: imageID, Valid: true},
 							pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -430,6 +433,7 @@ func TestDefaultRepository_UpdateImageWithStagedURL(t *testing.T) {
 							pgtype.Int8{Int64: 123, Valid: true},
 							"ready",
 							pgtype.Text{},
+							pgtype.Timestamptz{},
 							pgtype.Timestamptz{},
 							pgtype.Timestamptz{}))
 
@@ -518,7 +522,8 @@ func TestDefaultRepository_UpdateImageWithError(t *testing.T) {
 							"status",
 							"error",
 							"created_at",
-							"updated_at"}).
+							"updated_at",
+							"deleted_at"}).
 						AddRow(
 							pgtype.UUID{Bytes: imageID, Valid: true},
 							pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -529,6 +534,7 @@ func TestDefaultRepository_UpdateImageWithError(t *testing.T) {
 							pgtype.Int8{Int64: 123, Valid: true},
 							"error",
 							pgtype.Text{String: errorMsg, Valid: true},
+							pgtype.Timestamptz{},
 							pgtype.Timestamptz{},
 							pgtype.Timestamptz{}))
 			},
@@ -592,12 +598,12 @@ func TestDefaultRepository_DeleteImage(t *testing.T) {
 		expectError bool
 	}{
 		{
-			name:    "success: delete image",
+			name:    "success: soft delete image",
 			imageID: imageID.String(),
 			setupMock: func(mock pgxmock.PgxPoolIface) {
-				mock.ExpectExec("DELETE FROM images").
+				mock.ExpectExec("UPDATE images").
 					WithArgs(pgtype.UUID{Bytes: imageID, Valid: true}).
-					WillReturnResult(pgxmock.NewResult("DELETE", 1))
+					WillReturnResult(pgxmock.NewResult("UPDATE", 1))
 			},
 			expectError: false,
 		},
@@ -611,21 +617,21 @@ func TestDefaultRepository_DeleteImage(t *testing.T) {
 			name:    "fail: query error",
 			imageID: imageID.String(),
 			setupMock: func(mock pgxmock.PgxPoolIface) {
-				mock.ExpectExec("DELETE FROM images").
+				mock.ExpectExec("UPDATE images").
 					WithArgs(pgtype.UUID{Bytes: imageID, Valid: true}).
 					WillReturnError(errors.New("db error"))
 			},
 			expectError: true,
 		},
 		{
-			name:    "fail: image not found",
+			name:    "success: image already deleted (0 rows affected)",
 			imageID: imageID.String(),
 			setupMock: func(mock pgxmock.PgxPoolIface) {
-				mock.ExpectExec("DELETE FROM images").
+				mock.ExpectExec("UPDATE images").
 					WithArgs(pgtype.UUID{Bytes: imageID, Valid: true}).
-					WillReturnResult(pgxmock.NewResult("DELETE", 0))
+					WillReturnResult(pgxmock.NewResult("UPDATE", 0))
 			},
-			expectError: false, // DeleteImage doesn't return error for 0 rows affected
+			expectError: false, // Soft delete doesn't return error for 0 rows (already deleted)
 		},
 	}
 

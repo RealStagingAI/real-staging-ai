@@ -154,6 +154,9 @@ var _ Querier = &QuerierMock{}
 //			ListUsersFunc: func(ctx context.Context, arg ListUsersParams) ([]*ListUsersRow, error) {
 //				panic("mock out the ListUsers method")
 //			},
+//			SoftDeleteImageFunc: func(ctx context.Context, id pgtype.UUID) error {
+//				panic("mock out the SoftDeleteImage method")
+//			},
 //			StartJobFunc: func(ctx context.Context, id pgtype.UUID) (*Job, error) {
 //				panic("mock out the StartJob method")
 //			},
@@ -334,6 +337,9 @@ type QuerierMock struct {
 
 	// ListUsersFunc mocks the ListUsers method.
 	ListUsersFunc func(ctx context.Context, arg ListUsersParams) ([]*ListUsersRow, error)
+
+	// SoftDeleteImageFunc mocks the SoftDeleteImage method.
+	SoftDeleteImageFunc func(ctx context.Context, id pgtype.UUID) error
 
 	// StartJobFunc mocks the StartJob method.
 	StartJobFunc func(ctx context.Context, id pgtype.UUID) (*Job, error)
@@ -685,6 +691,13 @@ type QuerierMock struct {
 			// Arg is the arg argument value.
 			Arg ListUsersParams
 		}
+		// SoftDeleteImage holds details about calls to the SoftDeleteImage method.
+		SoftDeleteImage []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ID is the id argument value.
+			ID pgtype.UUID
+		}
 		// StartJob holds details about calls to the StartJob method.
 		StartJob []struct {
 			// Ctx is the ctx argument value.
@@ -822,6 +835,7 @@ type QuerierMock struct {
 	lockListSubscriptionsByUserID            sync.RWMutex
 	lockListSubscriptionsByUserIDAndStatuses sync.RWMutex
 	lockListUsers                            sync.RWMutex
+	lockSoftDeleteImage                      sync.RWMutex
 	lockStartJob                             sync.RWMutex
 	lockUpdateImageStatus                    sync.RWMutex
 	lockUpdateImageWithError                 sync.RWMutex
@@ -2442,6 +2456,42 @@ func (mock *QuerierMock) ListUsersCalls() []struct {
 	mock.lockListUsers.RLock()
 	calls = mock.calls.ListUsers
 	mock.lockListUsers.RUnlock()
+	return calls
+}
+
+// SoftDeleteImage calls SoftDeleteImageFunc.
+func (mock *QuerierMock) SoftDeleteImage(ctx context.Context, id pgtype.UUID) error {
+	if mock.SoftDeleteImageFunc == nil {
+		panic("QuerierMock.SoftDeleteImageFunc: method is nil but Querier.SoftDeleteImage was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}{
+		Ctx: ctx,
+		ID:  id,
+	}
+	mock.lockSoftDeleteImage.Lock()
+	mock.calls.SoftDeleteImage = append(mock.calls.SoftDeleteImage, callInfo)
+	mock.lockSoftDeleteImage.Unlock()
+	return mock.SoftDeleteImageFunc(ctx, id)
+}
+
+// SoftDeleteImageCalls gets all the calls that were made to SoftDeleteImage.
+// Check the length with:
+//
+//	len(mockedQuerier.SoftDeleteImageCalls())
+func (mock *QuerierMock) SoftDeleteImageCalls() []struct {
+	Ctx context.Context
+	ID  pgtype.UUID
+} {
+	var calls []struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}
+	mock.lockSoftDeleteImage.RLock()
+	calls = mock.calls.SoftDeleteImage
+	mock.lockSoftDeleteImage.RUnlock()
 	return calls
 }
 

@@ -258,7 +258,9 @@ func (r *DefaultRepository) UpdateImageWithError(
 	return image, nil
 }
 
-// DeleteImage deletes an image from the database.
+// DeleteImage soft deletes an image from the database.
+// The image is marked as deleted but kept in the database for usage tracking.
+// This prevents users from gaming the system by creating, downloading, and deleting images repeatedly.
 func (r *DefaultRepository) DeleteImage(ctx context.Context, imageID string) error {
 	q := queries.New(r.db)
 
@@ -267,7 +269,7 @@ func (r *DefaultRepository) DeleteImage(ctx context.Context, imageID string) err
 		return fmt.Errorf("invalid image ID: %w", err)
 	}
 
-	err = q.DeleteImage(ctx, pgtype.UUID{Bytes: imageUUID, Valid: true})
+	err = q.SoftDeleteImage(ctx, pgtype.UUID{Bytes: imageUUID, Valid: true})
 	if err != nil {
 		return fmt.Errorf("failed to delete image: %w", err)
 	}

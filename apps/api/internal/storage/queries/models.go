@@ -74,7 +74,8 @@ type Image struct {
 	// Processing time in milliseconds
 	ProcessingTimeMs pgtype.Int4 `json:"processing_time_ms"`
 	// Replicate prediction ID for tracking and billing
-	ReplicatePredictionID pgtype.Text `json:"replicate_prediction_id"`
+	ReplicatePredictionID pgtype.Text        `json:"replicate_prediction_id"`
+	DeletedAt             pgtype.Timestamptz `json:"deleted_at"`
 }
 
 type Invoice struct {

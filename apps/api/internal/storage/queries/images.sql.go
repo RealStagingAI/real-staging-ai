@@ -14,7 +14,7 @@ import (
 const CreateImage = `-- name: CreateImage :one
 INSERT INTO images (project_id, original_url, room_type, style, seed)
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
 `
 
 type CreateImageParams struct {
@@ -37,6 +37,7 @@ type CreateImageRow struct {
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }
 
 func (q *Queries) CreateImage(ctx context.Context, arg CreateImageParams) (*CreateImageRow, error) {
@@ -60,6 +61,7 @@ func (q *Queries) CreateImage(ctx context.Context, arg CreateImageParams) (*Crea
 		&i.Error,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return &i, err
 }
@@ -69,6 +71,7 @@ DELETE FROM images
 WHERE id = $1
 `
 
+// Hard delete an image - only use for cleanup operations
 func (q *Queries) DeleteImage(ctx context.Context, id pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, DeleteImage, id)
 	return err
@@ -79,6 +82,7 @@ DELETE FROM images
 WHERE project_id = $1
 `
 
+// Hard delete all images in a project - used when cascading project deletion
 func (q *Queries) DeleteImagesByProjectID(ctx context.Context, projectID pgtype.UUID) error {
 	_, err := q.db.Exec(ctx, DeleteImagesByProjectID, projectID)
 	return err
@@ -97,6 +101,7 @@ type DeleteStuckQueuedImagesRow struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+// Hard delete stuck queued images - cleanup operation for failed uploads
 func (q *Queries) DeleteStuckQueuedImages(ctx context.Context, dollar_1 pgtype.Interval) ([]*DeleteStuckQueuedImagesRow, error) {
 	rows, err := q.db.Query(ctx, DeleteStuckQueuedImages, dollar_1)
 	if err != nil {
@@ -118,9 +123,10 @@ func (q *Queries) DeleteStuckQueuedImages(ctx context.Context, dollar_1 pgtype.I
 }
 
 const GetImageByID = `-- name: GetImageByID :one
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE id = $1
+  AND deleted_at IS NULL
 `
 
 type GetImageByIDRow struct {
@@ -135,6 +141,7 @@ type GetImageByIDRow struct {
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }
 
 func (q *Queries) GetImageByID(ctx context.Context, id pgtype.UUID) (*GetImageByIDRow, error) {
@@ -152,14 +159,16 @@ func (q *Queries) GetImageByID(ctx context.Context, id pgtype.UUID) (*GetImageBy
 		&i.Error,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return &i, err
 }
 
 const GetImagesByProjectID = `-- name: GetImagesByProjectID :many
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE project_id = $1
+  AND deleted_at IS NULL
 ORDER BY created_at DESC
 `
 
@@ -175,6 +184,7 @@ type GetImagesByProjectIDRow struct {
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }
 
 func (q *Queries) GetImagesByProjectID(ctx context.Context, projectID pgtype.UUID) ([]*GetImagesByProjectIDRow, error) {
@@ -198,6 +208,7 @@ func (q *Queries) GetImagesByProjectID(ctx context.Context, projectID pgtype.UUI
 			&i.Error,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -210,11 +221,12 @@ func (q *Queries) GetImagesByProjectID(ctx context.Context, projectID pgtype.UUI
 }
 
 const ListImagesForReconcile = `-- name: ListImagesForReconcile :many
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE ($1::uuid IS NULL OR project_id = $1::uuid)
   AND ($2::text IS NULL OR $2::text = '' OR status = $2::image_status)
   AND ($3::uuid IS NULL OR id > $3::uuid)
+  AND deleted_at IS NULL
 ORDER BY id ASC
 LIMIT $4
 `
@@ -238,8 +250,10 @@ type ListImagesForReconcileRow struct {
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }
 
+// List images for reconciliation - only non-deleted images
 func (q *Queries) ListImagesForReconcile(ctx context.Context, arg ListImagesForReconcileParams) ([]*ListImagesForReconcileRow, error) {
 	rows, err := q.db.Query(ctx, ListImagesForReconcile,
 		arg.Column1,
@@ -266,6 +280,7 @@ func (q *Queries) ListImagesForReconcile(ctx context.Context, arg ListImagesForR
 			&i.Error,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -277,11 +292,24 @@ func (q *Queries) ListImagesForReconcile(ctx context.Context, arg ListImagesForR
 	return items, nil
 }
 
+const SoftDeleteImage = `-- name: SoftDeleteImage :exec
+UPDATE images
+SET deleted_at = NOW(), updated_at = NOW()
+WHERE id = $1
+  AND deleted_at IS NULL
+`
+
+// Soft delete an image - marks it as deleted but keeps it in DB for usage tracking
+func (q *Queries) SoftDeleteImage(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, SoftDeleteImage, id)
+	return err
+}
+
 const UpdateImageStatus = `-- name: UpdateImageStatus :one
 UPDATE images
 SET status = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
 `
 
 type UpdateImageStatusParams struct {
@@ -301,6 +329,7 @@ type UpdateImageStatusRow struct {
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }
 
 func (q *Queries) UpdateImageStatus(ctx context.Context, arg UpdateImageStatusParams) (*UpdateImageStatusRow, error) {
@@ -318,6 +347,7 @@ func (q *Queries) UpdateImageStatus(ctx context.Context, arg UpdateImageStatusPa
 		&i.Error,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return &i, err
 }
@@ -326,7 +356,7 @@ const UpdateImageWithError = `-- name: UpdateImageWithError :one
 UPDATE images
 SET status = 'error', error = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
 `
 
 type UpdateImageWithErrorParams struct {
@@ -346,6 +376,7 @@ type UpdateImageWithErrorRow struct {
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }
 
 func (q *Queries) UpdateImageWithError(ctx context.Context, arg UpdateImageWithErrorParams) (*UpdateImageWithErrorRow, error) {
@@ -363,6 +394,7 @@ func (q *Queries) UpdateImageWithError(ctx context.Context, arg UpdateImageWithE
 		&i.Error,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return &i, err
 }
@@ -371,7 +403,7 @@ const UpdateImageWithStagedURL = `-- name: UpdateImageWithStagedURL :one
 UPDATE images
 SET staged_url = $2, status = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
 `
 
 type UpdateImageWithStagedURLParams struct {
@@ -392,6 +424,7 @@ type UpdateImageWithStagedURLRow struct {
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	DeletedAt   pgtype.Timestamptz `json:"deleted_at"`
 }
 
 func (q *Queries) UpdateImageWithStagedURL(ctx context.Context, arg UpdateImageWithStagedURLParams) (*UpdateImageWithStagedURLRow, error) {
@@ -409,6 +442,7 @@ func (q *Queries) UpdateImageWithStagedURL(ctx context.Context, arg UpdateImageW
 		&i.Error,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DeletedAt,
 	)
 	return &i, err
 }

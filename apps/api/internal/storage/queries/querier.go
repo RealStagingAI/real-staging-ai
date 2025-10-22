@@ -13,6 +13,8 @@ import (
 type Querier interface {
 	CompleteJob(ctx context.Context, id pgtype.UUID) (*Job, error)
 	// Count how many images a user created within a specific date range
+	// IMPORTANT: This counts ALL images (including soft-deleted) to prevent gaming the system
+	// Users cannot reduce their usage count by deleting images
 	CountImagesCreatedInPeriod(ctx context.Context, arg CountImagesCreatedInPeriodParams) (int32, error)
 	CountProjectsByUserID(ctx context.Context, userID pgtype.UUID) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
@@ -21,7 +23,9 @@ type Querier interface {
 	CreateProcessedEvent(ctx context.Context, arg CreateProcessedEventParams) (*ProcessedEvent, error)
 	CreateProject(ctx context.Context, arg CreateProjectParams) (*CreateProjectRow, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (*CreateUserRow, error)
+	// Hard delete an image - only use for cleanup operations
 	DeleteImage(ctx context.Context, id pgtype.UUID) error
+	// Hard delete all images in a project - used when cascading project deletion
 	DeleteImagesByProjectID(ctx context.Context, projectID pgtype.UUID) error
 	DeleteJob(ctx context.Context, id pgtype.UUID) error
 	DeleteJobsByImageID(ctx context.Context, imageID pgtype.UUID) error
@@ -29,6 +33,7 @@ type Querier interface {
 	DeleteOldProcessedEvents(ctx context.Context, receivedAt pgtype.Timestamptz) error
 	DeleteProject(ctx context.Context, id pgtype.UUID) error
 	DeleteProjectByUserID(ctx context.Context, arg DeleteProjectByUserIDParams) error
+	// Hard delete stuck queued images - cleanup operation for failed uploads
 	DeleteStuckQueuedImages(ctx context.Context, dollar_1 pgtype.Interval) ([]*DeleteStuckQueuedImagesRow, error)
 	DeleteSubscriptionByStripeID(ctx context.Context, stripeSubscriptionID string) error
 	DeleteUser(ctx context.Context, id pgtype.UUID) error
@@ -60,11 +65,14 @@ type Querier interface {
 	GetUserProfileByID(ctx context.Context, id pgtype.UUID) (*GetUserProfileByIDRow, error)
 	// List all available plans
 	ListAllPlans(ctx context.Context) ([]*Plan, error)
+	// List images for reconciliation - only non-deleted images
 	ListImagesForReconcile(ctx context.Context, arg ListImagesForReconcileParams) ([]*ListImagesForReconcileRow, error)
 	ListInvoicesByUserID(ctx context.Context, arg ListInvoicesByUserIDParams) ([]*Invoice, error)
 	ListSubscriptionsByUserID(ctx context.Context, arg ListSubscriptionsByUserIDParams) ([]*Subscription, error)
 	ListSubscriptionsByUserIDAndStatuses(ctx context.Context, arg ListSubscriptionsByUserIDAndStatusesParams) ([]*Subscription, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]*ListUsersRow, error)
+	// Soft delete an image - marks it as deleted but keeps it in DB for usage tracking
+	SoftDeleteImage(ctx context.Context, id pgtype.UUID) error
 	StartJob(ctx context.Context, id pgtype.UUID) (*Job, error)
 	UpdateImageStatus(ctx context.Context, arg UpdateImageStatusParams) (*UpdateImageStatusRow, error)
 	UpdateImageWithError(ctx context.Context, arg UpdateImageWithErrorParams) (*UpdateImageWithErrorRow, error)
