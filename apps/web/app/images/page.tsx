@@ -297,7 +297,8 @@ export default function ImagesPage() {
     if (visibleImageIds.size > 0 && images.length > 0) {
       prefetchImageUrls(images);
     }
-  }, [visibleImageIds, images, prefetchImageUrls]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visibleImageIds, images]);
 
   // Prefetch image on hover (for smooth transitions)
   const handleImageHover = useCallback((imageId: string) => {
