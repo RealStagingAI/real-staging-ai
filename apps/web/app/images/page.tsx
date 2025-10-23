@@ -78,12 +78,17 @@ export default function ImagesPage() {
 
   // Lazy loading state
   const [visibleImageIds, setVisibleImageIds] = useState<Set<string>>(new Set());
+  const visibleImageIdsRef = useRef<Set<string>>(new Set());
   const imageObserverRef = useRef<IntersectionObserver | null>(null);
 
-  // Keep ref in sync with images state
+  // Keep refs in sync with state
   useEffect(() => {
     imagesRef.current = images;
   }, [images]);
+  
+  useEffect(() => {
+    visibleImageIdsRef.current = visibleImageIds;
+  }, [visibleImageIds]);
   
   // Clear expired cache entries on mount
   useEffect(() => {
@@ -261,13 +266,16 @@ export default function ImagesPage() {
       return prev;
     });
     
+    // Get current visible IDs from ref to avoid stale closures
+    const currentVisibleIds = visibleImageIdsRef.current;
+    
     // Fetch URLs for:
     // 1. First 6 images (eager load for initial page)
     // 2. Any visible images (lazy load as user scrolls)
     // 3. Only if uploaded and not already cached
     const imagesToFetch = imageList.filter((img, index) => {
       const isFirstPage = index < 6; // Eagerly load first page
-      const isVisible = visibleImageIds.has(img.id);
+      const isVisible = currentVisibleIds.has(img.id);
       const isReady = img.status !== 'queued' && img.status !== 'processing';
       const needsFetch = !currentUrls[img.id]?.original || (img.staged_url && !currentUrls[img.id]?.staged);
       
@@ -305,15 +313,14 @@ export default function ImagesPage() {
     }
 
     setImageUrls(urlMap);
-  }, [visibleImageIds]);
+  }, []);
   
   // Trigger prefetch when images become visible
   useEffect(() => {
     if (visibleImageIds.size > 0 && images.length > 0) {
       prefetchImageUrls(images);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleImageIds, images]);
+  }, [visibleImageIds, images, prefetchImageUrls]);
 
   // Prefetch image on hover (for smooth transitions)
   const handleImageHover = useCallback((imageId: string) => {
