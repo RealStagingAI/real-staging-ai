@@ -959,10 +959,12 @@ export default function ImagesPage() {
       {/* Grid View */}
       {!loadingImages && images.length > 0 && viewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {images.map((image) => {
+          {images.map((image, index) => {
             const urls = imageUrls[image.id];
             const stagedSrc = urls?.staged ?? null;
             const originalSrc = urls?.original ?? null;
+            // Prioritize first 3 images for LCP optimization
+            const isPriority = index < 3;
 
             return (
               <div
@@ -1002,7 +1004,8 @@ export default function ImagesPage() {
                             "absolute inset-0 object-cover transition-all duration-300",
                             hoveredImageId === image.id ? "opacity-0" : "opacity-100 group-hover:scale-105"
                           )}
-                          loading="lazy"
+                          priority={isPriority}
+                          loading={isPriority ? undefined : "lazy"}
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       )}

@@ -42,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                       alt="Real Staging AI Logo"
                       width={120}
                       height={40}
+                      style={{ height: 'auto' }}
                       className="h-8 w-auto sm:h-10 transition-opacity group-hover:opacity-80"
                       priority
                     />
