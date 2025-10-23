@@ -252,7 +252,7 @@ export default function ImagesPage() {
     setPreviewMode(kind);
   }
 
-  // Prefetch image URLs for display (only for visible images)
+  // Prefetch image URLs for display
   const prefetchImageUrls = useCallback(async (imageList: ImageRecord[]) => {
     // Use functional update to get current URLs without depending on imageUrls
     let currentUrls: Record<string, { original?: string; staged?: string }> = {};
@@ -261,12 +261,18 @@ export default function ImagesPage() {
       return prev;
     });
     
-    // Only fetch URLs for images that are visible, uploaded, and not already cached
-    const imagesToFetch = imageList.filter(img => 
-      visibleImageIds.has(img.id) &&
-      (img.status !== 'queued' && img.status !== 'processing') &&
-      (!currentUrls[img.id]?.original || (img.staged_url && !currentUrls[img.id]?.staged))
-    );
+    // Fetch URLs for:
+    // 1. First 6 images (eager load for initial page)
+    // 2. Any visible images (lazy load as user scrolls)
+    // 3. Only if uploaded and not already cached
+    const imagesToFetch = imageList.filter((img, index) => {
+      const isFirstPage = index < 6; // Eagerly load first page
+      const isVisible = visibleImageIds.has(img.id);
+      const isReady = img.status !== 'queued' && img.status !== 'processing';
+      const needsFetch = !currentUrls[img.id]?.original || (img.staged_url && !currentUrls[img.id]?.staged);
+      
+      return (isFirstPage || isVisible) && isReady && needsFetch;
+    });
     
     // Skip if no new images to fetch
     if (imagesToFetch.length === 0) {
