@@ -28,20 +28,21 @@ func (s Status) String() string {
 
 // Image represents a staging image in the system.
 type Image struct {
-	ID                    uuid.UUID `json:"id"`
-	ProjectID             uuid.UUID `json:"project_id"`
-	OriginalURL           string    `json:"original_url"`
-	StagedURL             *string   `json:"staged_url,omitempty"`
-	RoomType              *string   `json:"room_type,omitempty"`
-	Style                 *string   `json:"style,omitempty"`
-	Seed                  *int64    `json:"seed,omitempty"`
-	Status                Status    `json:"status"`
-	Error                 *string   `json:"error,omitempty"`
 	CostUSD               *float64  `json:"cost_usd,omitempty"`
-	ModelUsed             *string   `json:"model_used,omitempty"`
-	ProcessingTimeMs      *int      `json:"processing_time_ms,omitempty"`
-	ReplicatePredictionID *string   `json:"replicate_prediction_id,omitempty"`
 	CreatedAt             time.Time `json:"created_at"`
+	Error                 *string   `json:"error,omitempty"`
+	ID                    uuid.UUID `json:"id"`
+	ModelUsed             *string   `json:"model_used,omitempty"`
+	OriginalURL           string    `json:"original_url"`
+	ProcessingTimeMs      *int      `json:"processing_time_ms,omitempty"`
+	ProjectID             uuid.UUID `json:"project_id"`
+	Prompt                *string   `json:"prompt,omitempty"`
+	ReplicatePredictionID *string   `json:"replicate_prediction_id,omitempty"`
+	RoomType              *string   `json:"room_type,omitempty"`
+	Seed                  *int64    `json:"seed,omitempty"`
+	StagedURL             *string   `json:"staged_url,omitempty"`
+	Status                Status    `json:"status"`
+	Style                 *string   `json:"style,omitempty"`
 	UpdatedAt             time.Time `json:"updated_at"`
 }
 
@@ -52,8 +53,9 @@ type CreateImageRequest struct {
 	//nolint:lll // struct tags are long
 	RoomType *string `json:"room_type,omitempty" validate:"omitempty,oneof=living_room bedroom kitchen bathroom dining_room office"`
 	//nolint:lll // struct tags are long
-	Style *string `json:"style,omitempty" validate:"omitempty,oneof=modern contemporary traditional industrial scandinavian"`
-	Seed  *int64  `json:"seed,omitempty" validate:"omitempty,min=1,max=4294967295"`
+	Style  *string `json:"style,omitempty" validate:"omitempty,oneof=modern contemporary traditional industrial scandinavian"`
+	Seed   *int64  `json:"seed,omitempty" validate:"omitempty,min=1,max=4294967295"`
+	Prompt *string `json:"prompt,omitempty" validate:"omitempty,min=10,max=2000"`
 }
 
 // JobPayload represents the payload for image processing jobs.
@@ -63,6 +65,7 @@ type JobPayload struct {
 	RoomType    *string   `json:"room_type,omitempty"`
 	Style       *string   `json:"style,omitempty"`
 	Seed        *int64    `json:"seed,omitempty"`
+	Prompt      *string   `json:"prompt,omitempty"`
 }
 
 // ProjectCostSummary represents cost aggregation for a project.

@@ -60,11 +60,12 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 						pgtype.Text{String: "living_room", Valid: true},
 						pgtype.Text{String: "modern", Valid: true},
 						pgtype.Int8{Int64: 123, Valid: true},
+						pgtype.Text{},
 					).
 					WillReturnRows(
 						pgxmock.NewRows([]string{
 							"id", "project_id", "original_url", "staged_url",
-							"room_type", "style", "seed", "status", "error", "created_at", "updated_at", "deleted_at",
+							"room_type", "style", "seed", "prompt", "status", "error", "created_at", "updated_at", "deleted_at",
 						}).
 							AddRow(
 								pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -73,6 +74,7 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 								pgtype.Text{String: "living_room", Valid: true},
 								pgtype.Text{String: "modern", Valid: true},
 								pgtype.Int8{Int64: 123, Valid: true},
+								pgtype.Text{},
 								"queued", pgtype.Text{}, pgtype.Timestamptz{}, pgtype.Timestamptz{}, pgtype.Timestamptz{},
 							))
 			},
@@ -99,6 +101,7 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 						pgtype.Text{String: "living_room", Valid: true},
 						pgtype.Text{String: "modern", Valid: true},
 						pgtype.Int8{Int64: 123, Valid: true},
+						pgtype.Text{},
 					).
 					WillReturnError(errors.New("db error"))
 			},
@@ -109,7 +112,7 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.setupMock(poolMock)
-			_, err := repo.CreateImage(ctx, tc.projectID, tc.originalURL, tc.roomType, tc.style, tc.seed)
+			_, err := repo.CreateImage(ctx, tc.projectID, tc.originalURL, tc.roomType, tc.style, tc.seed, nil)
 
 			if tc.expectError {
 				assert.Error(t, err)
@@ -154,7 +157,7 @@ func TestDefaultRepository_GetImageByID(t *testing.T) {
 					WillReturnRows(
 						pgxmock.NewRows([]string{
 							"id", "project_id", "original_url", "staged_url",
-							"room_type", "style", "seed", "status", "error", "created_at", "updated_at", "deleted_at",
+							"room_type", "style", "seed", "prompt", "status", "error", "created_at", "updated_at", "deleted_at",
 						}).
 							AddRow(
 								pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -163,6 +166,7 @@ func TestDefaultRepository_GetImageByID(t *testing.T) {
 								pgtype.Text{String: "living_room", Valid: true},
 								pgtype.Text{String: "modern", Valid: true},
 								pgtype.Int8{Int64: 123, Valid: true},
+								pgtype.Text{},
 								"queued", pgtype.Text{}, pgtype.Timestamptz{}, pgtype.Timestamptz{}, pgtype.Timestamptz{},
 							))
 			},
@@ -330,7 +334,7 @@ func TestDefaultRepository_UpdateImageStatus(t *testing.T) {
 					WithArgs(pgtype.UUID{Bytes: imageID, Valid: true}, queries.ImageStatusProcessing).
 					WillReturnRows(pgxmock.NewRows(
 						[]string{"id", "project_id", "original_url", "staged_url", "room_type", "style",
-							"seed", "status", "error", "created_at", "updated_at", "deleted_at"}).
+							"seed", "prompt", "status", "error", "created_at", "updated_at", "deleted_at"}).
 						AddRow(
 							pgtype.UUID{Bytes: imageID, Valid: true},
 							pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -339,6 +343,7 @@ func TestDefaultRepository_UpdateImageStatus(t *testing.T) {
 							pgtype.Text{String: "living_room", Valid: true},
 							pgtype.Text{String: "modern", Valid: true},
 							pgtype.Int8{Int64: 123, Valid: true},
+							pgtype.Text{},
 							"processing",
 							pgtype.Text{},
 							pgtype.Timestamptz{},
@@ -422,7 +427,7 @@ func TestDefaultRepository_UpdateImageWithStagedURL(t *testing.T) {
 						queries.ImageStatusReady).
 					WillReturnRows(pgxmock.NewRows(
 						[]string{"id", "project_id", "original_url", "staged_url", "room_type", "style",
-							"seed", "status", "error", "created_at", "updated_at", "deleted_at"}).
+							"seed", "prompt", "status", "error", "created_at", "updated_at", "deleted_at"}).
 						AddRow(
 							pgtype.UUID{Bytes: imageID, Valid: true},
 							pgtype.UUID{Bytes: uuid.New(), Valid: true},
@@ -431,6 +436,7 @@ func TestDefaultRepository_UpdateImageWithStagedURL(t *testing.T) {
 							pgtype.Text{String: "living_room", Valid: true},
 							pgtype.Text{String: "modern", Valid: true},
 							pgtype.Int8{Int64: 123, Valid: true},
+							pgtype.Text{},
 							"ready",
 							pgtype.Text{},
 							pgtype.Timestamptz{},
@@ -519,6 +525,7 @@ func TestDefaultRepository_UpdateImageWithError(t *testing.T) {
 							"room_type",
 							"style",
 							"seed",
+							"prompt",
 							"status",
 							"error",
 							"created_at",
@@ -532,6 +539,7 @@ func TestDefaultRepository_UpdateImageWithError(t *testing.T) {
 							pgtype.Text{String: "living_room", Valid: true},
 							pgtype.Text{String: "modern", Valid: true},
 							pgtype.Int8{Int64: 123, Valid: true},
+							pgtype.Text{},
 							"error",
 							pgtype.Text{String: errorMsg, Valid: true},
 							pgtype.Timestamptz{},

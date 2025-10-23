@@ -21,6 +21,7 @@ type FileWithOverrides = {
   previewUrl: string
   roomType?: string
   style?: string
+  prompt?: string
 }
 
 type UploadProgress = {
@@ -57,6 +58,7 @@ export default function UploadPage() {
   const [projectId, setProjectId] = useState("")
   const [defaultRoomType, setDefaultRoomType] = useState("")
   const [defaultStyle, setDefaultStyle] = useState("")
+  const [defaultPrompt, setDefaultPrompt] = useState("")
   const [status, setStatus] = useState<string>("")
   const [projects, setProjects] = useState<Project[]>([])
   const [newProjectName, setNewProjectName] = useState("")
@@ -250,13 +252,15 @@ export default function UploadPage() {
 
       const roomType = fileData.roomType || defaultRoomType
       const style = fileData.style || defaultStyle
+      const prompt = fileData.prompt || defaultPrompt
 
-      const body: { project_id: string; original_url: string; room_type?: string; style?: string } = {
+      const body: { project_id: string; original_url: string; room_type?: string; style?: string; prompt?: string } = {
         project_id: projectId,
         original_url: originalUrl,
       }
       if (roomType) body.room_type = roomType
       if (style) body.style = style
+      if (prompt && prompt.length >= 10) body.prompt = prompt
 
       const created = await apiFetch<{ id: string }>("/v1/images", {
         method: "POST",
@@ -581,13 +585,26 @@ export default function UploadPage() {
                     <option value="traditional">Traditional</option>
                     <option value="industrial">Industrial</option>
                     <option value="scandinavian">Scandinavian</option>
-                    <option value="rustic">Rustic</option>
-                    <option value="coastal">Coastal</option>
-                    <option value="bohemian">Bohemian</option>
-                    <option value="minimalist">Minimalist</option>
-                    <option value="mid-century modern">Mid-Century Modern</option>
                   </select>
                 </div>
+              </div>
+              
+              {/* Custom Prompt (Testing) */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Custom Prompt <span className="text-xs text-gray-500">(optional - for testing)</span>
+                </label>
+                <textarea
+                  className="input min-h-[100px] font-mono text-xs"
+                  value={defaultPrompt}
+                  onChange={(e) => setDefaultPrompt(e.target.value)}
+                  placeholder="Leave empty to use library prompts. Enter custom prompt for testing (10-2000 characters)..."
+                  disabled={isUploading}
+                  rows={4}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Custom prompts override the built-in prompt library for the selected room/style combination.
+                </p>
               </div>
             </div>
           )}
@@ -718,11 +735,6 @@ export default function UploadPage() {
                                   <option value="traditional">Traditional</option>
                                   <option value="industrial">Industrial</option>
                                   <option value="scandinavian">Scandinavian</option>
-                                  <option value="rustic">Rustic</option>
-                                  <option value="coastal">Coastal</option>
-                                  <option value="bohemian">Bohemian</option>
-                                  <option value="minimalist">Minimalist</option>
-                                  <option value="mid-century modern">Mid-Century Modern</option>
                                 </select>
                               </div>
                             </div>

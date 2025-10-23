@@ -76,6 +76,8 @@ type Image struct {
 	// Replicate prediction ID for tracking and billing
 	ReplicatePredictionID pgtype.Text        `json:"replicate_prediction_id"`
 	DeletedAt             pgtype.Timestamptz `json:"deleted_at"`
+	// Custom prompt for AI staging. If null, uses default prompt from library based on room_type and style
+	Prompt pgtype.Text `json:"prompt"`
 }
 
 type Invoice struct {

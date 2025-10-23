@@ -297,7 +297,7 @@ func TestPresignUpload(t *testing.T) {
 
 			s3ServiceMock := SetupTestS3Service(t, context.Background())
 			imageServiceMock := &image.ServiceMock{}
-			server := httpLib.NewTestServer(&config.Config{, logging.Default(),S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
+			server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, logging.Default(), db, s3ServiceMock, imageServiceMock)
 
 			// Prepare request body
 			var body []byte
@@ -348,7 +348,7 @@ func TestPresignUpload_ValidationErrorDetails(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, context.Background())
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(&config.Config{, logging.Default(),S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, logging.Default(), db, s3ServiceMock, imageServiceMock)
 
 	testCases := []struct {
 		name                 string
@@ -450,7 +450,7 @@ func TestPresignUpload_Integration(t *testing.T) {
 
 	s3ServiceMock := SetupTestS3Service(t, context.Background())
 	imageServiceMock := &image.ServiceMock{}
-	server := httpLib.NewTestServer(&config.Config{, logging.Default(),S3: config.S3{SecretKey: "sk_test_fake"}}, db, s3ServiceMock, imageServiceMock)
+	server := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, logging.Default(), db, s3ServiceMock, imageServiceMock)
 
 	// Test with valid request
 	requestBody := PresignUploadRequest{

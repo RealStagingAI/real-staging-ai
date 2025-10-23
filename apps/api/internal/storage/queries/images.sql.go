@@ -12,9 +12,9 @@ import (
 )
 
 const CreateImage = `-- name: CreateImage :one
-INSERT INTO images (project_id, original_url, room_type, style, seed)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+INSERT INTO images (project_id, original_url, room_type, style, seed, prompt)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 `
 
 type CreateImageParams struct {
@@ -23,6 +23,7 @@ type CreateImageParams struct {
 	RoomType    pgtype.Text `json:"room_type"`
 	Style       pgtype.Text `json:"style"`
 	Seed        pgtype.Int8 `json:"seed"`
+	Prompt      pgtype.Text `json:"prompt"`
 }
 
 type CreateImageRow struct {
@@ -33,6 +34,7 @@ type CreateImageRow struct {
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
 	Seed        pgtype.Int8        `json:"seed"`
+	Prompt      pgtype.Text        `json:"prompt"`
 	Status      ImageStatus        `json:"status"`
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -47,6 +49,7 @@ func (q *Queries) CreateImage(ctx context.Context, arg CreateImageParams) (*Crea
 		arg.RoomType,
 		arg.Style,
 		arg.Seed,
+		arg.Prompt,
 	)
 	var i CreateImageRow
 	err := row.Scan(
@@ -57,6 +60,7 @@ func (q *Queries) CreateImage(ctx context.Context, arg CreateImageParams) (*Crea
 		&i.RoomType,
 		&i.Style,
 		&i.Seed,
+		&i.Prompt,
 		&i.Status,
 		&i.Error,
 		&i.CreatedAt,
@@ -123,7 +127,7 @@ func (q *Queries) DeleteStuckQueuedImages(ctx context.Context, dollar_1 pgtype.I
 }
 
 const GetImageByID = `-- name: GetImageByID :one
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE id = $1
   AND deleted_at IS NULL
@@ -137,6 +141,7 @@ type GetImageByIDRow struct {
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
 	Seed        pgtype.Int8        `json:"seed"`
+	Prompt      pgtype.Text        `json:"prompt"`
 	Status      ImageStatus        `json:"status"`
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -155,6 +160,7 @@ func (q *Queries) GetImageByID(ctx context.Context, id pgtype.UUID) (*GetImageBy
 		&i.RoomType,
 		&i.Style,
 		&i.Seed,
+		&i.Prompt,
 		&i.Status,
 		&i.Error,
 		&i.CreatedAt,
@@ -165,7 +171,7 @@ func (q *Queries) GetImageByID(ctx context.Context, id pgtype.UUID) (*GetImageBy
 }
 
 const GetImagesByProjectID = `-- name: GetImagesByProjectID :many
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE project_id = $1
   AND deleted_at IS NULL
@@ -180,6 +186,7 @@ type GetImagesByProjectIDRow struct {
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
 	Seed        pgtype.Int8        `json:"seed"`
+	Prompt      pgtype.Text        `json:"prompt"`
 	Status      ImageStatus        `json:"status"`
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -204,6 +211,7 @@ func (q *Queries) GetImagesByProjectID(ctx context.Context, projectID pgtype.UUI
 			&i.RoomType,
 			&i.Style,
 			&i.Seed,
+			&i.Prompt,
 			&i.Status,
 			&i.Error,
 			&i.CreatedAt,
@@ -221,7 +229,7 @@ func (q *Queries) GetImagesByProjectID(ctx context.Context, projectID pgtype.UUI
 }
 
 const ListImagesForReconcile = `-- name: ListImagesForReconcile :many
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE ($1::uuid IS NULL OR project_id = $1::uuid)
   AND ($2::text IS NULL OR $2::text = '' OR status = $2::image_status)
@@ -246,6 +254,7 @@ type ListImagesForReconcileRow struct {
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
 	Seed        pgtype.Int8        `json:"seed"`
+	Prompt      pgtype.Text        `json:"prompt"`
 	Status      ImageStatus        `json:"status"`
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -276,6 +285,7 @@ func (q *Queries) ListImagesForReconcile(ctx context.Context, arg ListImagesForR
 			&i.RoomType,
 			&i.Style,
 			&i.Seed,
+			&i.Prompt,
 			&i.Status,
 			&i.Error,
 			&i.CreatedAt,
@@ -309,7 +319,7 @@ const UpdateImageStatus = `-- name: UpdateImageStatus :one
 UPDATE images
 SET status = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 `
 
 type UpdateImageStatusParams struct {
@@ -325,6 +335,7 @@ type UpdateImageStatusRow struct {
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
 	Seed        pgtype.Int8        `json:"seed"`
+	Prompt      pgtype.Text        `json:"prompt"`
 	Status      ImageStatus        `json:"status"`
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -343,6 +354,7 @@ func (q *Queries) UpdateImageStatus(ctx context.Context, arg UpdateImageStatusPa
 		&i.RoomType,
 		&i.Style,
 		&i.Seed,
+		&i.Prompt,
 		&i.Status,
 		&i.Error,
 		&i.CreatedAt,
@@ -356,7 +368,7 @@ const UpdateImageWithError = `-- name: UpdateImageWithError :one
 UPDATE images
 SET status = 'error', error = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 `
 
 type UpdateImageWithErrorParams struct {
@@ -372,6 +384,7 @@ type UpdateImageWithErrorRow struct {
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
 	Seed        pgtype.Int8        `json:"seed"`
+	Prompt      pgtype.Text        `json:"prompt"`
 	Status      ImageStatus        `json:"status"`
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -390,6 +403,7 @@ func (q *Queries) UpdateImageWithError(ctx context.Context, arg UpdateImageWithE
 		&i.RoomType,
 		&i.Style,
 		&i.Seed,
+		&i.Prompt,
 		&i.Status,
 		&i.Error,
 		&i.CreatedAt,
@@ -403,7 +417,7 @@ const UpdateImageWithStagedURL = `-- name: UpdateImageWithStagedURL :one
 UPDATE images
 SET staged_url = $2, status = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 `
 
 type UpdateImageWithStagedURLParams struct {
@@ -420,6 +434,7 @@ type UpdateImageWithStagedURLRow struct {
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
 	Seed        pgtype.Int8        `json:"seed"`
+	Prompt      pgtype.Text        `json:"prompt"`
 	Status      ImageStatus        `json:"status"`
 	Error       pgtype.Text        `json:"error"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
@@ -438,6 +453,7 @@ func (q *Queries) UpdateImageWithStagedURL(ctx context.Context, arg UpdateImageW
 		&i.RoomType,
 		&i.Style,
 		&i.Seed,
+		&i.Prompt,
 		&i.Status,
 		&i.Error,
 		&i.CreatedAt,

@@ -14,6 +14,7 @@ type StagingRequest struct {
 	RoomType    *string
 	Style       *string
 	Seed        *int64
+	Prompt      *string
 }
 
 // Service defines the interface for AI-powered virtual staging operations.

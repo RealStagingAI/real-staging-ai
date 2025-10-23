@@ -300,7 +300,7 @@ func TestDefaultService_BuildPrompt(t *testing.T) {
 	}
 
 	t.Run("success: builds prompt with default style", func(t *testing.T) {
-		prompt := service.buildPrompt(nil, nil)
+		prompt := service.buildPrompt(nil, nil, nil)
 
 		if prompt == "" {
 			t.Error("expected non-empty prompt")
@@ -313,34 +313,34 @@ func TestDefaultService_BuildPrompt(t *testing.T) {
 	})
 
 	t.Run("success: builds prompt with custom style", func(t *testing.T) {
-		style := "minimalist"
-		prompt := service.buildPrompt(nil, &style)
+		style := "contemporary"
+		prompt := service.buildPrompt(nil, &style, nil)
 
-		if !contains(prompt, "minimalist") {
-			t.Error("expected prompt to contain custom style 'minimalist'")
+		if !contains(prompt, "contemporary") {
+			t.Error("expected prompt to contain custom style 'contemporary'")
 		}
 	})
 
 	t.Run("success: builds prompt with room type", func(t *testing.T) {
 		roomType := "living_room"
-		prompt := service.buildPrompt(&roomType, nil)
+		prompt := service.buildPrompt(&roomType, nil, nil)
 
-		if !contains(prompt, "living_room") {
-			t.Error("expected prompt to contain room type 'living_room'")
+		if !contains(prompt, "living room") {
+			t.Error("expected prompt to contain room type 'living room'")
 		}
 	})
 
 	t.Run("success: builds prompt with both room type and style", func(t *testing.T) {
 		roomType := "bedroom"
-		style := "rustic"
-		prompt := service.buildPrompt(&roomType, &style)
+		style := "traditional"
+		prompt := service.buildPrompt(&roomType, &style, nil)
 
 		if !contains(prompt, "bedroom") {
 			t.Error("expected prompt to contain room type 'bedroom'")
 		}
 
-		if !contains(prompt, "rustic") {
-			t.Error("expected prompt to contain style 'rustic'")
+		if !contains(prompt, "traditional") {
+			t.Error("expected prompt to contain style 'traditional'")
 		}
 	})
 }

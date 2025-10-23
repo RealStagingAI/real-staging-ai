@@ -19,7 +19,7 @@ var _ Repository = &RepositoryMock{}
 //
 //		// make and configure a mocked Repository
 //		mockedRepository := &RepositoryMock{
-//			CreateImageFunc: func(ctx context.Context, projectID string, originalURL string, roomType *string, style *string, seed *int64) (*queries.Image, error) {
+//			CreateImageFunc: func(ctx context.Context, projectID string, originalURL string, roomType *string, style *string, seed *int64, prompt *string) (*queries.Image, error) {
 //				panic("mock out the CreateImage method")
 //			},
 //			DeleteImageFunc: func(ctx context.Context, imageID string) error {
@@ -57,7 +57,7 @@ var _ Repository = &RepositoryMock{}
 //	}
 type RepositoryMock struct {
 	// CreateImageFunc mocks the CreateImage method.
-	CreateImageFunc func(ctx context.Context, projectID string, originalURL string, roomType *string, style *string, seed *int64) (*queries.Image, error)
+	CreateImageFunc func(ctx context.Context, projectID string, originalURL string, roomType *string, style *string, seed *int64, prompt *string) (*queries.Image, error)
 
 	// DeleteImageFunc mocks the DeleteImage method.
 	DeleteImageFunc func(ctx context.Context, imageID string) error
@@ -102,6 +102,8 @@ type RepositoryMock struct {
 			Style *string
 			// Seed is the seed argument value.
 			Seed *int64
+			// Prompt is the prompt argument value.
+			Prompt *string
 		}
 		// DeleteImage holds details about calls to the DeleteImage method.
 		DeleteImage []struct {
@@ -196,7 +198,7 @@ type RepositoryMock struct {
 }
 
 // CreateImage calls CreateImageFunc.
-func (mock *RepositoryMock) CreateImage(ctx context.Context, projectID string, originalURL string, roomType *string, style *string, seed *int64) (*queries.Image, error) {
+func (mock *RepositoryMock) CreateImage(ctx context.Context, projectID string, originalURL string, roomType *string, style *string, seed *int64, prompt *string) (*queries.Image, error) {
 	if mock.CreateImageFunc == nil {
 		panic("RepositoryMock.CreateImageFunc: method is nil but Repository.CreateImage was just called")
 	}
@@ -207,6 +209,7 @@ func (mock *RepositoryMock) CreateImage(ctx context.Context, projectID string, o
 		RoomType    *string
 		Style       *string
 		Seed        *int64
+		Prompt      *string
 	}{
 		Ctx:         ctx,
 		ProjectID:   projectID,
@@ -214,11 +217,12 @@ func (mock *RepositoryMock) CreateImage(ctx context.Context, projectID string, o
 		RoomType:    roomType,
 		Style:       style,
 		Seed:        seed,
+		Prompt:      prompt,
 	}
 	mock.lockCreateImage.Lock()
 	mock.calls.CreateImage = append(mock.calls.CreateImage, callInfo)
 	mock.lockCreateImage.Unlock()
-	return mock.CreateImageFunc(ctx, projectID, originalURL, roomType, style, seed)
+	return mock.CreateImageFunc(ctx, projectID, originalURL, roomType, style, seed, prompt)
 }
 
 // CreateImageCalls gets all the calls that were made to CreateImage.
@@ -232,6 +236,7 @@ func (mock *RepositoryMock) CreateImageCalls() []struct {
 	RoomType    *string
 	Style       *string
 	Seed        *int64
+	Prompt      *string
 } {
 	var calls []struct {
 		Ctx         context.Context
@@ -240,6 +245,7 @@ func (mock *RepositoryMock) CreateImageCalls() []struct {
 		RoomType    *string
 		Style       *string
 		Seed        *int64
+		Prompt      *string
 	}
 	mock.lockCreateImage.RLock()
 	calls = mock.calls.CreateImage

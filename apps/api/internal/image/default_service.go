@@ -54,6 +54,7 @@ func (s *DefaultService) CreateImage(ctx context.Context, req *CreateImageReques
 		req.RoomType,
 		req.Style,
 		req.Seed,
+		req.Prompt,
 	)
 	if err != nil {
 		log.Error(ctx, "create image: repo failure",
@@ -73,6 +74,7 @@ func (s *DefaultService) CreateImage(ctx context.Context, req *CreateImageReques
 		RoomType:    domainImage.RoomType,
 		Style:       domainImage.Style,
 		Seed:        domainImage.Seed,
+		Prompt:      domainImage.Prompt,
 	}
 	payloadJSON, err := jsonMarshal(payload)
 	if err != nil {
@@ -94,6 +96,7 @@ func (s *DefaultService) CreateImage(ctx context.Context, req *CreateImageReques
 		RoomType:    domainImage.RoomType,
 		Style:       domainImage.Style,
 		Seed:        domainImage.Seed,
+		Prompt:      domainImage.Prompt,
 	}, nil); err != nil {
 		log.Error(ctx, "enqueue stage:run failed", "image_id", domainImage.ID.String(), "error", err)
 		return nil, fmt.Errorf("failed to enqueue stage:run: %w", err)
@@ -257,6 +260,10 @@ func (s *DefaultService) convertToImage(dbImage *queries.Image) *Image {
 
 	if dbImage.Seed.Valid {
 		image.Seed = &dbImage.Seed.Int64
+	}
+
+	if dbImage.Prompt.Valid {
+		image.Prompt = &dbImage.Prompt.String
 	}
 
 	if dbImage.Error.Valid {

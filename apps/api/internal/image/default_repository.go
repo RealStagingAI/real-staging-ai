@@ -26,7 +26,7 @@ func NewDefaultRepository(db storage.Database) *DefaultRepository {
 
 // CreateImage creates a new image in the database.
 func (r *DefaultRepository) CreateImage(
-	ctx context.Context, projectID string, originalURL string, roomType, style *string, seed *int64,
+	ctx context.Context, projectID string, originalURL string, roomType, style *string, seed *int64, prompt *string,
 ) (*queries.Image, error) {
 	q := queries.New(r.db)
 
@@ -35,7 +35,7 @@ func (r *DefaultRepository) CreateImage(
 		return nil, fmt.Errorf("invalid project ID: %w", err)
 	}
 
-	var roomTypeText, styleText pgtype.Text
+	var roomTypeText, styleText, promptText pgtype.Text
 	var seedInt8 pgtype.Int8
 
 	if roomType != nil {
@@ -50,12 +50,17 @@ func (r *DefaultRepository) CreateImage(
 		seedInt8 = pgtype.Int8{Int64: *seed, Valid: true}
 	}
 
+	if prompt != nil {
+		promptText = pgtype.Text{String: *prompt, Valid: true}
+	}
+
 	row, err := q.CreateImage(ctx, queries.CreateImageParams{
 		ProjectID:   pgtype.UUID{Bytes: projectUUID, Valid: true},
 		OriginalUrl: originalURL,
 		RoomType:    roomTypeText,
 		Style:       styleText,
 		Seed:        seedInt8,
+		Prompt:      promptText,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create image: %w", err)

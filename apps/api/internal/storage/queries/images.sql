@@ -1,16 +1,16 @@
 -- name: CreateImage :one
-INSERT INTO images (project_id, original_url, room_type, style, seed)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at;
+INSERT INTO images (project_id, original_url, room_type, style, seed, prompt)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at;
 
 -- name: GetImageByID :one
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE id = $1
   AND deleted_at IS NULL;
 
 -- name: GetImagesByProjectID :many
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE project_id = $1
   AND deleted_at IS NULL
@@ -20,19 +20,19 @@ ORDER BY created_at DESC;
 UPDATE images
 SET status = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at;
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at;
 
 -- name: UpdateImageWithStagedURL :one
 UPDATE images
 SET staged_url = $2, status = $3, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at;
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at;
 
 -- name: UpdateImageWithError :one
 UPDATE images
 SET status = 'error', error = $2, updated_at = now()
 WHERE id = $1
-RETURNING id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at;
+RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at;
 
 -- name: SoftDeleteImage :exec
 -- Soft delete an image - marks it as deleted but keeps it in DB for usage tracking
@@ -60,7 +60,7 @@ RETURNING id, project_id, created_at;
 
 -- name: ListImagesForReconcile :many
 -- List images for reconciliation - only non-deleted images
-SELECT id, project_id, original_url, staged_url, room_type, style, seed, status, error, created_at, updated_at, deleted_at
+SELECT id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 FROM images
 WHERE ($1::uuid IS NULL OR project_id = $1::uuid)
   AND ($2::text IS NULL OR $2::text = '' OR status = $2::image_status)

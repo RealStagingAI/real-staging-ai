@@ -59,6 +59,7 @@ func TestDefaultService_CreateImage(t *testing.T) {
 					projectIDStr, originalURL string,
 					roomType, style *string,
 					seed *int64,
+					prompt *string,
 				) (*queries.Image, error) {
 					return &queries.Image{
 						ID:          pgtype.UUID{Bytes: imageID, Valid: true},
@@ -101,6 +102,7 @@ func TestDefaultService_CreateImage(t *testing.T) {
 					projectIDStr, originalURL string,
 					roomType, style *string,
 					seed *int64,
+					prompt *string,
 				) (*queries.Image, error) {
 					return nil, errors.New("db error")
 				}
@@ -655,6 +657,7 @@ func mockSuccessfulImageCreation(imageID, projectID uuid.UUID) func(*RepositoryM
 			projectIDStr, originalURL string,
 			roomType, style *string,
 			seed *int64,
+			prompt *string,
 		) (*queries.Image, error) {
 			return &queries.Image{
 				ID:          pgtype.UUID{Bytes: imageID, Valid: true},

@@ -22,6 +22,7 @@ import (
 
 	"github.com/real-staging-ai/worker/internal/logging"
 	"github.com/real-staging-ai/worker/internal/staging/model"
+	"github.com/real-staging-ai/worker/internal/staging/prompt"
 )
 
 // DefaultService implements the Service interface using Replicate AI and S3.
@@ -31,6 +32,7 @@ type DefaultService struct {
 	replicateClient *replicate.Client
 	modelID         model.ModelID
 	registry        *model.ModelRegistry
+	promptLib       *prompt.Library
 }
 
 // Ensure DefaultService implements Service interface.
@@ -108,6 +110,7 @@ func NewDefaultService(ctx context.Context, cfg *ServiceConfig) (*DefaultService
 			replicateClient: replicateClient,
 			modelID:         modelID,
 			registry:        registry,
+			promptLib:       prompt.New(),
 		}, nil
 	}
 
@@ -138,6 +141,7 @@ func NewDefaultService(ctx context.Context, cfg *ServiceConfig) (*DefaultService
 			replicateClient: replicateClient,
 			modelID:         modelID,
 			registry:        registry,
+			promptLib:       prompt.New(),
 		}, nil
 	}
 
@@ -155,6 +159,7 @@ func NewDefaultService(ctx context.Context, cfg *ServiceConfig) (*DefaultService
 		replicateClient: replicateClient,
 		modelID:         modelID,
 		registry:        registry,
+		promptLib:       prompt.New(),
 	}, nil
 }
 
@@ -203,11 +208,11 @@ func (s *DefaultService) StageImage(ctx context.Context, req *StagingRequest) (s
 	mimeType := http.DetectContentType(imageBytes)
 	dataURL := fmt.Sprintf("data:%s;base64,%s", mimeType, base64.StdEncoding.EncodeToString(imageBytes))
 
-	// Build the prompt based on room type and style
-	prompt := s.buildPrompt(req.RoomType, req.Style)
+	// Build the prompt using library or custom prompt
+	promptText := s.buildPrompt(req.RoomType, req.Style, req.Prompt)
 
 	// Call Replicate AI to stage the image
-	stagedImageURL, err := s.callReplicateAPI(ctx, dataURL, prompt, req.Seed)
+	stagedImageURL, err := s.callReplicateAPI(ctx, dataURL, promptText, req.Seed)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "Replicate API failed")
@@ -419,43 +424,28 @@ func (s *DefaultService) callReplicateAPI(
 	}
 }
 
-// buildPrompt constructs the AI prompt based on room type and style.
-func (s *DefaultService) buildPrompt(roomType, style *string) string {
-	// Determine the style theme
-	styleTheme := "modern"
-	if style != nil && *style != "" {
-		styleTheme = *style
+// buildPrompt constructs the AI prompt using the library or custom prompt.
+// If customPrompt is provided, it takes precedence.
+// Otherwise, retrieves the appropriate prompt from the library based on room type and style.
+func (s *DefaultService) buildPrompt(roomType, style, customPrompt *string) string {
+	// Extract values from pointers, using empty strings as defaults
+	roomTypeStr := ""
+	if roomType != nil {
+		roomTypeStr = *roomType
 	}
 
-	// Build the structured prompt
-	var prompt strings.Builder
-	prompt.WriteString("You are a professional real estate staging photographer. ")
-	prompt.WriteString("You have taken photos of this empty room and have been " +
-		"tasked with adding furniture to the space.\n")
-	prompt.WriteString("- Add in furniture to make the space more appealing to a buyer who loves ")
-	prompt.WriteString(styleTheme)
-	prompt.WriteString("\n")
-	prompt.WriteString("- Keep original paint colors on the walls\n")
-	prompt.WriteString("- You must keep all walls exactly where they are.\n")
-	prompt.WriteString("- You must keep all wall colors exactly as they are.\n")
-	prompt.WriteString("- You must not block thresholds (e.g. doors, hallways) with furniture.\n")
-
-	// Add room type context if provided
-	if roomType != nil && *roomType != "" {
-		prompt.WriteString("- This is a ")
-		prompt.WriteString(*roomType)
-		prompt.WriteString(" and should be staged accordingly.\n")
+	styleStr := ""
+	if style != nil {
+		styleStr = *style
 	}
 
-	prompt.WriteString("- The theme is ")
-	prompt.WriteString(styleTheme)
-	prompt.WriteString(".\n")
-	prompt.WriteString("- You must keep all existing structure (walls, doors, etc) exactly the same.\n")
-	prompt.WriteString("- You must keep all aspect ratios of rooms exactly as they are.\n")
-	prompt.WriteString("- You must keep all aspect ratios of walls exactly as they are.\n")
-	prompt.WriteString("- Do not change light fixtures")
+	customPromptStr := ""
+	if customPrompt != nil {
+		customPromptStr = *customPrompt
+	}
 
-	return prompt.String()
+	// Use the prompt library to build the final prompt
+	return s.promptLib.Build(roomTypeStr, styleStr, customPromptStr)
 }
 
 // downloadFromURL downloads content from an HTTP(S) URL.

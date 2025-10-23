@@ -17,6 +17,7 @@ type Repository interface {
 		originalURL string,
 		roomType, style *string,
 		seed *int64,
+		prompt *string,
 	) (*queries.Image, error)
 
 	// GetImageByID retrieves a specific image by its ID.

@@ -29,6 +29,7 @@ type StageRunPayload struct {
 	RoomType    *string `json:"room_type,omitempty"`
 	Style       *string `json:"style,omitempty"`
 	Seed        *int64  `json:"seed,omitempty"`
+	Prompt      *string `json:"prompt,omitempty"`
 }
 
 // EnqueueOpts controls per-task enqueue behavior (queue, retries, schedule, etc.).

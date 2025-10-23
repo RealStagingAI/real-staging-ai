@@ -43,6 +43,7 @@ type JobPayload struct {
 	RoomType    *string `json:"room_type,omitempty"`
 	Style       *string `json:"style,omitempty"`
 	Seed        *int64  `json:"seed,omitempty"`
+	Prompt      *string `json:"prompt,omitempty"`
 }
 
 // ProcessJob processes a job based on its type.
@@ -127,6 +128,7 @@ func (p *ImageProcessor) processStageJob(ctx context.Context, job *queue.Job) er
 		RoomType:    payload.RoomType,
 		Style:       payload.Style,
 		Seed:        payload.Seed,
+		Prompt:      payload.Prompt,
 	})
 	if err != nil {
 		span.RecordError(err)
