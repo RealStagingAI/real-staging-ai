@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
@@ -86,14 +87,18 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 		})
 	}
 
-	// Get the Authorization header from the incoming request
-	authHeader := c.Request().Header.Get("Authorization")
-	if authHeader == "" {
+	// Extract JWT token from Echo context (populated by auth middleware)
+	// This allows <img> tags to load images without sending Authorization headers
+	token, ok := c.Get("user").(*jwt.Token)
+	if !ok {
 		return c.JSON(http.StatusUnauthorized, ErrorResponse{
 			Error:   "unauthorized",
-			Message: "missing authorization header",
+			Message: "Invalid or missing JWT token",
 		})
 	}
+
+	// Reconstruct Authorization header for forwarding to CDN Worker
+	authHeader := fmt.Sprintf("Bearer %s", token.Raw)
 
 	// Construct CDN request URL
 	cdnRequestURL := fmt.Sprintf("%s/images/%s/%s", h.cdnURL, imageID, kind)
