@@ -52,6 +52,10 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 
 	ctx := c.Request().Context()
 	h.log.Info(ctx, "CDN ProxyImage called", "imageID", imageID, "kind", kind)
+	
+	// Debug: Check if JWT token is in context
+	user := c.Get("user")
+	h.log.Info(ctx, "CDN ProxyImage: checking user in context", "userType", fmt.Sprintf("%T", user), "userNil", user == nil)
 
 	// Validate image ID
 	if imageID == "" {
@@ -68,6 +72,8 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 			Message: "invalid kind parameter. Must be 'original' or 'staged'",
 		})
 	}
+	
+	h.log.Info(ctx, "CDN ProxyImage: validation passed, fetching image", "imageID", imageID)
 
 	// Verify user owns the image
 	img, err := h.imageService.GetImageByID(ctx, imageID)
