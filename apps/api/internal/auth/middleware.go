@@ -53,19 +53,25 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 		KeyFunc: func(token *jwt.Token) (interface{}, error) {
 			// Verify the signing method
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+				err := fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+				fmt.Printf("JWT validation error: %v\n", err)
+				return nil, err
 			}
 
 			// Get the kid from token header
 			kid, ok := token.Header["kid"].(string)
 			if !ok {
-				return nil, fmt.Errorf("kid not found in token header")
+				err := fmt.Errorf("kid not found in token header")
+				fmt.Printf("JWT validation error: %v\n", err)
+				return nil, err
 			}
 
 			// Validate audience and issuer claims
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
-				return nil, fmt.Errorf("invalid token claims")
+				err := fmt.Errorf("invalid token claims")
+				fmt.Printf("JWT validation error: %v\n", err)
+				return nil, err
 			}
 
 			// Check audience
@@ -74,7 +80,9 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 				// audience might be an array
 				audList, ok := claims["aud"].([]interface{})
 				if !ok || len(audList) == 0 {
-					return nil, fmt.Errorf("invalid or missing audience")
+					err := fmt.Errorf("invalid or missing audience")
+					fmt.Printf("JWT validation error: %v\n", err)
+					return nil, err
 				}
 				// Check if our audience is in the list
 				found := false
@@ -85,25 +93,38 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 					}
 				}
 				if !found {
-					return nil, fmt.Errorf("invalid audience: expected %s, got %v", config.Audience, audList)
+					err := fmt.Errorf("invalid audience: expected %s, got %v", config.Audience, audList)
+					fmt.Printf("JWT validation error: %v\n", err)
+					return nil, err
 				}
 			} else if aud != config.Audience {
-				return nil, fmt.Errorf("invalid audience: expected %s, got %s", config.Audience, aud)
+				err := fmt.Errorf("invalid audience: expected %s, got %s", config.Audience, aud)
+				fmt.Printf("JWT validation error: %v\n", err)
+				return nil, err
 			}
 
 			// Check issuer
 			iss, ok := claims["iss"].(string)
 			if !ok || iss != config.Issuer {
-				return nil, fmt.Errorf("invalid issuer")
+				err := fmt.Errorf("invalid issuer: expected %s, got %v", config.Issuer, iss)
+				fmt.Printf("JWT validation error: %v\n", err)
+				return nil, err
 			}
 
 			// Get the public key from Auth0's JWKS endpoint
-			return getPublicKey(config.Context, config.Domain, kid)
+			key, err := getPublicKey(config.Context, config.Domain, kid)
+			if err != nil {
+				fmt.Printf("JWT validation error: failed to get public key: %v\n", err)
+				return nil, err
+			}
+			return key, nil
 		},
 		// Allow tokens via Authorization header or access_token query param (for browser EventSource)
 		TokenLookup: "header:Authorization:Bearer ,query:access_token",
 		ErrorHandler: func(c echo.Context, err error) error {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid or missing JWT token")
+			// Log the actual error for debugging
+			fmt.Printf("JWT middleware error: %v\n", err)
+			return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("Invalid or missing JWT token: %v", err))
 		},
 	})
 }
