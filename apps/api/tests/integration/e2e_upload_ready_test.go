@@ -50,6 +50,13 @@ func TestE2E_Presign_Upload_CreateImage_ReadyViaSSE(t *testing.T) {
 	defer db.Close()
 	require.NoError(t, ResetDatabase(ctx, db.Pool()))
 
+	// Create active subscription for test user (required for image uploads)
+	_, err := db.Pool().Exec(context.Background(), `
+		INSERT INTO subscriptions (user_id, stripe_subscription_id, price_id, status, current_period_start, current_period_end)
+		VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'sub_test123', 'price_pro_test', 'active', NOW(), NOW() + INTERVAL '30 days')
+	`)
+	require.NoError(t, err)
+
 	// Start a minimal asynq worker that updates DB and publishes SSE events.
 	stop := startAsynqWorker(t, db, false)
 	defer stop()

@@ -25,6 +25,7 @@ import (
 	httpLib "github.com/real-staging-ai/api/internal/http"
 	"github.com/real-staging-ai/api/internal/image"
 	"github.com/real-staging-ai/api/internal/job"
+	"github.com/real-staging-ai/api/internal/logging"
 	"github.com/real-staging-ai/api/internal/queue"
 	"github.com/real-staging-ai/api/internal/storage"
 	"github.com/real-staging-ai/api/internal/storage/queries"
@@ -107,7 +108,7 @@ func TestE2E_SSE_ProcessingReady(t *testing.T) {
 	// Create active subscription for test user (required for image uploads)
 	_, err := db.Pool().Exec(context.Background(), `
 		INSERT INTO subscriptions (user_id, stripe_subscription_id, price_id, status, current_period_start, current_period_end)
-		VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'sub_test123', 'price_1SJOLOLkQ5x1VWxdO06cPbj1', 'active', NOW(), NOW() + INTERVAL '30 days')
+		VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'sub_test123', 'price_pro_test', 'active', NOW(), NOW() + INTERVAL '30 days')
 	`)
 	require.NoError(t, err)
 
@@ -178,7 +179,7 @@ func TestE2E_SSE_ProcessingError(t *testing.T) {
 	// Create active subscription for test user (required for image uploads)
 	_, err := db.Pool().Exec(context.Background(), `
 		INSERT INTO subscriptions (user_id, stripe_subscription_id, price_id, status, current_period_start, current_period_end)
-		VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'sub_test123', 'price_1SJOLOLkQ5x1VWxdO06cPbj1', 'active', NOW(), NOW() + INTERVAL '30 days')
+		VALUES ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'sub_test123', 'price_pro_test', 'active', NOW(), NOW() + INTERVAL '30 days')
 	`)
 	require.NoError(t, err)
 

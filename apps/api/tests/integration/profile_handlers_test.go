@@ -11,9 +11,9 @@ import (
 	"testing"
 
 	"github.com/real-staging-ai/api/internal/config"
-
 	httpLib "github.com/real-staging-ai/api/internal/http"
 	"github.com/real-staging-ai/api/internal/image"
+	"github.com/real-staging-ai/api/internal/logging"
 	"github.com/real-staging-ai/api/internal/user"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
