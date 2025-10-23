@@ -221,11 +221,27 @@ export default function ImagesPage() {
     }
     
     try {
-      // Use CDN proxy endpoint instead of presigned URLs
-      // This endpoint authenticates with the Cloudflare CDN Worker
-      const url = `/api/v1/images/${imageId}/cdn/${kind}`;
+      // Get access token for authentication
+      // The API JWT middleware accepts tokens via query param for browser requests
+      const tokenResponse = await fetch('/auth/access-token');
+      if (!tokenResponse.ok) {
+        console.error('Failed to get access token for CDN URL');
+        return null;
+      }
       
-      // Cache the URL (CDN URLs are stable, don't expire like presigned URLs)
+      const tokenData = await tokenResponse.json();
+      const token = tokenData.token || tokenData.accessToken || tokenData.access_token;
+      
+      if (!token) {
+        console.error('No access token returned');
+        return null;
+      }
+      
+      // Use CDN proxy endpoint with access token as query parameter
+      // This allows <img> tags to authenticate via URL without custom headers
+      const url = `/api/v1/images/${imageId}/cdn/${kind}?access_token=${encodeURIComponent(token)}`;
+      
+      // Cache the URL (CDN URLs with tokens are stable until token expires)
       setCachedUrl(imageId, kind, url);
       
       return url;
