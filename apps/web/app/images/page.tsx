@@ -692,8 +692,8 @@ export default function ImagesPage() {
       return;
     }
 
-    // Check if there are processing images initially
-    const hasProcessingImages = imagesRef.current.some(
+    // Check if there are processing images
+    const hasProcessingImages = images.some(
       img => img.status === 'queued' || img.status === 'processing'
     );
 
@@ -701,8 +701,10 @@ export default function ImagesPage() {
       return;
     }
 
-    // Start polling timer
-    pollingStartTimeRef.current = Date.now();
+    // Start polling timer if not already started
+    if (!pollingStartTimeRef.current) {
+      pollingStartTimeRef.current = Date.now();
+    }
     const MAX_POLLING_DURATION = 5 * 60 * 1000; // 5 minutes
 
     // Set up polling interval that checks current image states
@@ -733,15 +735,14 @@ export default function ImagesPage() {
 
     setPollingInterval(interval);
 
-    // Cleanup on unmount or project change
+    // Cleanup on unmount or when images/project change
     return () => {
       if (interval) {
         clearInterval(interval);
       }
-      pollingStartTimeRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProjectId]);
+  }, [selectedProjectId, images]);
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
