@@ -678,26 +678,24 @@ export default function ImagesPage() {
     }
   }, [images, focusedImageId]);
 
+  // Determine if we should be polling based on current images
+  const shouldPoll = useMemo(() => {
+    return selectedProjectId && images.some(
+      img => img.status === 'queued' || img.status === 'processing'
+    );
+  }, [selectedProjectId, images]);
+
   // Auto-polling for processing images
   useEffect(() => {
-    // Clear any existing interval first
+    // Clear any existing interval
     if (pollingInterval) {
       clearInterval(pollingInterval);
       setPollingInterval(null);
+    }
+
+    // Only set up polling if needed
+    if (!shouldPoll) {
       pollingStartTimeRef.current = null;
-    }
-
-    // Only poll if we have a selected project
-    if (!selectedProjectId) {
-      return;
-    }
-
-    // Check if there are processing images
-    const hasProcessingImages = images.some(
-      img => img.status === 'queued' || img.status === 'processing'
-    );
-
-    if (!hasProcessingImages) {
       return;
     }
 
@@ -735,14 +733,14 @@ export default function ImagesPage() {
 
     setPollingInterval(interval);
 
-    // Cleanup on unmount or when images/project change
+    // Cleanup on unmount or when shouldPoll changes
     return () => {
       if (interval) {
         clearInterval(interval);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProjectId, images]);
+  }, [shouldPoll, selectedProjectId]);
 
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
