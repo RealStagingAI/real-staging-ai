@@ -18,11 +18,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/real-staging-ai/api/internal/logging"
 )
 
 func TestNewAuth0Config(t *testing.T) {
 	ctx := context.Background()
-	config := NewAuth0Config(ctx, "test-domain.auth0.com", "test-audience")
+	log := logging.Default()
+	config := NewAuth0Config(ctx, log, "test-domain.auth0.com", "test-audience")
 
 	assert.Equal(t, "test-domain.auth0.com", config.Domain)
 	assert.Equal(t, "test-audience", config.Audience)
@@ -258,6 +261,7 @@ func TestJWTMiddleware(t *testing.T) {
 
 			config := &Auth0Config{
 				Context:  context.Background(),
+				Logger:   logging.Default(),
 				Domain:   domain,
 				Audience: "test-audience",
 				Issuer:   fmt.Sprintf("https://%s/", domain),
@@ -334,6 +338,7 @@ func TestOptionalJWTMiddleware(t *testing.T) {
 	domain := strings.TrimPrefix(server.URL, "https://")
 	config := &Auth0Config{
 		Context:  context.Background(),
+		Logger:   logging.Default(),
 		Domain:   domain,
 		Audience: "test-audience",
 		Issuer:   fmt.Sprintf("https://%s/", domain),

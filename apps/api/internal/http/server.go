@@ -28,6 +28,7 @@ import (
 // Server holds the dependencies for the HTTP server.
 type Server struct {
 	ctx                 context.Context
+	log                 logging.Logger
 	echo                *echo.Echo
 	db                  storage.Database
 	s3Service           storage.S3Service
@@ -42,6 +43,7 @@ type Server struct {
 func NewServer(
 	cfg *config.Config,
 	ctx context.Context,
+	log logging.Logger,
 	db storage.Database,
 	imageService image.Service,
 	s3Service storage.S3Service,
@@ -66,7 +68,7 @@ func NewServer(
 	}))
 
 	// Initialize Auth0 config
-	authConfig := auth.NewAuth0Config(ctx, cfg.Auth0.Domain, cfg.Auth0.Audience)
+	authConfig := auth.NewAuth0Config(ctx, log, cfg.Auth0.Domain, cfg.Auth0.Audience)
 
 	// Initialize billing services
 	usageService := billing.NewDefaultUsageService(db)
@@ -86,6 +88,7 @@ func NewServer(
 
 	s := &Server{
 		ctx:                 ctx,
+		log:                 log,
 		db:                  db,
 		s3Service:           s3Service,
 		imageService:        imageService,
@@ -132,7 +135,7 @@ func NewServer(
 	protected.GET("/projects/:project_id/cost", imgHandler.GetProjectCost)
 
 	// CDN routes
-	cdnHandler := cdn.NewDefaultHandler(cfg.CDN.URL, s.imageService)
+	cdnHandler := cdn.NewDefaultHandler(log, cfg.CDN.URL, s.imageService)
 	protected.GET("/images/:id/cdn/:kind", cdnHandler.ProxyImage)
 
 	// Internal routes (for Cloudflare Worker)
@@ -192,6 +195,7 @@ func NewServer(
 // NewTestServer creates a new Echo server for testing without Auth0 middleware.
 func NewTestServer(
 	cfg *config.Config,
+	log logging.Logger,
 	db storage.Database,
 	s3Service storage.S3Service,
 	imageService image.Service,
@@ -212,6 +216,7 @@ func NewTestServer(
 	imgHandler := image.NewDefaultHandler(imageService, usageService, userRepo)
 
 	s := &Server{
+		log:                 log,
 		db:                  db,
 		s3Service:           s3Service,
 		imageService:        imageService,
@@ -253,7 +258,7 @@ func NewTestServer(
 	api.GET("/projects/:project_id/cost", withTestUser(imgHandler.GetProjectCost))
 
 	// CDN routes
-	cdnHandlerTest := cdn.NewDefaultHandler(cfg.CDN.URL, s.imageService)
+	cdnHandlerTest := cdn.NewDefaultHandler(log, cfg.CDN.URL, s.imageService)
 	api.GET("/images/:id/cdn/:kind", withTestUser(cdnHandlerTest.ProxyImage))
 
 	// SSE routes

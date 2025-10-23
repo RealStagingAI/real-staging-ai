@@ -34,15 +34,17 @@ type JWK struct {
 // Auth0Config holds Auth0 configuration.
 type Auth0Config struct {
 	Context  context.Context
+	Logger   logging.Logger
 	Domain   string
 	Audience string
 	Issuer   string
 }
 
 // NewAuth0Config creates Auth0 configuration from provided values.
-func NewAuth0Config(ctx context.Context, domain, audience string) *Auth0Config {
+func NewAuth0Config(ctx context.Context, logger logging.Logger, domain, audience string) *Auth0Config {
 	return &Auth0Config{
 		Context:  ctx,
+		Logger:   logger,
 		Domain:   domain,
 		Audience: audience,
 		Issuer:   fmt.Sprintf("https://%s/", domain),
@@ -53,7 +55,7 @@ func NewAuth0Config(ctx context.Context, domain, audience string) *Auth0Config {
 func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		KeyFunc: func(token *jwt.Token) (interface{}, error) {
-			log := logging.Default()
+			log := config.Logger
 			ctx := config.Context
 
 			// Verify the signing method
@@ -128,8 +130,7 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 		TokenLookup: "header:Authorization:Bearer ,query:access_token",
 		ErrorHandler: func(c echo.Context, err error) error {
 			// Log the actual error for debugging
-			log := logging.Default()
-			log.Error(c.Request().Context(), "JWT middleware error", "error", err)
+			config.Logger.Error(c.Request().Context(), "JWT middleware error", "error", err)
 			return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("Invalid or missing JWT token: %v", err))
 		},
 	})
@@ -169,8 +170,9 @@ func getPublicKey(ctx context.Context, domain, kid string) (*rsa.PublicKey, erro
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log := logging.Default()
-			log.Error(ctx, "Error closing response body", "error", err)
+			// Note: We don't have access to logger here in getPublicKey.
+			// Consider refactoring if detailed logging needed.
+			fmt.Printf("Error closing response body: %v\n", err)
 		}
 	}()
 
