@@ -268,11 +268,13 @@ func (s *DefaultService) UploadToS3(
 	fileKey := fmt.Sprintf("staged/%s/%s-staged.jpg", imageID[:8], imageID)
 
 	// Upload to S3
+	// Set Cache-Control for Render Edge Caching: staged images are immutable, cache for 1 year
 	_, err := s.s3Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(s.bucketName),
-		Key:         aws.String(fileKey),
-		Body:        content,
-		ContentType: aws.String(contentType),
+		Bucket:       aws.String(s.bucketName),
+		Key:          aws.String(fileKey),
+		Body:         content,
+		ContentType:  aws.String(contentType),
+		CacheControl: aws.String("public, max-age=31536000, immutable"),
 	})
 	if err != nil {
 		span.RecordError(err)

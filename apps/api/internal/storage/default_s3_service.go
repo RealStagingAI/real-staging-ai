@@ -202,10 +202,12 @@ func (s *DefaultS3Service) GeneratePresignedUploadURL(
 	expirationDuration := 15 * time.Minute
 
 	// Create the presign request
+	// Set Cache-Control for Render Edge Caching: images are immutable, cache for 1 year
 	request, err := presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
-		Bucket:      aws.String(s.Cfg.BucketName),
-		Key:         aws.String(fileKey),
-		ContentType: aws.String(contentType),
+		Bucket:       aws.String(s.Cfg.BucketName),
+		Key:          aws.String(fileKey),
+		ContentType:  aws.String(contentType),
+		CacheControl: aws.String("public, max-age=31536000, immutable"),
 	}, func(opts *s3.PresignOptions) {
 		opts.Expires = expirationDuration
 	})
