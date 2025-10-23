@@ -20,7 +20,9 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  XCircle
+  XCircle,
+  HelpCircle,
+  Keyboard
 } from "lucide-react";
 
 import { apiFetch } from "@/lib/api";
@@ -75,6 +77,7 @@ export default function ImagesPage() {
   // Preview/Lightbox state
   const [previewImageId, setPreviewImageId] = useState<string | null>(null);
   const [previewMode, setPreviewMode] = useState<'original' | 'staged'>('staged');
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
 
   // Lazy loading state
   const [visibleImageIds, setVisibleImageIds] = useState<Set<string>>(new Set());
@@ -359,7 +362,7 @@ export default function ImagesPage() {
     }
   }
 
-  async function downloadSelected() {
+  const downloadSelected = useCallback(async () => {
     const count = selectedImageIds.size;
     
     // Single file - download directly
@@ -446,7 +449,7 @@ export default function ImagesPage() {
       setStatusMessage(`Download failed: ${message}`);
       setTimeout(() => setStatusMessage(''), 5000);
     }
-  }
+  }, [selectedImageIds, images, downloadType, selectedProject]);
 
   async function loadProjects() {
     setLoadingProjects(true);
@@ -619,7 +622,16 @@ export default function ImagesPage() {
     }
   }, [selectedImageIds]);
 
-  // Keyboard navigation
+  // Helper to get grid columns based on screen size
+  const getGridColumns = useCallback(() => {
+    if (typeof window === 'undefined') return 3;
+    const width = window.innerWidth;
+    if (width < 640) return 1; // mobile
+    if (width < 1024) return 2; // tablet
+    return 3; // desktop
+  }, []);
+
+  // Enhanced keyboard navigation with vim bindings
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if typing in an input field
@@ -627,37 +639,79 @@ export default function ImagesPage() {
         return;
       }
 
+      // Close help modal on any key if open
+      if (showKeyboardHelp && e.key !== '?') {
+        setShowKeyboardHelp(false);
+      }
+
       if (images.length === 0) return;
 
       const currentIndex = focusedImageId 
         ? images.findIndex(img => img.id === focusedImageId)
         : -1;
+      
+      const cols = getGridColumns();
 
       switch (e.key) {
-        case 'ArrowRight':
-        case 'ArrowDown': {
+        case '?': {
           e.preventDefault();
-          const nextIndex = viewMode === 'grid'
-            ? (currentIndex + 1) % images.length
-            : (currentIndex + 1) % images.length;
+          setShowKeyboardHelp(prev => !prev);
+          break;
+        }
+        case 'ArrowRight':
+        case 'l': { // vim right
+          e.preventDefault();
+          const nextIndex = (currentIndex + 1) % images.length;
           setFocusedImageId(images[nextIndex].id);
           break;
         }
         case 'ArrowLeft':
-        case 'ArrowUp': {
+        case 'h': { // vim left
           e.preventDefault();
-          const prevIndex = currentIndex <= 0 
-            ? images.length - 1 
-            : currentIndex - 1;
+          const prevIndex = currentIndex <= 0 ? images.length - 1 : currentIndex - 1;
           setFocusedImageId(images[prevIndex].id);
           break;
         }
-        case ' ': { // Space bar
+        case 'ArrowDown':
+        case 'j': { // vim down
+          e.preventDefault();
+          const nextIndex = currentIndex + cols;
+          if (nextIndex < images.length) {
+            setFocusedImageId(images[nextIndex].id);
+          }
+          break;
+        }
+        case 'ArrowUp':
+        case 'k': { // vim up
+          e.preventDefault();
+          const prevIndex = currentIndex - cols;
+          if (prevIndex >= 0) {
+            setFocusedImageId(images[prevIndex].id);
+          }
+          break;
+        }
+        case ' ': { // Space bar - toggle selection
           e.preventDefault();
           if (focusedImageId) {
             toggleImageSelection(focusedImageId);
           } else if (images.length > 0) {
             setFocusedImageId(images[0].id);
+          }
+          break;
+        }
+        case 'p': { // Preview
+          e.preventDefault();
+          if (focusedImageId) {
+            openPreview(focusedImageId, 'staged');
+          }
+          break;
+        }
+        case 'd': { // Download
+          e.preventDefault();
+          if (selectedImageIds.size > 0) {
+            downloadSelected();
+          } else if (focusedImageId) {
+            downloadImage(focusedImageId, downloadType);
           }
           break;
         }
@@ -673,8 +727,12 @@ export default function ImagesPage() {
         }
         case 'Escape': {
           e.preventDefault();
-          setFocusedImageId(null);
-          setSelectedImageIds(new Set());
+          if (showKeyboardHelp) {
+            setShowKeyboardHelp(false);
+          } else {
+            setFocusedImageId(null);
+            setSelectedImageIds(new Set());
+          }
           break;
         }
       }
@@ -682,7 +740,7 @@ export default function ImagesPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [images, focusedImageId, selectedImageIds, viewMode, toggleImageSelection, deleteImage, deleteSelected]);
+  }, [images, focusedImageId, selectedImageIds, viewMode, showKeyboardHelp, downloadType, toggleImageSelection, deleteImage, deleteSelected, downloadSelected, getGridColumns]);
 
   // Set initial focus when images load
   useEffect(() => {
@@ -984,9 +1042,9 @@ export default function ImagesPage() {
                 key={image.id}
                 ref={(el) => registerImageObserver(el, image.id)}
                 className={cn(
-                  "card group cursor-pointer transition-all duration-200",
+                  "card group cursor-pointer transition-all duration-200 relative",
                   selectedImageIds.has(image.id) && "ring-2 ring-blue-500 shadow-xl",
-                  focusedImageId === image.id && !selectedImageIds.has(image.id) && "ring-2 ring-blue-300 shadow-lg"
+                  focusedImageId === image.id && "ring-4 ring-amber-400 shadow-2xl shadow-amber-500/20"
                 )}
                 onClick={() => toggleImageSelection(image.id)}
                 onMouseEnter={() => handleImageHover(image.id)}
@@ -1298,6 +1356,122 @@ export default function ImagesPage() {
       {statusMessage && (
         <div className="fixed bottom-4 right-4 left-4 sm:left-auto bg-white dark:bg-gray-900 shadow-lg rounded-lg p-3 sm:p-4 border border-gray-200 dark:border-gray-700 max-w-sm mx-auto sm:mx-0 animate-in z-50">
           <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{statusMessage}</p>
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts Help Modal */}
+      {showKeyboardHelp && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowKeyboardHelp(false)}
+        >
+          <div 
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Keyboard className="h-6 w-6 text-blue-600" />
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Keyboard Shortcuts</h2>
+              </div>
+              <button
+                onClick={() => setShowKeyboardHelp(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Navigation */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Navigation</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Move right</span>
+                    <div className="flex gap-2">
+                      <kbd className="kbd">→</kbd>
+                      <kbd className="kbd">L</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Move left</span>
+                    <div className="flex gap-2">
+                      <kbd className="kbd">←</kbd>
+                      <kbd className="kbd">H</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Move down (grid)</span>
+                    <div className="flex gap-2">
+                      <kbd className="kbd">↓</kbd>
+                      <kbd className="kbd">J</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Move up (grid)</span>
+                    <div className="flex gap-2">
+                      <kbd className="kbd">↑</kbd>
+                      <kbd className="kbd">K</kbd>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Actions</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Select / Deselect image</span>
+                    <kbd className="kbd">Space</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Preview image</span>
+                    <kbd className="kbd">P</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Download image(s)</span>
+                    <kbd className="kbd">D</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Delete image(s)</span>
+                    <div className="flex gap-2">
+                      <kbd className="kbd">Del</kbd>
+                      <kbd className="kbd">⌫</kbd>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Clear selection</span>
+                    <kbd className="kbd">Esc</kbd>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-gray-700 dark:text-gray-300">Show this help</span>
+                    <kbd className="kbd">?</kbd>
+                  </div>
+                </div>
+              </div>
+
+              {/* Visual Guide */}
+              <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center gap-2">
+                  <HelpCircle className="h-4 w-4" />
+                  Visual Guide
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded border-4 border-amber-400 shadow-lg"></div>
+                    <span className="text-gray-700 dark:text-gray-300">Yellow border = Keyboard focused</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded border-2 border-blue-500"></div>
+                    <span className="text-gray-700 dark:text-gray-300">Blue border = Selected (checked)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

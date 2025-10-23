@@ -44,10 +44,10 @@ Before committing any changes, **always** run the following commands in order an
 This workflow ensures code quality, prevents broken builds, and catches issues early. **Do not commit if any of these steps fail.**
 
 ## Commit & Pull Request Guidelines
-- Commits: follow Conventional Commits (e.g., `feat(api): add presign upload endpoint`).
+- Commits: follow Conventional Commits (e.g., `feat(api): add presign upload endpoint`). **Keep messages brief and concise.**
 - We use Conventional Commits for all changes. Format: `type(scope): subject`.
   - Common types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`, `perf`.
-  - Example scopes: `api`, `worker`, `infra`, `docs`, `db`, `stripe`.
+  - Example scopes: `api`, `worker`, `infra`, `docs`, `db`, `stripe`, `web`.
   - Reference: https://www.conventionalcommits.org/
 - PRs: include purpose, linked issues, test plan/output, and screenshots/logs when relevant. Ensure `make test` and `make lint` pass. Touch docs when changing behavior (see `docs/`).
 

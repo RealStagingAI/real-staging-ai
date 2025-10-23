@@ -102,9 +102,9 @@ export default function MobileNav() {
       {/* Mobile Menu Panel - Slides in from right */}
       <nav
         className={cn(
-          'fixed top-0 right-0 h-screen w-80 max-w-[85vw] bg-white dark:bg-slate-950 z-40 md:hidden',
+          'fixed top-0 right-0 h-[100dvh] w-80 max-w-[85vw] bg-white dark:bg-slate-950 z-40 md:hidden',
           'shadow-2xl transform transition-transform duration-300 ease-out',
-          'flex flex-col', // Use flexbox for proper layout
+          'flex flex-col pt-safe', // Use flexbox for proper layout with top safe area
           isOpen ? 'translate-x-0' : 'translate-x-full'
         )}
         aria-label="Mobile navigation"
