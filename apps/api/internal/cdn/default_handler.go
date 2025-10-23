@@ -47,6 +47,8 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 	imageID := c.Param("id")
 	kind := strings.ToLower(strings.TrimSpace(c.Param("kind")))
 
+	fmt.Printf("CDN ProxyImage called: imageID=%s, kind=%s\n", imageID, kind)
+
 	// Validate image ID
 	if imageID == "" {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "bad_request", Message: "image id is required"})
@@ -68,6 +70,7 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 	// Verify user owns the image
 	img, err := h.imageService.GetImageByID(ctx, imageID)
 	if err != nil {
+		fmt.Printf("CDN ProxyImage: image not found: %v\n", err)
 		return c.JSON(http.StatusNotFound, ErrorResponse{Error: "not_found", Message: "image not found"})
 	}
 
@@ -91,11 +94,15 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 	// This allows <img> tags to load images without sending Authorization headers
 	token, ok := c.Get("user").(*jwt.Token)
 	if !ok {
+		fmt.Printf("CDN ProxyImage: failed to get JWT token from context (middleware may not have set it)\n")
+		fmt.Printf("CDN ProxyImage: context keys available: %v\n", c.Request().Context())
 		return c.JSON(http.StatusUnauthorized, ErrorResponse{
 			Error:   "unauthorized",
 			Message: "Invalid or missing JWT token",
 		})
 	}
+	
+	fmt.Printf("CDN ProxyImage: successfully extracted JWT token from context\n")
 
 	// Reconstruct Authorization header for forwarding to CDN Worker
 	authHeader := fmt.Sprintf("Bearer %s", token.Raw)
