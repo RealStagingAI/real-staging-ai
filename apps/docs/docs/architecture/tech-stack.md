@@ -518,7 +518,7 @@ type Database interface {
 - **Kafka** - High-throughput event streaming
 - **Elasticsearch** - Full-text search
 - **Redis Cluster** - Horizontal scaling
-- **CDN** - Static asset delivery (Cloudflare)
+- **Edge Caching** - Render automatic edge caching for presigned URLs
 - **Message Queue** - RabbitMQ or SQS for complex workflows
 
 ---

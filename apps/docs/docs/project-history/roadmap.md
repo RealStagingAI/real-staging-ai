@@ -80,7 +80,7 @@ Real Staging AI is production-ready with core features implemented:
 
 **Platform**
 - [ ] Multi-region deployment
-- [ ] Edge caching (Cloudflare)
+- [x] Edge caching (Render)
 - [ ] Self-hosted option
 - [ ] White-label support
 - [ ] API marketplace

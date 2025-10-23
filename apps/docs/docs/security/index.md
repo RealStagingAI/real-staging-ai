@@ -143,7 +143,7 @@ database:
 | **SQL injection** | Prepared statements, input validation |
 | **XSS attacks** | Output encoding, CSP headers |
 | **CSRF** | SameSite cookies, CSRF tokens |
-| **DDoS** | Rate limiting, WAF, CDN |
+| **DDoS** | Rate limiting, Render edge caching |
 | **Data breaches** | Encryption, access controls, monitoring |
 | **Webhook spoofing** | Signature verification |
 | **Token theft** | Short expiration, HTTPS only |
