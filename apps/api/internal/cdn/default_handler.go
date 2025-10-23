@@ -101,7 +101,7 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 			Message: "Invalid or missing JWT token",
 		})
 	}
-	
+
 	fmt.Printf("CDN ProxyImage: successfully extracted JWT token from context\n")
 
 	// Reconstruct Authorization header for forwarding to CDN Worker
