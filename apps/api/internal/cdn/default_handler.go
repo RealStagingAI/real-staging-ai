@@ -115,9 +115,11 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 		})
 	}
 
+	h.log.Info(ctx, "CDN ProxyImage: type assertion succeeded", "tokenNil", token == nil)
 	h.log.Debug(ctx, "CDN ProxyImage: successfully extracted JWT token from context", "imageID", imageID)
 
 	// Reconstruct Authorization header for forwarding to CDN Worker
+	h.log.Info(ctx, "CDN ProxyImage: building auth header", "tokenRawEmpty", token.Raw == "")
 	authHeader := fmt.Sprintf("Bearer %s", token.Raw)
 
 	// Construct CDN request URL
