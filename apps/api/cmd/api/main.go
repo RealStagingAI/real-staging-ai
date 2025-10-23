@@ -35,8 +35,9 @@ func main() {
 	s3Service, err := storage.NewDefaultS3Service(ctx, &cfg.S3)
 	if err != nil {
 		log.Error(ctx, fmt.Sprintf("failed to create S3 service: %v", err))
-	} else {
+	} else if cfg.App.Env == "development" || cfg.App.Env == "local" || cfg.App.Env == "test" {
 		// Ensure bucket exists in dev/local (MinIO) to avoid presign/upload failures
+		// Skip in production where bucket already exists and IAM may not have bucket creation perms
 		if err := s3Service.CreateBucket(ctx); err != nil {
 			log.Error(ctx, fmt.Sprintf("failed to ensure S3 bucket exists: %v", err))
 		}
