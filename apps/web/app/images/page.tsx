@@ -227,26 +227,19 @@ export default function ImagesPage() {
     }
     
     try {
-      // Fetch presigned URL from API
-      const response = await fetch(`/api/v1/images/${imageId}/presign?kind=${kind}`);
+      // Fetch presigned URL from API with authentication
+      const params = new URLSearchParams({ kind });
+      const data = await apiFetch<{ url: string }>(`/v1/images/${imageId}/presign?${params.toString()}`);
       
-      if (!response.ok) {
-        console.error('Failed to get presigned URL:', response.status, response.statusText);
-        return null;
-      }
-      
-      const data = await response.json();
-      const url = data.url;
-      
-      if (!url) {
+      if (!data?.url) {
         console.error('No URL in presign response:', data);
         return null;
       }
       
       // Cache the presigned URL (valid for 1 hour typically)
-      setCachedUrl(imageId, kind, url);
+      setCachedUrl(imageId, kind, data.url);
       
-      return url;
+      return data.url;
     } catch (err: unknown) {
       console.error('Failed to get presigned URL:', err);
       return null;
