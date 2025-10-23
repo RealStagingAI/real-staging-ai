@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/real-staging-ai/api/internal/image"
+	"github.com/real-staging-ai/api/internal/logging"
 )
 
 // DefaultHandler provides Echo HTTP handlers for CDN proxy operations.
@@ -47,7 +48,9 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 	imageID := c.Param("id")
 	kind := strings.ToLower(strings.TrimSpace(c.Param("kind")))
 
-	fmt.Printf("CDN ProxyImage called: imageID=%s, kind=%s\n", imageID, kind)
+	ctx := c.Request().Context()
+	log := logging.Default()
+	log.Info(ctx, "CDN ProxyImage called", "imageID", imageID, "kind", kind)
 
 	// Validate image ID
 	if imageID == "" {
@@ -65,12 +68,10 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 		})
 	}
 
-	ctx := c.Request().Context()
-
 	// Verify user owns the image
 	img, err := h.imageService.GetImageByID(ctx, imageID)
 	if err != nil {
-		fmt.Printf("CDN ProxyImage: image not found: %v\n", err)
+		log.Warn(ctx, "CDN ProxyImage: image not found", "imageID", imageID, "error", err)
 		return c.JSON(http.StatusNotFound, ErrorResponse{Error: "not_found", Message: "image not found"})
 	}
 
@@ -94,15 +95,14 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 	// This allows <img> tags to load images without sending Authorization headers
 	token, ok := c.Get("user").(*jwt.Token)
 	if !ok {
-		fmt.Printf("CDN ProxyImage: failed to get JWT token from context (middleware may not have set it)\n")
-		fmt.Printf("CDN ProxyImage: context keys available: %v\n", c.Request().Context())
+		log.Error(ctx, "CDN ProxyImage: failed to get JWT token from context", "imageID", imageID)
 		return c.JSON(http.StatusUnauthorized, ErrorResponse{
 			Error:   "unauthorized",
 			Message: "Invalid or missing JWT token",
 		})
 	}
 
-	fmt.Printf("CDN ProxyImage: successfully extracted JWT token from context\n")
+	log.Debug(ctx, "CDN ProxyImage: successfully extracted JWT token from context", "imageID", imageID)
 
 	// Reconstruct Authorization header for forwarding to CDN Worker
 	authHeader := fmt.Sprintf("Bearer %s", token.Raw)
@@ -133,7 +133,7 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 	}
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
-			fmt.Printf("Error closing CDN response body: %v\n", closeErr)
+			log.Error(ctx, "Error closing CDN response body", "error", closeErr)
 		}
 	}()
 
@@ -167,7 +167,7 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 	_, err = io.Copy(c.Response().Writer, resp.Body)
 	if err != nil {
 		// Can't return JSON error here as headers are already sent
-		fmt.Printf("Error streaming CDN response: %v\n", err)
+		log.Error(ctx, "Error streaming CDN response", "error", err)
 	}
 
 	return nil

@@ -13,6 +13,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+
+	"github.com/real-staging-ai/api/internal/logging"
 )
 
 // JWKSet represents a JSON Web Key Set
@@ -51,10 +53,13 @@ func NewAuth0Config(ctx context.Context, domain, audience string) *Auth0Config {
 func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 	return echojwt.WithConfig(echojwt.Config{
 		KeyFunc: func(token *jwt.Token) (interface{}, error) {
+			log := logging.Default()
+			ctx := config.Context
+
 			// Verify the signing method
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				err := fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-				fmt.Printf("JWT validation error: %v\n", err)
+				log.Error(ctx, "JWT validation error", "error", err)
 				return nil, err
 			}
 
@@ -62,7 +67,7 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 			kid, ok := token.Header["kid"].(string)
 			if !ok {
 				err := fmt.Errorf("kid not found in token header")
-				fmt.Printf("JWT validation error: %v\n", err)
+				log.Error(ctx, "JWT validation error", "error", err)
 				return nil, err
 			}
 
@@ -70,7 +75,7 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if !ok {
 				err := fmt.Errorf("invalid token claims")
-				fmt.Printf("JWT validation error: %v\n", err)
+				log.Error(ctx, "JWT validation error", "error", err)
 				return nil, err
 			}
 
@@ -81,7 +86,7 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 				audList, ok := claims["aud"].([]interface{})
 				if !ok || len(audList) == 0 {
 					err := fmt.Errorf("invalid or missing audience")
-					fmt.Printf("JWT validation error: %v\n", err)
+					log.Error(ctx, "JWT validation error", "error", err)
 					return nil, err
 				}
 				// Check if our audience is in the list
@@ -94,12 +99,12 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 				}
 				if !found {
 					err := fmt.Errorf("invalid audience: expected %s, got %v", config.Audience, audList)
-					fmt.Printf("JWT validation error: %v\n", err)
+					log.Error(ctx, "JWT validation error", "error", err)
 					return nil, err
 				}
 			} else if aud != config.Audience {
 				err := fmt.Errorf("invalid audience: expected %s, got %s", config.Audience, aud)
-				fmt.Printf("JWT validation error: %v\n", err)
+				log.Error(ctx, "JWT validation error", "error", err)
 				return nil, err
 			}
 
@@ -107,14 +112,14 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 			iss, ok := claims["iss"].(string)
 			if !ok || iss != config.Issuer {
 				err := fmt.Errorf("invalid issuer: expected %s, got %v", config.Issuer, iss)
-				fmt.Printf("JWT validation error: %v\n", err)
+				log.Error(ctx, "JWT validation error", "error", err)
 				return nil, err
 			}
 
 			// Get the public key from Auth0's JWKS endpoint
 			key, err := getPublicKey(config.Context, config.Domain, kid)
 			if err != nil {
-				fmt.Printf("JWT validation error: failed to get public key: %v\n", err)
+				log.Error(ctx, "JWT validation error: failed to get public key", "error", err)
 				return nil, err
 			}
 			return key, nil
@@ -123,7 +128,8 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 		TokenLookup: "header:Authorization:Bearer ,query:access_token",
 		ErrorHandler: func(c echo.Context, err error) error {
 			// Log the actual error for debugging
-			fmt.Printf("JWT middleware error: %v\n", err)
+			log := logging.Default()
+			log.Error(c.Request().Context(), "JWT middleware error", "error", err)
 			return echo.NewHTTPError(http.StatusUnauthorized, fmt.Sprintf("Invalid or missing JWT token: %v", err))
 		},
 	})
@@ -163,7 +169,8 @@ func getPublicKey(ctx context.Context, domain, kid string) (*rsa.PublicKey, erro
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			fmt.Printf("Error closing response body: %v\n", err)
+			log := logging.Default()
+			log.Error(ctx, "Error closing response body", "error", err)
 		}
 	}()
 
