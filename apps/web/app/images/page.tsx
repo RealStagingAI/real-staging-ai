@@ -225,7 +225,7 @@ export default function ImagesPage() {
       // The API JWT middleware accepts tokens via query param for browser requests
       const tokenResponse = await fetch('/auth/access-token');
       if (!tokenResponse.ok) {
-        console.error('Failed to get access token for CDN URL');
+        console.error('Failed to get access token for CDN URL:', tokenResponse.status, tokenResponse.statusText);
         return null;
       }
       
@@ -233,9 +233,11 @@ export default function ImagesPage() {
       const token = tokenData.token || tokenData.accessToken || tokenData.access_token;
       
       if (!token) {
-        console.error('No access token returned');
+        console.error('No access token in response:', tokenData);
         return null;
       }
+      
+      console.log('Got access token, constructing CDN URL for', imageId, kind);
       
       // Use CDN proxy endpoint with access token as query parameter
       // This allows <img> tags to authenticate via URL without custom headers
