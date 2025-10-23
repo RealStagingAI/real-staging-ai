@@ -85,10 +85,10 @@ func JWTMiddleware(config *Auth0Config) echo.MiddlewareFunc {
 					}
 				}
 				if !found {
-					return nil, fmt.Errorf("invalid audience")
+					return nil, fmt.Errorf("invalid audience: expected %s, got %v", config.Audience, audList)
 				}
 			} else if aud != config.Audience {
-				return nil, fmt.Errorf("invalid audience")
+				return nil, fmt.Errorf("invalid audience: expected %s, got %s", config.Audience, aud)
 			}
 
 			// Check issuer
