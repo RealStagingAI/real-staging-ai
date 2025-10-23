@@ -82,6 +82,7 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 		h.log.Warn(ctx, "CDN ProxyImage: image not found", "imageID", imageID, "error", err)
 		return c.JSON(http.StatusNotFound, ErrorResponse{Error: "not_found", Message: "image not found"})
 	}
+	h.log.Info(ctx, "CDN ProxyImage: image fetched successfully", "imageID", imageID)
 
 	// Verify image has the requested variant
 	if kind == "staged" && (img.StagedURL == nil || *img.StagedURL == "") {
@@ -93,15 +94,19 @@ func (h *DefaultHandler) ProxyImage(c echo.Context) error {
 
 	// Check if CDN is configured
 	if h.cdnURL == "" {
+		h.log.Error(ctx, "CDN ProxyImage: CDN URL not configured")
 		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
 			Error:   "service_unavailable",
 			Message: "CDN not configured",
 		})
 	}
+	h.log.Info(ctx, "CDN ProxyImage: CDN URL configured, extracting JWT")
 
 	// Extract JWT token from Echo context (populated by auth middleware)
 	// This allows <img> tags to load images without sending Authorization headers
-	token, ok := c.Get("user").(*jwt.Token)
+	userVal := c.Get("user")
+	h.log.Info(ctx, "CDN ProxyImage: about to cast user", "userType", fmt.Sprintf("%T", userVal))
+	token, ok := userVal.(*jwt.Token)
 	if !ok {
 		h.log.Error(ctx, "CDN ProxyImage: failed to get JWT token from context", "imageID", imageID)
 		return c.JSON(http.StatusUnauthorized, ErrorResponse{
