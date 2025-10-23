@@ -212,8 +212,8 @@ export default function ImagesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewImageId, goToPreviousImage, goToNextImage, closePreview, togglePreviewMode]);
 
-  // Get CDN URL for viewing (with caching)
-  async function getCdnUrl(imageId: string, kind: 'original' | 'staged'): Promise<string | null> {
+  // Get presigned S3 URL for viewing (with caching)
+  async function getPresignedUrl(imageId: string, kind: 'original' | 'staged'): Promise<string | null> {
     // Check cache first
     const cached = getCachedUrl(imageId, kind);
     if (cached) {
@@ -221,34 +221,28 @@ export default function ImagesPage() {
     }
     
     try {
-      // Get access token for authentication
-      // The API JWT middleware accepts tokens via query param for browser requests
-      const tokenResponse = await fetch('/auth/access-token');
-      if (!tokenResponse.ok) {
-        console.error('Failed to get access token for CDN URL:', tokenResponse.status, tokenResponse.statusText);
+      // Fetch presigned URL from API
+      const response = await fetch(`/api/v1/images/${imageId}/presign?kind=${kind}`);
+      
+      if (!response.ok) {
+        console.error('Failed to get presigned URL:', response.status, response.statusText);
         return null;
       }
       
-      const tokenData = await tokenResponse.json();
-      const token = tokenData.token || tokenData.accessToken || tokenData.access_token;
+      const data = await response.json();
+      const url = data.url;
       
-      if (!token) {
-        console.error('No access token in response:', tokenData);
+      if (!url) {
+        console.error('No URL in presign response:', data);
         return null;
       }
       
-      console.log('Got access token, constructing CDN URL for', imageId, kind);
-      
-      // Use CDN proxy endpoint with access token as query parameter
-      // This allows <img> tags to authenticate via URL without custom headers
-      const url = `/api/v1/images/${imageId}/cdn/${kind}?access_token=${encodeURIComponent(token)}`;
-      
-      // Cache the URL (CDN URLs with tokens are stable until token expires)
+      // Cache the presigned URL (valid for 1 hour typically)
       setCachedUrl(imageId, kind, url);
       
       return url;
     } catch (err: unknown) {
-      console.error('Failed to get CDN URL:', err);
+      console.error('Failed to get presigned URL:', err);
       return null;
     }
   }
@@ -292,9 +286,9 @@ export default function ImagesPage() {
       await Promise.all(
         chunk.map(async (image) => {
           // Only fetch if we don't have it cached
-          const originalUrl = urlMap[image.id]?.original || await getCdnUrl(image.id, 'original');
+          const originalUrl = urlMap[image.id]?.original || await getPresignedUrl(image.id, 'original');
           const stagedUrl = image.staged_url 
-            ? (urlMap[image.id]?.staged || await getCdnUrl(image.id, 'staged'))
+            ? (urlMap[image.id]?.staged || await getPresignedUrl(image.id, 'staged'))
             : null;
           
           urlMap[image.id] = {

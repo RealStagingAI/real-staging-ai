@@ -15,7 +15,6 @@ import (
 type Config struct {
 	App     App     `yaml:"app"`
 	Auth0   Auth0   `yaml:"auth0"`
-	CDN     CDN     `yaml:"cdn"`
 	DB      DB      `yaml:"db"`
 	Job     Job     `yaml:"job"`
 	Logging Logging `yaml:"logging"`
@@ -36,10 +35,6 @@ type Auth0 struct {
 	ClientSecret string `yaml:"client_secret" env:"AUTH0_CLIENT_SECRET"`
 	Domain       string `yaml:"domain" env:"AUTH0_DOMAIN"`
 	GrantType    string `yaml:"grant_type" env:"AUTH0_GRANT_TYPE" env-default:"client_credentials"`
-}
-
-type CDN struct {
-	URL string `yaml:"url" env:"CDN_URL"`
 }
 
 type DB struct {
