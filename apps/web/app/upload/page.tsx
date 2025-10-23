@@ -235,6 +235,7 @@ export default function UploadPage() {
         method: "PUT",
         headers: {
           "Content-Type": fileData.file.type || "application/octet-stream",
+          "Cache-Control": "public, max-age=31536000, immutable",
         },
         body: fileData.file,
       })
