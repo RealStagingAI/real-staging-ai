@@ -100,7 +100,13 @@ export default function ImagesPage() {
           if (entry.isIntersecting) {
             const imageId = entry.target.getAttribute('data-image-id');
             if (imageId) {
-              setVisibleImageIds(prev => new Set(prev).add(imageId));
+              setVisibleImageIds(prev => {
+                // Only create new Set if imageId not already present
+                if (prev.has(imageId)) {
+                  return prev;
+                }
+                return new Set(prev).add(imageId);
+              });
             }
           }
         });
