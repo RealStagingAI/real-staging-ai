@@ -131,6 +131,7 @@ func NewServer(
 	protected.GET("/images/:id/presign", s.presignImageDownloadHandler)
 	protected.DELETE("/images/:id", s.deleteImageHandler)
 	protected.GET("/projects/:project_id/images", imgHandler.GetProjectImages)
+	protected.GET("/projects/:project_id/images/grouped", imgHandler.GetGroupedProjectImages)
 	protected.GET("/projects/:project_id/cost", imgHandler.GetProjectCost)
 
 	// SSE routes
@@ -246,6 +247,7 @@ func NewTestServer(
 	api.GET("/images/:id/presign", withTestUser(s.presignImageDownloadHandler))
 	api.DELETE("/images/:id", withTestUser(s.deleteImageHandler))
 	api.GET("/projects/:project_id/images", withTestUser(imgHandler.GetProjectImages))
+	api.GET("/projects/:project_id/images/grouped", withTestUser(imgHandler.GetGroupedProjectImages))
 	api.GET("/projects/:project_id/cost", withTestUser(imgHandler.GetProjectCost))
 
 	// SSE routes

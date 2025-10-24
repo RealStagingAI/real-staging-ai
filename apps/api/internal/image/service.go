@@ -14,6 +14,7 @@ type Service interface {
 	BatchCreateImages(ctx context.Context, reqs []CreateImageRequest) (*BatchCreateImagesResponse, error)
 	GetImageByID(ctx context.Context, imageID string) (*Image, error)
 	GetImagesByProjectID(ctx context.Context, projectID string) ([]*Image, error)
+	GetGroupedProjectImages(ctx context.Context, projectID string) (*GroupedProjectImagesResponse, error)
 	UpdateImageStatus(ctx context.Context, imageID string, status Status) (*Image, error)
 	UpdateImageWithStagedURL(ctx context.Context, imageID string, stagedURL string) (*Image, error)
 	UpdateImageWithError(ctx context.Context, imageID string, errorMsg string) (*Image, error)

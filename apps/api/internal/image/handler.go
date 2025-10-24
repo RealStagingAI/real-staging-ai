@@ -29,6 +29,7 @@ type Handler interface {
 	CreateImage(c echo.Context) error
 	GetImage(c echo.Context) error
 	GetProjectImages(c echo.Context) error
+	GetGroupedProjectImages(c echo.Context) error
 	DeleteImage(c echo.Context) error
 	GetProjectCost(c echo.Context) error
 }

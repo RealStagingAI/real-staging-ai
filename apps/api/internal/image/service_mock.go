@@ -28,6 +28,9 @@ var _ Service = &ServiceMock{}
 //			DeleteImageFunc: func(ctx context.Context, imageID string) error {
 //				panic("mock out the DeleteImage method")
 //			},
+//			GetGroupedProjectImagesFunc: func(ctx context.Context, projectID string) (*GroupedProjectImagesResponse, error) {
+//				panic("mock out the GetGroupedProjectImages method")
+//			},
 //			GetImageByIDFunc: func(ctx context.Context, imageID string) (*Image, error) {
 //				panic("mock out the GetImageByID method")
 //			},
@@ -64,6 +67,9 @@ type ServiceMock struct {
 
 	// DeleteImageFunc mocks the DeleteImage method.
 	DeleteImageFunc func(ctx context.Context, imageID string) error
+
+	// GetGroupedProjectImagesFunc mocks the GetGroupedProjectImages method.
+	GetGroupedProjectImagesFunc func(ctx context.Context, projectID string) (*GroupedProjectImagesResponse, error)
 
 	// GetImageByIDFunc mocks the GetImageByID method.
 	GetImageByIDFunc func(ctx context.Context, imageID string) (*Image, error)
@@ -108,6 +114,13 @@ type ServiceMock struct {
 			Ctx context.Context
 			// ImageID is the imageID argument value.
 			ImageID string
+		}
+		// GetGroupedProjectImages holds details about calls to the GetGroupedProjectImages method.
+		GetGroupedProjectImages []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ProjectID is the projectID argument value.
+			ProjectID string
 		}
 		// GetImageByID holds details about calls to the GetImageByID method.
 		GetImageByID []struct {
@@ -166,6 +179,7 @@ type ServiceMock struct {
 	lockBatchCreateImages        sync.RWMutex
 	lockCreateImage              sync.RWMutex
 	lockDeleteImage              sync.RWMutex
+	lockGetGroupedProjectImages  sync.RWMutex
 	lockGetImageByID             sync.RWMutex
 	lockGetImagesByProjectID     sync.RWMutex
 	lockGetProjectCostSummary    sync.RWMutex
@@ -280,6 +294,42 @@ func (mock *ServiceMock) DeleteImageCalls() []struct {
 	mock.lockDeleteImage.RLock()
 	calls = mock.calls.DeleteImage
 	mock.lockDeleteImage.RUnlock()
+	return calls
+}
+
+// GetGroupedProjectImages calls GetGroupedProjectImagesFunc.
+func (mock *ServiceMock) GetGroupedProjectImages(ctx context.Context, projectID string) (*GroupedProjectImagesResponse, error) {
+	if mock.GetGroupedProjectImagesFunc == nil {
+		panic("ServiceMock.GetGroupedProjectImagesFunc: method is nil but Service.GetGroupedProjectImages was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		ProjectID string
+	}{
+		Ctx:       ctx,
+		ProjectID: projectID,
+	}
+	mock.lockGetGroupedProjectImages.Lock()
+	mock.calls.GetGroupedProjectImages = append(mock.calls.GetGroupedProjectImages, callInfo)
+	mock.lockGetGroupedProjectImages.Unlock()
+	return mock.GetGroupedProjectImagesFunc(ctx, projectID)
+}
+
+// GetGroupedProjectImagesCalls gets all the calls that were made to GetGroupedProjectImages.
+// Check the length with:
+//
+//	len(mockedService.GetGroupedProjectImagesCalls())
+func (mock *ServiceMock) GetGroupedProjectImagesCalls() []struct {
+	Ctx       context.Context
+	ProjectID string
+} {
+	var calls []struct {
+		Ctx       context.Context
+		ProjectID string
+	}
+	mock.lockGetGroupedProjectImages.RLock()
+	calls = mock.calls.GetGroupedProjectImages
+	mock.lockGetGroupedProjectImages.RUnlock()
 	return calls
 }
 

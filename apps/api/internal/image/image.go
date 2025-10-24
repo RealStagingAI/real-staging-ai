@@ -102,3 +102,33 @@ type BatchImageError struct {
 	Index   int    `json:"index"`
 	Message string `json:"message"`
 }
+
+// ImageVariant represents a single style variant of an original image.
+type ImageVariant struct {
+	ID                    uuid.UUID `json:"id"`
+	Style                 *string   `json:"style,omitempty"`
+	Status                Status    `json:"status"`
+	StagedURL             *string   `json:"staged_url,omitempty"`
+	Error                 *string   `json:"error,omitempty"`
+	CostUSD               *float64  `json:"cost_usd,omitempty"`
+	ProcessingTimeMs      *int      `json:"processing_time_ms,omitempty"`
+	ModelUsed             *string   `json:"model_used,omitempty"`
+	ReplicatePredictionID *string   `json:"replicate_prediction_id,omitempty"`
+	CreatedAt             time.Time `json:"created_at"`
+	UpdatedAt             time.Time `json:"updated_at"`
+}
+
+// GroupedImage represents an original image with all its style variants.
+type GroupedImage struct {
+	OriginalImageID *string         `json:"original_image_id,omitempty"`
+	OriginalURL     string          `json:"original_url"`
+	RoomType        *string         `json:"room_type,omitempty"`
+	Seed            *int64          `json:"seed,omitempty"`
+	Prompt          *string         `json:"prompt,omitempty"`
+	Variants        []*ImageVariant `json:"variants"`
+}
+
+// GroupedProjectImagesResponse represents the grouped images response.
+type GroupedProjectImagesResponse struct {
+	Images []*GroupedImage `json:"images"`
+}

@@ -24,6 +24,9 @@ var _ Handler = &HandlerMock{}
 //			DeleteImageFunc: func(c echo.Context) error {
 //				panic("mock out the DeleteImage method")
 //			},
+//			GetGroupedProjectImagesFunc: func(c echo.Context) error {
+//				panic("mock out the GetGroupedProjectImages method")
+//			},
 //			GetImageFunc: func(c echo.Context) error {
 //				panic("mock out the GetImage method")
 //			},
@@ -46,6 +49,9 @@ type HandlerMock struct {
 	// DeleteImageFunc mocks the DeleteImage method.
 	DeleteImageFunc func(c echo.Context) error
 
+	// GetGroupedProjectImagesFunc mocks the GetGroupedProjectImages method.
+	GetGroupedProjectImagesFunc func(c echo.Context) error
+
 	// GetImageFunc mocks the GetImage method.
 	GetImageFunc func(c echo.Context) error
 
@@ -67,6 +73,11 @@ type HandlerMock struct {
 			// C is the c argument value.
 			C echo.Context
 		}
+		// GetGroupedProjectImages holds details about calls to the GetGroupedProjectImages method.
+		GetGroupedProjectImages []struct {
+			// C is the c argument value.
+			C echo.Context
+		}
 		// GetImage holds details about calls to the GetImage method.
 		GetImage []struct {
 			// C is the c argument value.
@@ -83,11 +94,12 @@ type HandlerMock struct {
 			C echo.Context
 		}
 	}
-	lockCreateImage      sync.RWMutex
-	lockDeleteImage      sync.RWMutex
-	lockGetImage         sync.RWMutex
-	lockGetProjectCost   sync.RWMutex
-	lockGetProjectImages sync.RWMutex
+	lockCreateImage             sync.RWMutex
+	lockDeleteImage             sync.RWMutex
+	lockGetGroupedProjectImages sync.RWMutex
+	lockGetImage                sync.RWMutex
+	lockGetProjectCost          sync.RWMutex
+	lockGetProjectImages        sync.RWMutex
 }
 
 // CreateImage calls CreateImageFunc.
@@ -151,6 +163,38 @@ func (mock *HandlerMock) DeleteImageCalls() []struct {
 	mock.lockDeleteImage.RLock()
 	calls = mock.calls.DeleteImage
 	mock.lockDeleteImage.RUnlock()
+	return calls
+}
+
+// GetGroupedProjectImages calls GetGroupedProjectImagesFunc.
+func (mock *HandlerMock) GetGroupedProjectImages(c echo.Context) error {
+	if mock.GetGroupedProjectImagesFunc == nil {
+		panic("HandlerMock.GetGroupedProjectImagesFunc: method is nil but Handler.GetGroupedProjectImages was just called")
+	}
+	callInfo := struct {
+		C echo.Context
+	}{
+		C: c,
+	}
+	mock.lockGetGroupedProjectImages.Lock()
+	mock.calls.GetGroupedProjectImages = append(mock.calls.GetGroupedProjectImages, callInfo)
+	mock.lockGetGroupedProjectImages.Unlock()
+	return mock.GetGroupedProjectImagesFunc(c)
+}
+
+// GetGroupedProjectImagesCalls gets all the calls that were made to GetGroupedProjectImages.
+// Check the length with:
+//
+//	len(mockedHandler.GetGroupedProjectImagesCalls())
+func (mock *HandlerMock) GetGroupedProjectImagesCalls() []struct {
+	C echo.Context
+} {
+	var calls []struct {
+		C echo.Context
+	}
+	mock.lockGetGroupedProjectImages.RLock()
+	calls = mock.calls.GetGroupedProjectImages
+	mock.lockGetGroupedProjectImages.RUnlock()
 	return calls
 }
 

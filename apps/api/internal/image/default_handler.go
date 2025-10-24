@@ -248,6 +248,35 @@ func (h *DefaultHandler) GetProjectImages(c echo.Context) error {
 	})
 }
 
+// GetGroupedProjectImages handles GET /api/v1/projects/{project_id}/images/grouped requests.
+func (h *DefaultHandler) GetGroupedProjectImages(c echo.Context) error {
+	projectID := c.Param("project_id")
+	if projectID == "" {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "bad_request",
+			Message: "Project ID is required",
+		})
+	}
+
+	// Validate UUID format
+	if _, err := uuid.Parse(projectID); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "bad_request",
+			Message: "Invalid project ID format",
+		})
+	}
+
+	response, err := h.service.GetGroupedProjectImages(c.Request().Context(), projectID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "Failed to get grouped images",
+		})
+	}
+
+	return c.JSON(http.StatusOK, response)
+}
+
 // DeleteImage handles DELETE /api/v1/images/{id} requests.
 func (h *DefaultHandler) DeleteImage(c echo.Context) error {
 	imageID := c.Param("id")

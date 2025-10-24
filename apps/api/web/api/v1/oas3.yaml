@@ -444,6 +444,61 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "500":
           $ref: "#/components/responses/InternalServerError"
+  /api/v1/projects/{project_id}/images/grouped:
+    get:
+      summary: Get grouped images for a project
+      description: |
+        Retrieve images grouped by original image, with all style variants for each original.
+        This endpoint is designed for displaying multiple style options for the same source image,
+        enabling multi-style selection in the UI.
+        
+        **Grouping logic:**
+        - Images sharing the same `original_image_id` are grouped together
+        - Each group contains the original URL and an array of style variants
+        - Perfect for showing "same room, different styles" in a single card
+      tags:
+        - Images
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          description: The unique identifier of the project
+          schema:
+            type: string
+            format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+      responses:
+        "200":
+          description: Grouped images
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupedProjectImagesResponse"
+              example:
+                images:
+                  - original_image_id: "abc123-def456-ghi789"
+                    original_url: "https://s3.amazonaws.com/bucket/original.jpg"
+                    room_type: "living_room"
+                    variants:
+                      - id: "uuid-1"
+                        style: "modern"
+                        status: "ready"
+                        staged_url: "https://s3.amazonaws.com/bucket/staged_modern.jpg"
+                        created_at: "2025-01-15T10:30:00Z"
+                        updated_at: "2025-01-15T10:35:00Z"
+                      - id: "uuid-2"
+                        style: "scandinavian"
+                        status: "processing"
+                        created_at: "2025-01-15T10:30:00Z"
+                        updated_at: "2025-01-15T10:32:00Z"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
   /api/v1/events:
     get:
       summary: Server-Sent Events for real-time updates
@@ -1323,6 +1378,78 @@ components:
           type: string
           description: Error message describing why the image creation failed
           example: "failed to create image: invalid project ID"
+    ImageVariant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for this image variant
+        style:
+          type: string
+          description: Style variant (e.g., modern, scandinavian)
+          example: modern
+        status:
+          type: string
+          enum: [queued, processing, ready, error]
+          description: Processing status of this variant
+        staged_url:
+          type: string
+          description: URL of the staged/processed image
+        error:
+          type: string
+          description: Error message if status is error
+        cost_usd:
+          type: number
+          format: float
+          description: Processing cost in USD
+        processing_time_ms:
+          type: integer
+          description: Processing time in milliseconds
+        model_used:
+          type: string
+          description: AI model used for processing
+        replicate_prediction_id:
+          type: string
+          description: Replicate prediction ID for tracking
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    GroupedImage:
+      type: object
+      properties:
+        original_image_id:
+          type: string
+          description: ID of the deduplicated original image
+        original_url:
+          type: string
+          description: URL of the original image
+        room_type:
+          type: string
+          description: Room type for all variants
+        seed:
+          type: integer
+          format: int64
+          description: Seed for reproducibility
+        prompt:
+          type: string
+          description: Custom prompt if provided
+        variants:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImageVariant"
+          description: All style variants for this original image
+    GroupedProjectImagesResponse:
+      type: object
+      properties:
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupedImage"
+          description: Images grouped by original image
     PresignUploadRequest:
       type: object
       required:

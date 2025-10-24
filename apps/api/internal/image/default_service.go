@@ -184,6 +184,108 @@ func (s *DefaultService) GetImagesByProjectID(ctx context.Context, projectID str
 	return images, nil
 }
 
+// GetGroupedProjectImages retrieves images grouped by original_image_id.
+func (s *DefaultService) GetGroupedProjectImages(
+	ctx context.Context, projectID string,
+) (*GroupedProjectImagesResponse, error) {
+	if projectID == "" {
+		return nil, fmt.Errorf("project ID cannot be empty")
+	}
+
+	dbImages, err := s.imageRepo.GetImagesByProjectID(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get images: %w", err)
+	}
+
+	// Group images by original_image_id (or by original_url if no original_image_id)
+	groupMap := make(map[string]*GroupedImage)
+	for _, dbImage := range dbImages {
+		// Use original_image_id as key if available, else use original_url
+		var groupKey string
+		switch {
+		case dbImage.OriginalImageID.Valid:
+			groupKey = dbImage.OriginalImageID.String()
+		case dbImage.OriginalUrl.Valid:
+			groupKey = dbImage.OriginalUrl.String
+		default:
+			// Skip images without original_url (shouldn't happen)
+			continue
+		}
+
+		if _, exists := groupMap[groupKey]; !exists {
+			// Create new group
+			var originalImageID *string
+			if dbImage.OriginalImageID.Valid {
+				oidStr := dbImage.OriginalImageID.String()
+				originalImageID = &oidStr
+			}
+
+			originalURL := ""
+			if dbImage.OriginalUrl.Valid {
+				originalURL = dbImage.OriginalUrl.String
+			}
+
+			group := &GroupedImage{
+				OriginalImageID: originalImageID,
+				OriginalURL:     originalURL,
+				Variants:        []*ImageVariant{},
+			}
+
+			if dbImage.RoomType.Valid {
+				group.RoomType = &dbImage.RoomType.String
+			}
+			if dbImage.Seed.Valid {
+				group.Seed = &dbImage.Seed.Int64
+			}
+			if dbImage.Prompt.Valid {
+				group.Prompt = &dbImage.Prompt.String
+			}
+
+			groupMap[groupKey] = group
+		}
+
+		// Add variant to group
+		variant := &ImageVariant{
+			ID:        dbImage.ID.Bytes,
+			Status:    Status(dbImage.Status),
+			CreatedAt: dbImage.CreatedAt.Time,
+			UpdatedAt: dbImage.UpdatedAt.Time,
+		}
+
+		if dbImage.Style.Valid {
+			variant.Style = &dbImage.Style.String
+		}
+		if dbImage.StagedUrl.Valid {
+			variant.StagedURL = &dbImage.StagedUrl.String
+		}
+		if dbImage.Error.Valid {
+			variant.Error = &dbImage.Error.String
+		}
+		// TODO: Convert pgtype.Numeric to float64 for CostUSD when needed
+		// if dbImage.CostUsd.Valid { variant.CostUSD = ... }
+		if dbImage.ProcessingTimeMs.Valid {
+			processingTimeMs := int(dbImage.ProcessingTimeMs.Int32)
+			variant.ProcessingTimeMs = &processingTimeMs
+		}
+		if dbImage.ModelUsed.Valid {
+			variant.ModelUsed = &dbImage.ModelUsed.String
+		}
+		if dbImage.ReplicatePredictionID.Valid {
+			variant.ReplicatePredictionID = &dbImage.ReplicatePredictionID.String
+		}
+
+		groupMap[groupKey].Variants = append(groupMap[groupKey].Variants, variant)
+	}
+
+	// Convert map to slice
+	images := make([]*GroupedImage, 0, len(groupMap))
+	for _, group := range groupMap {
+		images = append(images, group)
+	}
+
+	return &GroupedProjectImagesResponse{Images: images}, nil
+}
+
 // UpdateImageStatus updates an image's processing status.
 func (s *DefaultService) UpdateImageStatus(ctx context.Context, imageID string, status Status) (*Image, error) {
 	if imageID == "" {
