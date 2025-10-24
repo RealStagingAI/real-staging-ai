@@ -1,0 +1,19 @@
+BEFORE (Old Outdoor Modern Prompt):
+================================================================================
+Professional real estate staging for a outdoor patio/deck with modern design. You are a professional real estate photographer creating staged photos. Add modern outdoor seating set. Include outdoor coffee table. Add outdoor planters with greenery. Do NOT add indoor furniture outside. Include weather-appropriate cushions. Add outdoor lighting if fixture points exist. CRITICAL RULES: Keep all walls, paint colors, and structural elements EXACTLY as they are. Do NOT block doorways, hallways, or thresholds with furniture. Do NOT change wall colors or add wall treatments. Do NOT alter windows, doors, or light fixtures. Furniture must be appropriately sized and placed for the room. Maintain realistic lighting and shadows.
+
+
+AFTER (New Outdoor Modern Prompt):
+================================================================================
+EXTERIOR SPACE STAGING: You are staging an outdoor patio, deck, or exterior area. This is an OUTDOOR space requiring modern-style OUTDOOR FURNITURE ONLY. OUTDOOR FURNITURE REQUIREMENTS: Use only weather-resistant, exterior-grade furniture. Acceptable materials include: powder-coated metals (aluminum, steel), teak/eucalyptus/acacia wood, all-weather wicker/rattan, marine-grade fabrics, concrete, stone, weather-resistant plastics. NEVER use indoor furniture like upholstered sofas, fabric chairs, or wooden furniture designed for interior spaces. Add sleek outdoor sectional or lounge chairs made from powder-coated aluminum, stainless steel, or all-weather synthetic wicker in neutral tones (gray, charcoal, white). Include low-profile outdoor coffee table made from teak, concrete, or metal with glass top. Add large planters (ceramic, concrete, or fiberglass) with tropical plants, ornamental grasses, or succulents. Include outdoor cushions and pillows in performance fabrics that are UV-resistant and water-repellent. Add string lights, outdoor floor lamps, or wall-mounted exterior fixtures if mounting points exist. CRITICAL OUTDOOR RULES: Keep all existing outdoor surfaces (brick, concrete, wood decking, stone pavers) EXACTLY as they are. Furniture must be weather-appropriate with visible outdoor characteristics (metal frames, slatted designs, outdoor cushion styles). Do NOT block doorways or pathways. Maintain natural outdoor lighting - this is an exterior space with sky visible. All textiles must look like outdoor performance fabrics (cushions, pillows, rugs). Plants and planters should be exterior-appropriate containers (not decorative indoor pots).
+
+
+KEY IMPROVEMENTS:
+================================================================================
+1. ✅ LEADS WITH "EXTERIOR SPACE STAGING" - immediately establishes outdoor context
+2. ✅ EXPLICIT MATERIAL LIST - lists exact outdoor materials (powder-coated metal, teak, marine-grade fabrics)
+3. ✅ STRONG NEGATION UPFRONT - "NEVER use indoor furniture" appears early with examples
+4. ✅ SPECIFIC FURNITURE TYPES - describes "outdoor sectional or lounge chairs made from powder-coated aluminum" instead of generic "outdoor seating set"
+5. ✅ OUTDOOR-SPECIFIC RULES - mentions "brick, concrete, wood decking" instead of "walls and paint"
+6. ✅ MATERIAL CHARACTERISTICS - emphasizes "metal frames, slatted designs, outdoor cushion styles"
+7. ✅ ENVIRONMENTAL CONTEXT - "exterior space with sky visible" to reinforce outdoor setting

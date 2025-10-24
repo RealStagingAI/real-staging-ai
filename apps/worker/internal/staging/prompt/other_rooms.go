@@ -1,5 +1,47 @@
 package prompt
 
+import (
+	"fmt"
+	"strings"
+)
+
+// buildOutdoorPrompt creates prompts specifically for outdoor/exterior spaces.
+// This structure emphasizes outdoor context upfront and uses explicit material descriptions.
+func buildOutdoorPrompt(style string, specifics ...string) string {
+	var b strings.Builder
+
+	// Lead with strong outdoor context
+	b.WriteString("EXTERIOR SPACE STAGING: You are staging an outdoor patio, deck, or exterior area. ")
+	b.WriteString(fmt.Sprintf("This is an OUTDOOR space requiring %s-style OUTDOOR FURNITURE ONLY. ", style))
+
+	// Emphasize outdoor materials and furniture types
+	b.WriteString("OUTDOOR FURNITURE REQUIREMENTS: Use only weather-resistant, exterior-grade furniture. ")
+	b.WriteString("Acceptable materials include: powder-coated metals (aluminum, steel), ")
+	b.WriteString("teak/eucalyptus/acacia wood, all-weather wicker/rattan, marine-grade fabrics, ")
+	b.WriteString("concrete, stone, weather-resistant plastics. ")
+	b.WriteString("NEVER use indoor furniture like upholstered sofas, fabric chairs, ")
+	b.WriteString("or wooden furniture designed for interior spaces. ")
+
+	// Add style-specific outdoor instructions
+	for _, s := range specifics {
+		b.WriteString(s)
+		b.WriteString(" ")
+	}
+
+	// Critical outdoor rules
+	b.WriteString("CRITICAL OUTDOOR RULES: ")
+	b.WriteString("Keep all existing outdoor surfaces (brick, concrete, wood decking, stone pavers) ")
+	b.WriteString("EXACTLY as they are. ")
+	b.WriteString("Furniture must be weather-appropriate with visible outdoor characteristics ")
+	b.WriteString("(metal frames, slatted designs, outdoor cushion styles). ")
+	b.WriteString("Do NOT block doorways or pathways. ")
+	b.WriteString("Maintain natural outdoor lighting - this is an exterior space with sky visible. ")
+	b.WriteString("All textiles must look like outdoor performance fabrics (cushions, pillows, rugs). ")
+	b.WriteString("Plants and planters should be exterior-appropriate containers (not decorative indoor pots).")
+
+	return b.String()
+}
+
 // Kitchen prompts - kitchens typically need minimal staging
 func buildKitchenModern() string {
 	return buildPrompt("kitchen", "modern",
@@ -242,47 +284,60 @@ func buildEntrywayScandinavian() string {
 
 // Outdoor/Patio prompts
 func buildOutdoorModern() string {
-	return buildPrompt("outdoor patio/deck", "modern",
-		"Add modern outdoor seating set.",
-		"Include outdoor coffee table.",
-		"Add outdoor planters with greenery.",
-		"Do NOT add indoor furniture outside.",
-		"Include weather-appropriate cushions.",
-		"Add outdoor lighting if fixture points exist.",
+	return buildOutdoorPrompt("modern",
+		"Add sleek outdoor sectional or lounge chairs made from powder-coated aluminum, "+
+			"stainless steel, or all-weather synthetic wicker in neutral tones (gray, charcoal, white).",
+		"Include low-profile outdoor coffee table made from teak, concrete, or metal with glass top.",
+		"Add large planters (ceramic, concrete, or fiberglass) with tropical plants, "+
+			"ornamental grasses, or succulents.",
+		"Include outdoor cushions and pillows in performance fabrics that are "+
+			"UV-resistant and water-repellent.",
+		"Add string lights, outdoor floor lamps, or wall-mounted exterior fixtures "+
+			"if mounting points exist.",
 	)
 }
 
 func buildOutdoorContemporary() string {
-	return buildPrompt("outdoor patio/deck", "contemporary",
-		"Add comfortable outdoor seating.",
-		"Include outdoor tables.",
-		"Add planters and plants.",
-		"Use weather-resistant materials only.",
+	return buildOutdoorPrompt("contemporary",
+		"Add comfortable outdoor sectional with deep seating, made from resin wicker or aluminum "+
+			"with thick cushions in performance outdoor fabric.",
+		"Include outdoor dining set or coffee table made from weather-resistant materials "+
+			"like teak, eucalyptus wood, or powder-coated metal.",
+		"Add variety of planters (mix of sizes) with lush greenery: "+
+			"ferns, palms, flowering plants.",
+		"Include outdoor rug made from polypropylene or recycled plastic "+
+			"that can handle moisture.",
+		"Add decorative outdoor pillows in weather-proof fabrics with patterns or textures.",
 	)
 }
 
 func buildOutdoorTraditional() string {
-	return buildPrompt("outdoor patio/deck", "traditional",
-		"Add classic outdoor furniture.",
-		"Include traditional planters.",
-		"Add welcoming outdoor accessories.",
-		"Use traditional outdoor materials.",
+	return buildOutdoorPrompt("traditional",
+		"Add classic outdoor furniture made from wrought iron, cast aluminum, or natural teak wood in traditional designs.",
+		"Include round or rectangular outdoor dining table with matching chairs, or conversation set with cushioned seating.",
+		"Add terra cotta or ceramic planters with classic plants: boxwoods, hydrangeas, geraniums, ivy.",
+		"Include traditional outdoor accessories: weather-resistant cushions in classic patterns, outdoor lanterns.",
+		"Add warm outdoor lighting like hanging lanterns or coach-style wall fixtures.",
 	)
 }
 
 func buildOutdoorIndustrial() string {
-	return buildPrompt("outdoor patio/deck", "industrial",
-		"Add metal outdoor furniture.",
-		"Include industrial planters.",
-		"Keep minimal and functional.",
+	return buildOutdoorPrompt("industrial",
+		"Add raw metal outdoor furniture: steel mesh chairs, aluminum benches, or metal frame seating with minimal cushions.",
+		"Include industrial-style outdoor table with metal base and wood or metal top (rust-finish acceptable for style).",
+		"Add metal planters (galvanized steel, corten steel, or powder-coated metal) with architectural plants.",
+		"Include Edison-style string lights or industrial cage outdoor fixtures.",
+		"Keep accessories minimal: metal candle holders, simple outdoor cushions in gray or charcoal.",
 	)
 }
 
 func buildOutdoorScandinavian() string {
-	return buildPrompt("outdoor patio/deck", "Scandinavian",
-		"Add simple wooden outdoor furniture.",
-		"Include natural planters.",
-		"Keep minimal with natural elements.",
+	return buildOutdoorPrompt("Scandinavian",
+		"Add simple outdoor furniture made from light-colored wood (acacia, eucalyptus, or painted pine) with clean lines.",
+		"Include wooden outdoor table with matching chairs or bench seating, minimal design.",
+		"Add white or natural-colored ceramic planters with simple greenery: herbs, small trees, grasses.",
+		"Include neutral outdoor cushions and textiles in natural linen-look performance fabrics (white, cream, light gray).",
+		"Add simple outdoor candles or minimalist outdoor lighting.",
 	)
 }
 
