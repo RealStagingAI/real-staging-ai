@@ -523,10 +523,16 @@ export default function ImagesPage() {
         // Fetch grouped images
         const res = await apiFetch<GroupedImageListResponse>(`/v1/projects/${projectId}/images/grouped`);
         const groupedList = res.images ?? [];
-        setGroupedImages(groupedList);
+        // Sort groups by original_url for consistent ordering
+        const sortedGroups = [...groupedList].sort((a, b) => a.original_url.localeCompare(b.original_url));
+        // Sort variants within each group by style for consistent sub-ordering
+        sortedGroups.forEach(group => {
+          group.variants.sort((a, b) => (a.style || '').localeCompare(b.style || ''));
+        });
+        setGroupedImages(sortedGroups);
         
-        // Flatten for compatibility with existing code
-        const flatList: ImageRecord[] = groupedList.flatMap(group =>
+        // Flatten for compatibility with existing code (use sorted groups)
+        const flatList: ImageRecord[] = sortedGroups.flatMap(group =>
           group.variants.map(variant => ({
             id: variant.id,
             project_id: projectId,
@@ -1113,7 +1119,16 @@ export default function ImagesPage() {
               'border-rose-300 dark:border-rose-600 bg-rose-50/50 dark:bg-rose-900/20',
               'border-cyan-300 dark:border-cyan-600 bg-cyan-50/50 dark:bg-cyan-900/20',
             ];
-            const groupColorIndex = groupedImages.findIndex(g => g === group) % groupColors.length;
+            // Use stable hash of original_url to determine color (consistent across updates)
+            const getStableColorIndex = (url: string): number => {
+              let hash = 0;
+              for (let i = 0; i < url.length; i++) {
+                hash = ((hash << 5) - hash) + url.charCodeAt(i);
+                hash = hash & hash; // Convert to 32bit integer
+              }
+              return Math.abs(hash) % groupColors.length;
+            };
+            const groupColorIndex = group ? getStableColorIndex(group.original_url) : 0;
             const groupColor = isGrouped ? groupColors[groupColorIndex] : '';
 
             return (
