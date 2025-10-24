@@ -17,8 +17,8 @@ import (
 	"github.com/real-staging-ai/worker/internal/processor"
 	"github.com/real-staging-ai/worker/internal/queue"
 	"github.com/real-staging-ai/worker/internal/repository"
+	"github.com/real-staging-ai/worker/internal/settings"
 	"github.com/real-staging-ai/worker/internal/staging"
-	"github.com/real-staging-ai/worker/internal/staging/model"
 	"github.com/real-staging-ai/worker/internal/telemetry"
 )
 
@@ -64,11 +64,20 @@ func main() {
 
 	imgRepo := repository.NewImageRepository(db)
 
+	// Get active model from database settings
+	settingsRepo := settings.NewRepository(db)
+	activeModel, err := settingsRepo.GetActiveModel(ctx)
+	if err != nil {
+		log.Error(ctx, fmt.Sprintf("Failed to get active model from settings: %v", err))
+		return
+	}
+	log.Info(ctx, fmt.Sprintf("Using model: %s", activeModel))
+
 	// Initialize the staging service with config
 	stagingCfg := &staging.ServiceConfig{
 		BucketName:     cfg.S3Bucket(),
 		ReplicateToken: cfg.Replicate.APIToken,
-		ModelID:        model.ModelFluxKontextMax, // Default model
+		ModelID:        activeModel, // Use model from database settings
 		S3Endpoint:     cfg.S3.Endpoint,
 		S3Region:       cfg.S3.Region,
 		S3AccessKey:    cfg.S3.AccessKey,
