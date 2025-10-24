@@ -1204,10 +1204,22 @@ export default function ImagesPage() {
                     )
                   )}
 
-                {/* Group Indicator Badge */}
+                {/* Selection Indicator */}
+                <div className={cn(
+                  "absolute top-3 left-3 flex items-center justify-center h-6 w-6 rounded-full border-2 transition-all z-20",
+                  selectedImageIds.has(image.id)
+                    ? "bg-blue-600 border-blue-600"
+                    : "bg-white border-white group-hover:border-blue-400"
+                )}>
+                  {selectedImageIds.has(image.id) && (
+                    <Check className="h-4 w-4 text-white" />
+                  )}
+                </div>
+
+                {/* Group Indicator Badge - Bottom Center */}
                 {isGrouped && group && (
-                  <div className="absolute top-3 left-3 flex items-center gap-1 z-20">
-                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-current shadow-sm text-xs font-medium"
+                  <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 z-30">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-2 border-current shadow-lg text-xs font-semibold"
                       style={{
                         borderColor: groupColors[groupColorIndex].includes('purple') ? '#a78bfa' :
                                     groupColors[groupColorIndex].includes('emerald') ? '#34d399' :
@@ -1219,25 +1231,12 @@ export default function ImagesPage() {
                               groupColors[groupColorIndex].includes('rose') ? '#e11d48' : '#0891b2'
                       }}
                     >
-                      <Grid3x3 className="h-3 w-3" />
-                      {variantIndex + 1}/{group.variants.length}
-                      {image.style && <span className="text-[10px] opacity-75">· {image.style}</span>}
+                      <Grid3x3 className="h-3.5 w-3.5" />
+                      <span className="font-bold">{variantIndex + 1}/{group.variants.length}</span>
+                      {image.style && <span className="text-[11px] opacity-80">· {image.style}</span>}
                     </span>
                   </div>
                 )}
-
-                {/* Selection Indicator */}
-                <div className={cn(
-                  "absolute flex items-center justify-center h-6 w-6 rounded-full border-2 transition-all z-20",
-                  isGrouped ? "top-3 left-20" : "top-3 left-3",
-                  selectedImageIds.has(image.id)
-                    ? "bg-blue-600 border-blue-600"
-                    : "bg-white border-white group-hover:border-blue-400"
-                )}>
-                  {selectedImageIds.has(image.id) && (
-                    <Check className="h-4 w-4 text-white" />
-                  )}
-                </div>
 
                 {/* Action Buttons */}
                 <div className="absolute top-3 right-3 flex items-center gap-2">
