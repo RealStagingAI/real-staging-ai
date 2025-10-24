@@ -124,7 +124,7 @@ func (s *Server) presignImageDownloadHandler(c echo.Context) error {
 	} else {
 		p = strings.TrimPrefix(p, bucket+"/")
 	}
-	
+
 	// URL-decode the file key since u.Path is URL-encoded
 	fileKey, err := url.PathUnescape(p)
 	if err != nil {

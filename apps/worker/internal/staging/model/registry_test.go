@@ -21,14 +21,22 @@ func TestNewModelRegistry(t *testing.T) {
 		if !registry.Exists(ModelFluxKontextMax) {
 			t.Error("expected Flux Kontext model to be registered")
 		}
+
+		// Verify Seedream models are registered
+		if !registry.Exists(ModelSeedream3) {
+			t.Error("expected Seedream-3 model to be registered")
+		}
+		if !registry.Exists(ModelSeedream4) {
+			t.Error("expected Seedream-4 model to be registered")
+		}
 	})
 
 	t.Run("success: registry has correct model count", func(t *testing.T) {
 		registry := NewModelRegistry()
 
 		models := registry.List()
-		if len(models) != 2 {
-			t.Errorf("expected 2 models to be registered, got %d", len(models))
+		if len(models) != 4 {
+			t.Errorf("expected 4 models to be registered, got %d", len(models))
 		}
 	})
 }
@@ -124,6 +132,48 @@ func TestModelRegistry_Get(t *testing.T) {
 		}
 	})
 
+	t.Run("success: retrieves Seedream-3 model", func(t *testing.T) {
+		registry := NewModelRegistry()
+
+		model, err := registry.Get(ModelSeedream3)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if model.ID != ModelSeedream3 {
+			t.Errorf("expected model ID to be %s, got %s", ModelSeedream3, model.ID)
+		}
+
+		if model.Name != "Seedream 3" {
+			t.Errorf("expected model name to be 'Seedream 3', got %s", model.Name)
+		}
+
+		if model.InputBuilder == nil {
+			t.Error("expected model to have an input builder")
+		}
+	})
+
+	t.Run("success: retrieves Seedream-4 model", func(t *testing.T) {
+		registry := NewModelRegistry()
+
+		model, err := registry.Get(ModelSeedream4)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if model.ID != ModelSeedream4 {
+			t.Errorf("expected model ID to be %s, got %s", ModelSeedream4, model.ID)
+		}
+
+		if model.Name != "Seedream 4" {
+			t.Errorf("expected model name to be 'Seedream 4', got %s", model.Name)
+		}
+
+		if model.InputBuilder == nil {
+			t.Error("expected model to have an input builder")
+		}
+	})
+
 	t.Run("fail: model not found", func(t *testing.T) {
 		registry := NewModelRegistry()
 
@@ -145,19 +195,27 @@ func TestModelRegistry_List(t *testing.T) {
 
 		models := registry.List()
 
-		if len(models) < 2 {
-			t.Errorf("expected at least 2 models to be registered, got %d", len(models))
+		if len(models) != 4 {
+			t.Errorf("expected 4 models to be registered, got %d", len(models))
 		}
 
-		// Verify both models are in the list
+		// Verify all models are in the list
 		foundQwen := false
 		foundFlux := false
+		foundSeedream3 := false
+		foundSeedream4 := false
 		for _, model := range models {
 			if model.ID == ModelQwenImageEdit {
 				foundQwen = true
 			}
 			if model.ID == ModelFluxKontextMax {
 				foundFlux = true
+			}
+			if model.ID == ModelSeedream3 {
+				foundSeedream3 = true
+			}
+			if model.ID == ModelSeedream4 {
+				foundSeedream4 = true
 			}
 		}
 
@@ -166,6 +224,12 @@ func TestModelRegistry_List(t *testing.T) {
 		}
 		if !foundFlux {
 			t.Error("expected Flux Kontext model to be in the list")
+		}
+		if !foundSeedream3 {
+			t.Error("expected Seedream-3 model to be in the list")
+		}
+		if !foundSeedream4 {
+			t.Error("expected Seedream-4 model to be in the list")
 		}
 	})
 
@@ -196,6 +260,22 @@ func TestModelRegistry_Exists(t *testing.T) {
 
 		if !registry.Exists(ModelFluxKontextMax) {
 			t.Error("expected Flux Kontext model to exist")
+		}
+	})
+
+	t.Run("success: returns true for Seedream-3 model", func(t *testing.T) {
+		registry := NewModelRegistry()
+
+		if !registry.Exists(ModelSeedream3) {
+			t.Error("expected Seedream-3 model to exist")
+		}
+	})
+
+	t.Run("success: returns true for Seedream-4 model", func(t *testing.T) {
+		registry := NewModelRegistry()
+
+		if !registry.Exists(ModelSeedream4) {
+			t.Error("expected Seedream-4 model to exist")
 		}
 	})
 

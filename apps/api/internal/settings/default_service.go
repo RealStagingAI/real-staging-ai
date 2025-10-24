@@ -72,6 +72,22 @@ func (s *DefaultService) ListAvailableModels(ctx context.Context) ([]ModelInfo, 
 			Version:  "v1",
 			IsActive: activeModelID == "black-forest-labs/flux-kontext-max",
 		},
+		{
+			ID:   "bytedance/seedream-3",
+			Name: "Seedream 3",
+			Description: "Unified text-to-image generation and precise editing. " +
+				"Supports both workflows with natural language commands.",
+			Version:  "v1",
+			IsActive: activeModelID == "bytedance/seedream-3",
+		},
+		{
+			ID:   "bytedance/seedream-4",
+			Name: "Seedream 4",
+			Description: "Latest Seedream model with support for up to 4K resolution. " +
+				"High-quality text-to-image and image editing.",
+			Version:  "v1",
+			IsActive: activeModelID == "bytedance/seedream-4",
+		},
 	}
 
 	return models, nil

@@ -16,6 +16,7 @@ The model registry is now organized in a dedicated package:
   - `registry.go` - Core registry and interface definitions
   - `qwen.go` - Qwen Image Edit model implementation
   - `flux_kontext.go` - Flux Kontext Max model implementation
+  - `seedream.go` - Seedream model implementations (supports multiple versions)
   - `*_test.go` - Comprehensive test files (100% coverage)
 
 ### Components
@@ -35,6 +36,8 @@ type ModelID string
 const (
     ModelQwenImageEdit  ModelID = "qwen/qwen-image-edit"
     ModelFluxKontextMax ModelID = "black-forest-labs/flux-kontext-max"
+    ModelSeedream3      ModelID = "bytedance/seedream-3"
+    ModelSeedream4      ModelID = "bytedance/seedream-4"
     // Additional models can be added here
 )
 ```
@@ -92,6 +95,48 @@ Each registered model includes metadata:
   - `safety_tolerance` (int): Safety level 0-6, 2 is max with input images (default: 2)
   - `prompt_upsampling` (bool): Automatic prompt improvement (default: false)
   - `seed` (int, optional): Random seed for reproducibility
+
+### 3. Seedream Models
+
+ByteDance's Seedream family of models provides unified text-to-image generation and precise editing capabilities. All versions share a common API structure and are implemented using a single flexible input builder.
+
+**Package Location**: `apps/worker/internal/staging/model/seedream.go`
+
+#### Seedream 3
+
+- **ID**: `bytedance/seedream-3`
+- **Description**: Unified text-to-image generation and precise editing
+- **Cost**: $0.03 per output image
+- **Parameters**:
+  - `prompt` (string, required): Text description or editing instruction
+  - `image_input` (array of strings, optional): Base64-encoded image data URLs for image editing
+  - `size` (string): Image resolution (default: "2K")
+  - `aspect_ratio` (string): Output aspect ratio (default: "match_input_image")
+  - `enhance_prompt` (bool): Enable prompt enhancement for higher quality (default: true)
+  - `max_images` (int): Maximum number of images to generate (default: 1)
+  - `seed` (int, optional): Random seed for reproducibility
+
+#### Seedream 4
+
+- **ID**: `bytedance/seedream-4`
+- **Description**: Latest version with support for up to 4K resolution
+- **Cost**: $0.03 per output image
+- **Parameters**:
+  - `prompt` (string, required): Text description or editing instruction
+  - `image_input` (array of strings, optional): Base64-encoded image data URLs for image editing (supports 1-10 images)
+  - `size` (string): Image resolution - "1K" (1024px), "2K" (2048px), or "4K" (4096px) (default: "2K")
+  - `aspect_ratio` (string): Output aspect ratio (default: "match_input_image")
+  - `enhance_prompt` (bool): Enable prompt enhancement for higher quality (default: true)
+  - `max_images` (int): Maximum number of images to generate (1-15) (default: 1)
+  - `seed` (int, optional): Random seed for reproducibility
+- **Features**:
+  - Supports both text-to-image and image-to-image workflows
+  - High-resolution output up to 4K (4096px)
+  - Natural language editing commands
+  - Batch and multi-reference support
+  - Faster inference than previous generations
+
+**Note**: The `SeedreamInputBuilder` is designed to support all Seedream versions with a common API structure, making it easy to add future Seedream models.
 
 ### Future Models
 

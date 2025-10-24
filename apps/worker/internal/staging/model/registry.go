@@ -14,6 +14,8 @@ type ModelID string
 const (
 	ModelQwenImageEdit  ModelID = "qwen/qwen-image-edit"
 	ModelFluxKontextMax ModelID = "black-forest-labs/flux-kontext-max"
+	ModelSeedream3      ModelID = "bytedance/seedream-3"
+	ModelSeedream4      ModelID = "bytedance/seedream-4"
 )
 
 // ModelInputRequest contains the parameters needed to build model input.
@@ -71,6 +73,23 @@ func NewModelRegistry() *ModelRegistry {
 		Description:  "High-quality image generation and editing with advanced context understanding",
 		Version:      "latest",
 		InputBuilder: NewFluxKontextInputBuilder(),
+	})
+
+	// Register Seedream models
+	registry.Register(&ModelMetadata{
+		ID:           ModelSeedream3,
+		Name:         "Seedream 3",
+		Description:  "Unified text-to-image generation and precise editing",
+		Version:      "latest",
+		InputBuilder: NewSeedreamInputBuilder(),
+	})
+
+	registry.Register(&ModelMetadata{
+		ID:           ModelSeedream4,
+		Name:         "Seedream 4",
+		Description:  "Unified text-to-image generation and precise editing at up to 4K resolution",
+		Version:      "latest",
+		InputBuilder: NewSeedreamInputBuilder(),
 	})
 
 	return registry

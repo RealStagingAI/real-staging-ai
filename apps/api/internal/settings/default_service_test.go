@@ -91,6 +91,40 @@ func TestDefaultService_UpdateActiveModel(t *testing.T) {
 		}
 	})
 
+	t.Run("success: updates to Seedream-4 model", func(t *testing.T) {
+		repo := &RepositoryMock{
+			GetByKeyFunc: func(ctx context.Context, key string) (*Setting, error) {
+				return &Setting{
+					Key:   "active_model",
+					Value: "qwen/qwen-image-edit",
+				}, nil
+			},
+			UpdateFunc: func(ctx context.Context, key, value, userID string) error {
+				if key != "active_model" {
+					t.Errorf("expected key 'active_model', got %s", key)
+				}
+				if value != "bytedance/seedream-4" {
+					t.Errorf("expected 'bytedance/seedream-4', got %s", value)
+				}
+				if userID != "user123" {
+					t.Errorf("expected 'user123', got %s", userID)
+				}
+				return nil
+			},
+		}
+
+		service := NewDefaultService(repo)
+		err := service.UpdateActiveModel(ctx, "bytedance/seedream-4", "user123")
+
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if len(repo.UpdateCalls()) != 1 {
+			t.Errorf("expected 1 call to Update, got %d", len(repo.UpdateCalls()))
+		}
+	})
+
 	t.Run("fail: invalid model ID", func(t *testing.T) {
 		repo := &RepositoryMock{
 			GetByKeyFunc: func(ctx context.Context, key string) (*Setting, error) {
@@ -134,13 +168,15 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		if len(models) != 2 {
-			t.Fatalf("expected 2 models, got %d", len(models))
+		if len(models) != 4 {
+			t.Fatalf("expected 4 models, got %d", len(models))
 		}
 
-		// Check Qwen model
+		// Check all models
 		qwenFound := false
 		fluxFound := false
+		seedream3Found := false
+		seedream4Found := false
 		for _, model := range models {
 			if model.ID == "qwen/qwen-image-edit" {
 				qwenFound = true
@@ -154,6 +190,18 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 					t.Error("expected Flux model to not be active")
 				}
 			}
+			if model.ID == "bytedance/seedream-3" {
+				seedream3Found = true
+				if model.IsActive {
+					t.Error("expected Seedream-3 model to not be active")
+				}
+			}
+			if model.ID == "bytedance/seedream-4" {
+				seedream4Found = true
+				if model.IsActive {
+					t.Error("expected Seedream-4 model to not be active")
+				}
+			}
 		}
 
 		if !qwenFound {
@@ -161,6 +209,12 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 		}
 		if !fluxFound {
 			t.Error("expected Flux model in list")
+		}
+		if !seedream3Found {
+			t.Error("expected Seedream-3 model in list")
+		}
+		if !seedream4Found {
+			t.Error("expected Seedream-4 model in list")
 		}
 	})
 }

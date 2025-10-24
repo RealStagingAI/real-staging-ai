@@ -18,6 +18,8 @@ Add a new constant to `apps/worker/internal/staging/model/registry.go`:
 const (
     ModelQwenImageEdit  ModelID = "qwen/qwen-image-edit"
     ModelFluxKontextMax ModelID = "black-forest-labs/flux-kontext-max"
+    ModelSeedream3      ModelID = "bytedance/seedream-3"
+    ModelSeedream4      ModelID = "bytedance/seedream-4"
     ModelYourNewModel   ModelID = "vendor/model-name"  // Add your model here
 )
 ```
@@ -294,5 +296,6 @@ If the Replicate API returns errors:
 - Review existing models: 
   - `apps/worker/internal/staging/model/qwen.go`
   - `apps/worker/internal/staging/model/flux_kontext.go`
+  - `apps/worker/internal/staging/model/seedream.go`
 - Check the architecture doc: `docs/model_registry.md`
 - Ask in the team channel or create an issue
