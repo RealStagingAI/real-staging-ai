@@ -14,6 +14,17 @@ func buildBedroomPrompt(style string, specifics ...string) string {
 	b.WriteString("BEDROOM STAGING: You are staging a bedroom. ")
 	b.WriteString(fmt.Sprintf("This is a BEDROOM requiring %s-style BEDROOM FURNITURE ONLY. ", style))
 
+	// CRITICAL: Structural preservation FIRST, before any furniture instructions
+	b.WriteString("STRUCTURAL PRESERVATION - ABSOLUTE PRIORITY: ")
+	b.WriteString("Do NOT modify, move, or alter ANY walls, paint colors, windows, doors, or architectural features. ")
+	b.WriteString("Keep ALL existing walls in their EXACT positions. ")
+	b.WriteString("Do NOT remove, add, resize, or relocate windows. ")
+	b.WriteString("Do NOT change wall colors, paint finishes, or add wall treatments. ")
+	b.WriteString("Do NOT modify ceiling height, flooring material, or room dimensions. ")
+	b.WriteString("Do NOT alter light fixtures, ceiling fans, or built-in features. ")
+	b.WriteString("ONLY add furniture, bedding, rugs, artwork, and decorative items. ")
+	b.WriteString("The room's structure must remain COMPLETELY UNCHANGED. ")
+
 	// Emphasize bedroom furniture requirements
 	b.WriteString("BEDROOM FURNITURE REQUIREMENTS: This is a sleeping space. ")
 	b.WriteString("Essential bedroom furniture includes: bed with headboard (platform, upholstered, or wood frame), ")
@@ -28,14 +39,14 @@ func buildBedroomPrompt(style string, specifics ...string) string {
 		b.WriteString(" ")
 	}
 
-	// Critical bedroom rules
-	b.WriteString("CRITICAL BEDROOM RULES: ")
+	// Critical bedroom placement rules
+	b.WriteString("CRITICAL PLACEMENT RULES: ")
 	b.WriteString("The bed must be the focal point and largest piece of furniture. ")
 	b.WriteString("Place bed against the main wall, typically centered. ")
 	b.WriteString("Nightstands go on either side of the bed, not elsewhere. ")
 	b.WriteString("Do NOT block closet doors or place furniture inside closets. ")
+	b.WriteString("Do NOT block doorways, hallways, or thresholds with furniture. ")
 	b.WriteString("Do NOT add seating unless space explicitly allows (reading chair in corner only). ")
-	b.WriteString("Keep walls, paint colors, and structural elements EXACTLY as they are. ")
 	b.WriteString("Bedding should be neatly made with pillows arranged. ")
 	b.WriteString("Area rugs should be at the foot of the bed or under the bed, not blocking pathways.")
 

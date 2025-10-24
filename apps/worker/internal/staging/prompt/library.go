@@ -189,18 +189,26 @@ func buildPrompt(roomType, style string, specifics ...string) string {
 	b.WriteString(fmt.Sprintf("Professional real estate staging for a %s with %s design. ", roomType, style))
 	b.WriteString("You are a professional real estate photographer creating staged photos. ")
 
+	// CRITICAL: Structural preservation FIRST, before any furniture instructions
+	b.WriteString("STRUCTURAL PRESERVATION - ABSOLUTE PRIORITY: ")
+	b.WriteString("Do NOT modify, move, or alter ANY walls, paint colors, windows, doors, or architectural features. ")
+	b.WriteString("Keep ALL existing walls in their EXACT positions. ")
+	b.WriteString("Do NOT remove, add, resize, or relocate windows. ")
+	b.WriteString("Do NOT change wall colors, paint finishes, or add wall treatments. ")
+	b.WriteString("Do NOT modify ceiling height, flooring material, or room dimensions. ")
+	b.WriteString("Do NOT alter light fixtures, ceiling fans, or built-in features. ")
+	b.WriteString("ONLY add furniture, rugs, artwork, and decorative items. ")
+	b.WriteString("The room's structure must remain COMPLETELY UNCHANGED. ")
+
 	// Add room-specific instructions
 	for _, s := range specifics {
 		b.WriteString(s)
 		b.WriteString(" ")
 	}
 
-	// Common rules for all prompts
-	b.WriteString("CRITICAL RULES: ")
-	b.WriteString("Keep all walls, paint colors, and structural elements EXACTLY as they are. ")
+	// Common placement rules for all prompts
+	b.WriteString("CRITICAL PLACEMENT RULES: ")
 	b.WriteString("Do NOT block doorways, hallways, or thresholds with furniture. ")
-	b.WriteString("Do NOT change wall colors or add wall treatments. ")
-	b.WriteString("Do NOT alter windows, doors, or light fixtures. ")
 	b.WriteString("Furniture must be appropriately sized and placed for the room. ")
 	b.WriteString("Maintain realistic lighting and shadows.")
 

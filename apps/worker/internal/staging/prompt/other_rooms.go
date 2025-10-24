@@ -14,6 +14,18 @@ func buildOutdoorPrompt(style string, specifics ...string) string {
 	b.WriteString("EXTERIOR SPACE STAGING: You are staging an outdoor patio, deck, or exterior area. ")
 	b.WriteString(fmt.Sprintf("This is an OUTDOOR space requiring %s-style OUTDOOR FURNITURE ONLY. ", style))
 
+	// CRITICAL: Structural preservation FIRST, before any furniture instructions
+	b.WriteString("STRUCTURAL PRESERVATION - ABSOLUTE PRIORITY: ")
+	b.WriteString("Do NOT modify, move, or alter ANY walls, railings, columns, doors, windows, ")
+	b.WriteString("or architectural features. ")
+	b.WriteString("Keep ALL existing surfaces (brick, concrete, wood decking, stone pavers, tile) ")
+	b.WriteString("in their EXACT condition. ")
+	b.WriteString("Do NOT remove, add, resize, or relocate windows or doors. ")
+	b.WriteString("Do NOT change surface colors, finishes, or add new materials. ")
+	b.WriteString("Do NOT modify built-in features like pergolas, awnings, or planters. ")
+	b.WriteString("ONLY add outdoor furniture, planters, rugs, and decorative items. ")
+	b.WriteString("The space's structure must remain COMPLETELY UNCHANGED. ")
+
 	// Emphasize outdoor materials and furniture types
 	b.WriteString("OUTDOOR FURNITURE REQUIREMENTS: Use only weather-resistant, exterior-grade furniture. ")
 	b.WriteString("Acceptable materials include: powder-coated metals (aluminum, steel), ")
@@ -28,10 +40,8 @@ func buildOutdoorPrompt(style string, specifics ...string) string {
 		b.WriteString(" ")
 	}
 
-	// Critical outdoor rules
-	b.WriteString("CRITICAL OUTDOOR RULES: ")
-	b.WriteString("Keep all existing outdoor surfaces (brick, concrete, wood decking, stone pavers) ")
-	b.WriteString("EXACTLY as they are. ")
+	// Critical outdoor placement rules
+	b.WriteString("CRITICAL PLACEMENT RULES: ")
 	b.WriteString("Furniture must be weather-appropriate with visible outdoor characteristics ")
 	b.WriteString("(metal frames, slatted designs, outdoor cushion styles). ")
 	b.WriteString("Do NOT block doorways or pathways. ")
