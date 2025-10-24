@@ -9,6 +9,7 @@ import (
 	"github.com/real-staging-ai/api/internal/image"
 	"github.com/real-staging-ai/api/internal/job"
 	"github.com/real-staging-ai/api/internal/logging"
+	"github.com/real-staging-ai/api/internal/originalimage"
 	"github.com/real-staging-ai/api/internal/storage"
 )
 
@@ -46,8 +47,12 @@ func main() {
 	// Create repositories
 	imageRepo := image.NewDefaultRepository(db)
 	jobRepo := job.NewDefaultRepository(db)
+	originalImageRepo := originalimage.NewDefaultRepository(db)
+
+	// Create services
+	originalImageService := originalimage.NewDefaultService(originalImageRepo, s3Service)
 	log.Info(ctx, fmt.Sprintf("Setting up image service (queue: %s)", cfg.Job.QueueName))
-	imageService := image.NewDefaultService(cfg, imageRepo, jobRepo)
+	imageService := image.NewDefaultService(cfg, imageRepo, jobRepo, originalImageService)
 
 	s := http.NewServer(cfg, ctx, log, db, imageService, s3Service)
 	if err := s.Start(":8080"); err != nil {

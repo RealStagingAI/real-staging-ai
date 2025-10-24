@@ -14,15 +14,27 @@ import (
 
 var jsonMarshal = json.Marshal
 
+// OriginalImageService defines the interface for original image operations.
+// This is a minimal interface to avoid circular dependencies.
+type OriginalImageService interface {
+	DecrementReferenceAndCleanup(ctx context.Context, originalImageID string) (bool, error)
+}
+
 // DefaultService handles business logic for image operations.
 type DefaultService struct {
-	imageRepo Repository
-	jobRepo   job.Repository
-	enqueuer  queue.Enqueuer
+	imageRepo            Repository
+	jobRepo              job.Repository
+	enqueuer             queue.Enqueuer
+	originalImageService OriginalImageService
 }
 
 // NewDefaultService creates a new DefaultService instance.
-func NewDefaultService(cfg *config.Config, imageRepo Repository, jobRepo job.Repository) *DefaultService {
+func NewDefaultService(
+	cfg *config.Config,
+	imageRepo Repository,
+	jobRepo job.Repository,
+	originalImageService OriginalImageService,
+) *DefaultService {
 	// Best-effort build an enqueuer from env or config; fall back to Noop if not configured.
 	var enq queue.Enqueuer
 	if e, err := queue.NewAsynqEnqueuerFromEnv(cfg); err == nil {
@@ -31,9 +43,10 @@ func NewDefaultService(cfg *config.Config, imageRepo Repository, jobRepo job.Rep
 		enq = queue.NoopEnqueuer{}
 	}
 	return &DefaultService{
-		imageRepo: imageRepo,
-		jobRepo:   jobRepo,
-		enqueuer:  enq,
+		imageRepo:            imageRepo,
+		jobRepo:              jobRepo,
+		enqueuer:             enq,
+		originalImageService: originalImageService,
 	}
 }
 
@@ -221,15 +234,37 @@ func (s *DefaultService) UpdateImageWithError(ctx context.Context, imageID strin
 	return s.convertToImage(dbImage), nil
 }
 
-// DeleteImage deletes an image from the database.
+// DeleteImage deletes an image from the database and decrements the original image reference.
+// If this is the last reference to the original image, the original is also deleted from S3 and database.
 func (s *DefaultService) DeleteImage(ctx context.Context, imageID string) error {
+	log := logging.Default()
 	if imageID == "" {
 		return fmt.Errorf("image ID cannot be empty")
 	}
 
-	err := s.imageRepo.DeleteImage(ctx, imageID)
+	// Get the original_image_id before soft-deleting the image
+	originalImageID, err := s.imageRepo.GetOriginalImageID(ctx, imageID)
+	if err != nil {
+		return fmt.Errorf("failed to get original image ID: %w", err)
+	}
+
+	// Soft delete the image (marks as deleted but keeps for billing/usage tracking)
+	err = s.imageRepo.DeleteImage(ctx, imageID)
 	if err != nil {
 		return fmt.Errorf("failed to delete image: %w", err)
+	}
+
+	// If the image has an associated original, decrement its reference count
+	// and clean up if this was the last reference
+	if originalImageID != "" && s.originalImageService != nil {
+		deleted, err := s.originalImageService.DecrementReferenceAndCleanup(ctx, originalImageID)
+		if err != nil {
+			// Log the error but don't fail the deletion
+			// The orphaned original can be cleaned up later by a background job
+			log.Warn(ctx, "failed to decrement original image reference", "original_id", originalImageID, "error", err)
+		} else if deleted {
+			log.Info(ctx, "deleted unreferenced original image", "original_id", originalImageID)
+		}
 	}
 
 	return nil
@@ -237,10 +272,16 @@ func (s *DefaultService) DeleteImage(ctx context.Context, imageID string) error 
 
 // convertToImage converts a database image to a domain image.
 func (s *DefaultService) convertToImage(dbImage *queries.Image) *Image {
+	// Extract OriginalURL - default to empty string if null (for migration compatibility)
+	originalURL := ""
+	if dbImage.OriginalUrl.Valid {
+		originalURL = dbImage.OriginalUrl.String
+	}
+
 	image := &Image{
 		ID:          dbImage.ID.Bytes,
 		ProjectID:   dbImage.ProjectID.Bytes,
-		OriginalURL: dbImage.OriginalUrl,
+		OriginalURL: originalURL,
 		Status:      Status(dbImage.Status),
 		CreatedAt:   dbImage.CreatedAt.Time,
 		UpdatedAt:   dbImage.UpdatedAt.Time,

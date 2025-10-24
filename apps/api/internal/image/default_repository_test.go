@@ -56,7 +56,8 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 			setupMock: func(mock pgxmock.PgxPoolIface) {
 				mock.ExpectQuery("INSERT INTO images").
 					WithArgs(
-						pgtype.UUID{Bytes: projectID, Valid: true}, "http://example.com/image.jpg",
+						pgtype.UUID{Bytes: projectID, Valid: true},
+						pgtype.Text{String: "http://example.com/image.jpg", Valid: true},
 						pgtype.Text{String: "living_room", Valid: true},
 						pgtype.Text{String: "modern", Valid: true},
 						pgtype.Int8{Int64: 123, Valid: true},
@@ -70,7 +71,7 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 							AddRow(
 								pgtype.UUID{Bytes: uuid.New(), Valid: true},
 								pgtype.UUID{Bytes: projectID, Valid: true},
-								"http://example.com/image.jpg", pgtype.Text{},
+								pgtype.Text{String: "http://example.com/image.jpg", Valid: true}, pgtype.Text{},
 								pgtype.Text{String: "living_room", Valid: true},
 								pgtype.Text{String: "modern", Valid: true},
 								pgtype.Int8{Int64: 123, Valid: true},
@@ -97,7 +98,8 @@ func TestDefaultRepository_CreateImage(t *testing.T) {
 			setupMock: func(mock pgxmock.PgxPoolIface) {
 				mock.ExpectQuery("INSERT INTO images").
 					WithArgs(
-						pgtype.UUID{Bytes: projectID, Valid: true}, "http://example.com/image.jpg",
+						pgtype.UUID{Bytes: projectID, Valid: true},
+						pgtype.Text{String: "http://example.com/image.jpg", Valid: true},
 						pgtype.Text{String: "living_room", Valid: true},
 						pgtype.Text{String: "modern", Valid: true},
 						pgtype.Int8{Int64: 123, Valid: true},

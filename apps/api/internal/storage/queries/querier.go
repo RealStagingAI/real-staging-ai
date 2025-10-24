@@ -20,9 +20,11 @@ type Querier interface {
 	CountUsers(ctx context.Context) (int64, error)
 	CreateImage(ctx context.Context, arg CreateImageParams) (*CreateImageRow, error)
 	CreateJob(ctx context.Context, arg CreateJobParams) (*Job, error)
+	CreateOriginalImage(ctx context.Context, arg CreateOriginalImageParams) (*OriginalImage, error)
 	CreateProcessedEvent(ctx context.Context, arg CreateProcessedEventParams) (*ProcessedEvent, error)
 	CreateProject(ctx context.Context, arg CreateProjectParams) (*CreateProjectRow, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (*CreateUserRow, error)
+	DecrementReferenceCount(ctx context.Context, id pgtype.UUID) error
 	// Hard delete an image - only use for cleanup operations
 	DeleteImage(ctx context.Context, id pgtype.UUID) error
 	// Hard delete all images in a project - used when cascading project deletion
@@ -31,6 +33,7 @@ type Querier interface {
 	DeleteJobsByImageID(ctx context.Context, imageID pgtype.UUID) error
 	// Optional maintenance: delete older processed events by timestamp (retention)
 	DeleteOldProcessedEvents(ctx context.Context, receivedAt pgtype.Timestamptz) error
+	DeleteOriginalImage(ctx context.Context, id pgtype.UUID) error
 	DeleteProject(ctx context.Context, id pgtype.UUID) error
 	DeleteProjectByUserID(ctx context.Context, arg DeleteProjectByUserIDParams) error
 	// Hard delete stuck queued images - cleanup operation for failed uploads
@@ -44,6 +47,13 @@ type Querier interface {
 	GetInvoiceByStripeID(ctx context.Context, stripeInvoiceID string) (*Invoice, error)
 	GetJobByID(ctx context.Context, id pgtype.UUID) (*Job, error)
 	GetJobsByImageID(ctx context.Context, imageID pgtype.UUID) ([]*Job, error)
+	GetOriginalImageByHash(ctx context.Context, contentHash string) (*OriginalImage, error)
+	GetOriginalImageByID(ctx context.Context, id pgtype.UUID) (*OriginalImage, error)
+	// Get the original_image_id for an image before deletion
+	GetOriginalImageIDForImage(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+	// Get all unique original_image_ids for a project (for bulk deletion)
+	GetOriginalImageIDsForProject(ctx context.Context, projectID pgtype.UUID) ([]pgtype.UUID, error)
+	GetOriginalImageStats(ctx context.Context) (*GetOriginalImageStatsRow, error)
 	GetPendingJobs(ctx context.Context, limit int32) ([]*Job, error)
 	// Get a plan by its code (free, pro, business, etc.)
 	GetPlanByCode(ctx context.Context, code string) (*Plan, error)
@@ -63,11 +73,13 @@ type Querier interface {
 	GetUserByStripeCustomerID(ctx context.Context, stripeCustomerID pgtype.Text) (*GetUserByStripeCustomerIDRow, error)
 	GetUserProfileByAuth0Sub(ctx context.Context, auth0Sub string) (*GetUserProfileByAuth0SubRow, error)
 	GetUserProfileByID(ctx context.Context, id pgtype.UUID) (*GetUserProfileByIDRow, error)
+	IncrementReferenceCount(ctx context.Context, id pgtype.UUID) error
 	// List all available plans
 	ListAllPlans(ctx context.Context) ([]*Plan, error)
 	// List images for reconciliation - only non-deleted images
 	ListImagesForReconcile(ctx context.Context, arg ListImagesForReconcileParams) ([]*ListImagesForReconcileRow, error)
 	ListInvoicesByUserID(ctx context.Context, arg ListInvoicesByUserIDParams) ([]*Invoice, error)
+	ListOrphanedOriginalImages(ctx context.Context, arg ListOrphanedOriginalImagesParams) ([]*OriginalImage, error)
 	ListSubscriptionsByUserID(ctx context.Context, arg ListSubscriptionsByUserIDParams) ([]*Subscription, error)
 	ListSubscriptionsByUserIDAndStatuses(ctx context.Context, arg ListSubscriptionsByUserIDAndStatusesParams) ([]*Subscription, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]*ListUsersRow, error)

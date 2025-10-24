@@ -44,6 +44,10 @@ type Repository interface {
 	// DeleteImagesByProjectID deletes all images for a specific project.
 	DeleteImagesByProjectID(ctx context.Context, projectID string) error
 
+	// GetOriginalImageID retrieves the original_image_id for an image.
+	// Returns empty string if the image has no associated original_image_id.
+	GetOriginalImageID(ctx context.Context, imageID string) (string, error)
+
 	// UpdateImageCost updates cost tracking information for an image.
 	UpdateImageCost(
 		ctx context.Context,

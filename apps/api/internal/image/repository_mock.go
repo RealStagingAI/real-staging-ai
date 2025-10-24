@@ -34,6 +34,9 @@ var _ Repository = &RepositoryMock{}
 //			GetImagesByProjectIDFunc: func(ctx context.Context, projectID string) ([]*queries.Image, error) {
 //				panic("mock out the GetImagesByProjectID method")
 //			},
+//			GetOriginalImageIDFunc: func(ctx context.Context, imageID string) (string, error) {
+//				panic("mock out the GetOriginalImageID method")
+//			},
 //			GetProjectCostSummaryFunc: func(ctx context.Context, projectID string) (*ProjectCostSummary, error) {
 //				panic("mock out the GetProjectCostSummary method")
 //			},
@@ -70,6 +73,9 @@ type RepositoryMock struct {
 
 	// GetImagesByProjectIDFunc mocks the GetImagesByProjectID method.
 	GetImagesByProjectIDFunc func(ctx context.Context, projectID string) ([]*queries.Image, error)
+
+	// GetOriginalImageIDFunc mocks the GetOriginalImageID method.
+	GetOriginalImageIDFunc func(ctx context.Context, imageID string) (string, error)
 
 	// GetProjectCostSummaryFunc mocks the GetProjectCostSummary method.
 	GetProjectCostSummaryFunc func(ctx context.Context, projectID string) (*ProjectCostSummary, error)
@@ -133,6 +139,13 @@ type RepositoryMock struct {
 			// ProjectID is the projectID argument value.
 			ProjectID string
 		}
+		// GetOriginalImageID holds details about calls to the GetOriginalImageID method.
+		GetOriginalImageID []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ImageID is the imageID argument value.
+			ImageID string
+		}
 		// GetProjectCostSummary holds details about calls to the GetProjectCostSummary method.
 		GetProjectCostSummary []struct {
 			// Ctx is the ctx argument value.
@@ -190,6 +203,7 @@ type RepositoryMock struct {
 	lockDeleteImagesByProjectID  sync.RWMutex
 	lockGetImageByID             sync.RWMutex
 	lockGetImagesByProjectID     sync.RWMutex
+	lockGetOriginalImageID       sync.RWMutex
 	lockGetProjectCostSummary    sync.RWMutex
 	lockUpdateImageCost          sync.RWMutex
 	lockUpdateImageStatus        sync.RWMutex
@@ -394,6 +408,42 @@ func (mock *RepositoryMock) GetImagesByProjectIDCalls() []struct {
 	mock.lockGetImagesByProjectID.RLock()
 	calls = mock.calls.GetImagesByProjectID
 	mock.lockGetImagesByProjectID.RUnlock()
+	return calls
+}
+
+// GetOriginalImageID calls GetOriginalImageIDFunc.
+func (mock *RepositoryMock) GetOriginalImageID(ctx context.Context, imageID string) (string, error) {
+	if mock.GetOriginalImageIDFunc == nil {
+		panic("RepositoryMock.GetOriginalImageIDFunc: method is nil but Repository.GetOriginalImageID was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		ImageID string
+	}{
+		Ctx:     ctx,
+		ImageID: imageID,
+	}
+	mock.lockGetOriginalImageID.Lock()
+	mock.calls.GetOriginalImageID = append(mock.calls.GetOriginalImageID, callInfo)
+	mock.lockGetOriginalImageID.Unlock()
+	return mock.GetOriginalImageIDFunc(ctx, imageID)
+}
+
+// GetOriginalImageIDCalls gets all the calls that were made to GetOriginalImageID.
+// Check the length with:
+//
+//	len(mockedRepository.GetOriginalImageIDCalls())
+func (mock *RepositoryMock) GetOriginalImageIDCalls() []struct {
+	Ctx     context.Context
+	ImageID string
+} {
+	var calls []struct {
+		Ctx     context.Context
+		ImageID string
+	}
+	mock.lockGetOriginalImageID.RLock()
+	calls = mock.calls.GetOriginalImageID
+	mock.lockGetOriginalImageID.RUnlock()
 	return calls
 }
 

@@ -90,7 +90,7 @@ func newAPITestServer(t *testing.T, db *storage.DefaultDatabase) (*httptest.Serv
 
 	imgRepo := image.NewDefaultRepository(db)
 	jobRepo := job.NewDefaultRepository(db)
-	imgSvc := image.NewDefaultService(cfg, imgRepo, jobRepo)
+	imgSvc := image.NewDefaultService(cfg, imgRepo, jobRepo, nil)
 
 	srv := httpLib.NewTestServer(&config.Config{S3: config.S3{SecretKey: "sk_test_fake"}}, logging.Default(), db, s3, imgSvc)
 	return httptest.NewServer(srv), s3

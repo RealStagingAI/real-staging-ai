@@ -19,7 +19,7 @@ RETURNING id, project_id, original_url, staged_url, room_type, style, seed, prom
 
 type CreateImageParams struct {
 	ProjectID   pgtype.UUID `json:"project_id"`
-	OriginalUrl string      `json:"original_url"`
+	OriginalUrl pgtype.Text `json:"original_url"`
 	RoomType    pgtype.Text `json:"room_type"`
 	Style       pgtype.Text `json:"style"`
 	Seed        pgtype.Int8 `json:"seed"`
@@ -29,7 +29,7 @@ type CreateImageParams struct {
 type CreateImageRow struct {
 	ID          pgtype.UUID        `json:"id"`
 	ProjectID   pgtype.UUID        `json:"project_id"`
-	OriginalUrl string             `json:"original_url"`
+	OriginalUrl pgtype.Text        `json:"original_url"`
 	StagedUrl   pgtype.Text        `json:"staged_url"`
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
@@ -136,7 +136,7 @@ WHERE id = $1
 type GetImageByIDRow struct {
 	ID          pgtype.UUID        `json:"id"`
 	ProjectID   pgtype.UUID        `json:"project_id"`
-	OriginalUrl string             `json:"original_url"`
+	OriginalUrl pgtype.Text        `json:"original_url"`
 	StagedUrl   pgtype.Text        `json:"staged_url"`
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
@@ -181,7 +181,7 @@ ORDER BY created_at DESC
 type GetImagesByProjectIDRow struct {
 	ID          pgtype.UUID        `json:"id"`
 	ProjectID   pgtype.UUID        `json:"project_id"`
-	OriginalUrl string             `json:"original_url"`
+	OriginalUrl pgtype.Text        `json:"original_url"`
 	StagedUrl   pgtype.Text        `json:"staged_url"`
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
@@ -228,6 +228,48 @@ func (q *Queries) GetImagesByProjectID(ctx context.Context, projectID pgtype.UUI
 	return items, nil
 }
 
+const GetOriginalImageIDForImage = `-- name: GetOriginalImageIDForImage :one
+SELECT original_image_id
+FROM images
+WHERE id = $1
+`
+
+// Get the original_image_id for an image before deletion
+func (q *Queries) GetOriginalImageIDForImage(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, GetOriginalImageIDForImage, id)
+	var original_image_id pgtype.UUID
+	err := row.Scan(&original_image_id)
+	return original_image_id, err
+}
+
+const GetOriginalImageIDsForProject = `-- name: GetOriginalImageIDsForProject :many
+SELECT DISTINCT original_image_id
+FROM images
+WHERE project_id = $1
+  AND original_image_id IS NOT NULL
+`
+
+// Get all unique original_image_ids for a project (for bulk deletion)
+func (q *Queries) GetOriginalImageIDsForProject(ctx context.Context, projectID pgtype.UUID) ([]pgtype.UUID, error) {
+	rows, err := q.db.Query(ctx, GetOriginalImageIDsForProject, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []pgtype.UUID{}
+	for rows.Next() {
+		var original_image_id pgtype.UUID
+		if err := rows.Scan(&original_image_id); err != nil {
+			return nil, err
+		}
+		items = append(items, original_image_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const ListImagesForReconcile = `-- name: ListImagesForReconcile :many
 SELECT id, project_id, original_url, staged_url, room_type, style, seed, prompt, status, error, created_at, updated_at, deleted_at
 FROM images
@@ -249,7 +291,7 @@ type ListImagesForReconcileParams struct {
 type ListImagesForReconcileRow struct {
 	ID          pgtype.UUID        `json:"id"`
 	ProjectID   pgtype.UUID        `json:"project_id"`
-	OriginalUrl string             `json:"original_url"`
+	OriginalUrl pgtype.Text        `json:"original_url"`
 	StagedUrl   pgtype.Text        `json:"staged_url"`
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
@@ -330,7 +372,7 @@ type UpdateImageStatusParams struct {
 type UpdateImageStatusRow struct {
 	ID          pgtype.UUID        `json:"id"`
 	ProjectID   pgtype.UUID        `json:"project_id"`
-	OriginalUrl string             `json:"original_url"`
+	OriginalUrl pgtype.Text        `json:"original_url"`
 	StagedUrl   pgtype.Text        `json:"staged_url"`
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
@@ -379,7 +421,7 @@ type UpdateImageWithErrorParams struct {
 type UpdateImageWithErrorRow struct {
 	ID          pgtype.UUID        `json:"id"`
 	ProjectID   pgtype.UUID        `json:"project_id"`
-	OriginalUrl string             `json:"original_url"`
+	OriginalUrl pgtype.Text        `json:"original_url"`
 	StagedUrl   pgtype.Text        `json:"staged_url"`
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
@@ -429,7 +471,7 @@ type UpdateImageWithStagedURLParams struct {
 type UpdateImageWithStagedURLRow struct {
 	ID          pgtype.UUID        `json:"id"`
 	ProjectID   pgtype.UUID        `json:"project_id"`
-	OriginalUrl string             `json:"original_url"`
+	OriginalUrl pgtype.Text        `json:"original_url"`
 	StagedUrl   pgtype.Text        `json:"staged_url"`
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`

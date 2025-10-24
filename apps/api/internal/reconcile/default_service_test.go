@@ -441,7 +441,7 @@ func createTestImage(id, status, originalURL, stagedURL string) *queries.ListIma
 	img := &queries.ListImagesForReconcileRow{
 		ID:          pgtype.UUID{Bytes: imgID, Valid: true},
 		ProjectID:   pgtype.UUID{Bytes: uid, Valid: true},
-		OriginalUrl: originalURL,
+		OriginalUrl: pgtype.Text{String: originalURL, Valid: true},
 		Status:      queries.ImageStatus(status),
 	}
 

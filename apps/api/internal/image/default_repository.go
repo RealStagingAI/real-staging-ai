@@ -56,7 +56,7 @@ func (r *DefaultRepository) CreateImage(
 
 	row, err := q.CreateImage(ctx, queries.CreateImageParams{
 		ProjectID:   pgtype.UUID{Bytes: projectUUID, Valid: true},
-		OriginalUrl: originalURL,
+		OriginalUrl: pgtype.Text{String: originalURL, Valid: true},
 		RoomType:    roomTypeText,
 		Style:       styleText,
 		Seed:        seedInt8,
@@ -297,6 +297,35 @@ func (r *DefaultRepository) DeleteImagesByProjectID(ctx context.Context, project
 	}
 
 	return nil
+}
+
+// GetOriginalImageID retrieves the original_image_id for an image.
+func (r *DefaultRepository) GetOriginalImageID(ctx context.Context, imageID string) (string, error) {
+	q := queries.New(r.db)
+
+	imageUUID, err := uuid.Parse(imageID)
+	if err != nil {
+		return "", fmt.Errorf("invalid image ID: %w", err)
+	}
+
+	result, err := q.GetOriginalImageIDForImage(ctx, pgtype.UUID{Bytes: imageUUID, Valid: true})
+	if err != nil {
+		return "", fmt.Errorf("failed to get original image ID: %w", err)
+	}
+
+	// Return empty string if no original_image_id is set
+	if !result.Valid {
+		return "", nil
+	}
+
+	// Format UUID bytes to string
+	return formatUUID(result.Bytes), nil
+}
+
+// formatUUID converts [16]byte UUID to string format.
+func formatUUID(b [16]byte) string {
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+		b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
 
 // UpdateImageCost updates cost tracking information for an image.

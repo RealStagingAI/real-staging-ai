@@ -58,7 +58,7 @@ func (ns NullImageStatus) Value() (driver.Value, error) {
 type Image struct {
 	ID          pgtype.UUID        `json:"id"`
 	ProjectID   pgtype.UUID        `json:"project_id"`
-	OriginalUrl string             `json:"original_url"`
+	OriginalUrl pgtype.Text        `json:"original_url"`
 	StagedUrl   pgtype.Text        `json:"staged_url"`
 	RoomType    pgtype.Text        `json:"room_type"`
 	Style       pgtype.Text        `json:"style"`
@@ -77,7 +77,8 @@ type Image struct {
 	ReplicatePredictionID pgtype.Text        `json:"replicate_prediction_id"`
 	DeletedAt             pgtype.Timestamptz `json:"deleted_at"`
 	// Custom prompt for AI staging. If null, uses default prompt from library based on room_type and style
-	Prompt pgtype.Text `json:"prompt"`
+	Prompt          pgtype.Text `json:"prompt"`
+	OriginalImageID pgtype.UUID `json:"original_image_id"`
 }
 
 type Invoice struct {
@@ -104,6 +105,19 @@ type Job struct {
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	StartedAt   pgtype.Timestamptz `json:"started_at"`
 	FinishedAt  pgtype.Timestamptz `json:"finished_at"`
+}
+
+type OriginalImage struct {
+	ID             pgtype.UUID        `json:"id"`
+	ContentHash    string             `json:"content_hash"`
+	S3Key          string             `json:"s3_key"`
+	FileSize       int64              `json:"file_size"`
+	MimeType       string             `json:"mime_type"`
+	Width          pgtype.Int4        `json:"width"`
+	Height         pgtype.Int4        `json:"height"`
+	ReferenceCount int32              `json:"reference_count"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Plan struct {

@@ -25,7 +25,7 @@ func TestNewDefaultService(t *testing.T) {
 	t.Run("success: create new default service", func(t *testing.T) {
 		imageRepo := &RepositoryMock{}
 		jobRepo := &job.RepositoryMock{}
-		service := NewDefaultService(cfg, imageRepo, jobRepo)
+		service := NewDefaultService(cfg, imageRepo, jobRepo, nil)
 		assert.NotNil(t, service)
 	})
 }
@@ -64,7 +64,7 @@ func TestDefaultService_CreateImage(t *testing.T) {
 					return &queries.Image{
 						ID:          pgtype.UUID{Bytes: imageID, Valid: true},
 						ProjectID:   pgtype.UUID{Bytes: projectID, Valid: true},
-						OriginalUrl: "http://example.com/image.jpg",
+						OriginalUrl: pgtype.Text{String: "http://example.com/image.jpg", Valid: true},
 						Status:      queries.ImageStatusQueued,
 						CreatedAt:   pgtype.Timestamptz{Time: time.Now(), Valid: true},
 						UpdatedAt:   pgtype.Timestamptz{Time: time.Now(), Valid: true},
@@ -149,7 +149,7 @@ func TestDefaultService_CreateImage(t *testing.T) {
 			jobRepo := &job.RepositoryMock{}
 			tc.setupMocks(imageRepo, jobRepo)
 
-			service := NewDefaultService(cfg, imageRepo, jobRepo)
+			service := NewDefaultService(cfg, imageRepo, jobRepo, nil)
 
 			if tc.name == "fail: json marshal error" {
 				jsonMarshal = func(v interface{}) ([]byte, error) {
@@ -201,7 +201,7 @@ func TestDefaultService_GetImageByID(t *testing.T) {
 					parsedImageID, _ := uuid.Parse(imageIDStr)
 					return &queries.Image{
 						ID:          pgtype.UUID{Bytes: parsedImageID, Valid: true},
-						OriginalUrl: "http://example.com/image.jpg",
+						OriginalUrl: pgtype.Text{String: "http://example.com/image.jpg", Valid: true},
 						Status:      queries.ImageStatusQueued,
 						CreatedAt:   pgtype.Timestamptz{Time: time.Now(), Valid: true},
 						UpdatedAt:   pgtype.Timestamptz{Time: time.Now(), Valid: true},
@@ -228,7 +228,7 @@ func TestDefaultService_GetImageByID(t *testing.T) {
 					parsedImageID, _ := uuid.Parse(imageIDStr)
 					return &queries.Image{
 						ID:          pgtype.UUID{Bytes: parsedImageID, Valid: true},
-						OriginalUrl: "http://example.com/image.jpg",
+						OriginalUrl: pgtype.Text{String: "http://example.com/image.jpg", Valid: true},
 						Status:      queries.ImageStatusQueued,
 						CreatedAt:   pgtype.Timestamptz{Time: time.Now(), Valid: true},
 						UpdatedAt:   pgtype.Timestamptz{Time: time.Now(), Valid: true},
@@ -265,7 +265,7 @@ func TestDefaultService_GetImageByID(t *testing.T) {
 			imageRepo := &RepositoryMock{}
 			tc.setupMocks(imageRepo)
 
-			service := NewDefaultService(cfg, imageRepo, nil)
+			service := NewDefaultService(cfg, imageRepo, nil, nil)
 			image, err := service.GetImageByID(context.Background(), tc.imageID)
 
 			if tc.expectedErr != nil {
@@ -350,7 +350,7 @@ func TestDefaultService_GetImagesByProjectID(t *testing.T) {
 			imageRepo := &RepositoryMock{}
 			tc.setupMocks(imageRepo)
 
-			service := NewDefaultService(cfg, imageRepo, nil)
+			service := NewDefaultService(cfg, imageRepo, nil, nil)
 			images, err := service.GetImagesByProjectID(context.Background(), tc.projectID)
 
 			if tc.expectedErr != nil {
@@ -419,7 +419,7 @@ func TestDefaultService_UpdateImageStatus(t *testing.T) {
 			imageRepo := &RepositoryMock{}
 			tc.setupMocks(imageRepo)
 
-			service := NewDefaultService(cfg, imageRepo, nil)
+			service := NewDefaultService(cfg, imageRepo, nil, nil)
 			image, err := service.UpdateImageStatus(context.Background(), tc.imageID, tc.status)
 
 			if tc.expectedErr != nil {
@@ -499,7 +499,7 @@ func TestDefaultService_UpdateImageWithStagedURL(t *testing.T) {
 			imageRepo := &RepositoryMock{}
 			tc.setupMocks(imageRepo)
 
-			service := NewDefaultService(cfg, imageRepo, nil)
+			service := NewDefaultService(cfg, imageRepo, nil, nil)
 			image, err := service.UpdateImageWithStagedURL(context.Background(), tc.imageID, tc.stagedURL)
 
 			if tc.expectedErr != nil {
@@ -575,7 +575,7 @@ func TestDefaultService_UpdateImageWithError(t *testing.T) {
 			imageRepo := &RepositoryMock{}
 			tc.setupMocks(imageRepo)
 
-			service := NewDefaultService(cfg, imageRepo, nil)
+			service := NewDefaultService(cfg, imageRepo, nil, nil)
 			image, err := service.UpdateImageWithError(context.Background(), tc.imageID, tc.errorMsg)
 
 			if tc.expectedErr != nil {
@@ -608,6 +608,9 @@ func TestDefaultService_DeleteImage(t *testing.T) {
 			name:    "success: delete image",
 			imageID: imageID.String(),
 			setupMocks: func(imageRepo *RepositoryMock) {
+				imageRepo.GetOriginalImageIDFunc = func(ctx context.Context, imageID string) (string, error) {
+					return "", nil // No original_image_id for this image
+				}
 				imageRepo.DeleteImageFunc = func(ctx context.Context, imageID string) error {
 					return nil
 				}
@@ -624,6 +627,9 @@ func TestDefaultService_DeleteImage(t *testing.T) {
 			name:    "fail: db error",
 			imageID: imageID.String(),
 			setupMocks: func(imageRepo *RepositoryMock) {
+				imageRepo.GetOriginalImageIDFunc = func(ctx context.Context, imageID string) (string, error) {
+					return "", nil
+				}
 				imageRepo.DeleteImageFunc = func(ctx context.Context, imageID string) error {
 					return errors.New("db error")
 				}
@@ -637,7 +643,7 @@ func TestDefaultService_DeleteImage(t *testing.T) {
 			imageRepo := &RepositoryMock{}
 			tc.setupMocks(imageRepo)
 
-			service := NewDefaultService(cfg, imageRepo, nil)
+			service := NewDefaultService(cfg, imageRepo, nil, nil)
 			err := service.DeleteImage(context.Background(), tc.imageID)
 
 			if tc.expectedErr != nil {
@@ -662,7 +668,7 @@ func mockSuccessfulImageCreation(imageID, projectID uuid.UUID) func(*RepositoryM
 			return &queries.Image{
 				ID:          pgtype.UUID{Bytes: imageID, Valid: true},
 				ProjectID:   pgtype.UUID{Bytes: projectID, Valid: true},
-				OriginalUrl: "http://example.com/image.jpg",
+				OriginalUrl: pgtype.Text{String: "http://example.com/image.jpg", Valid: true},
 				Status:      queries.ImageStatusQueued,
 				CreatedAt:   pgtype.Timestamptz{Time: time.Now(), Valid: true},
 				UpdatedAt:   pgtype.Timestamptz{Time: time.Now(), Valid: true},

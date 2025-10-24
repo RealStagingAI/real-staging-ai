@@ -68,3 +68,16 @@ WHERE ($1::uuid IS NULL OR project_id = $1::uuid)
   AND deleted_at IS NULL
 ORDER BY id ASC
 LIMIT $4;
+
+-- name: GetOriginalImageIDForImage :one
+-- Get the original_image_id for an image before deletion
+SELECT original_image_id
+FROM images
+WHERE id = $1;
+
+-- name: GetOriginalImageIDsForProject :many
+-- Get all unique original_image_ids for a project (for bulk deletion)
+SELECT DISTINCT original_image_id
+FROM images
+WHERE project_id = $1
+  AND original_image_id IS NOT NULL;

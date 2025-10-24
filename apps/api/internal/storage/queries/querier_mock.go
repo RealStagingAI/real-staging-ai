@@ -37,6 +37,9 @@ var _ Querier = &QuerierMock{}
 //			CreateJobFunc: func(ctx context.Context, arg CreateJobParams) (*Job, error) {
 //				panic("mock out the CreateJob method")
 //			},
+//			CreateOriginalImageFunc: func(ctx context.Context, arg CreateOriginalImageParams) (*OriginalImage, error) {
+//				panic("mock out the CreateOriginalImage method")
+//			},
 //			CreateProcessedEventFunc: func(ctx context.Context, arg CreateProcessedEventParams) (*ProcessedEvent, error) {
 //				panic("mock out the CreateProcessedEvent method")
 //			},
@@ -45,6 +48,9 @@ var _ Querier = &QuerierMock{}
 //			},
 //			CreateUserFunc: func(ctx context.Context, arg CreateUserParams) (*CreateUserRow, error) {
 //				panic("mock out the CreateUser method")
+//			},
+//			DecrementReferenceCountFunc: func(ctx context.Context, id pgtype.UUID) error {
+//				panic("mock out the DecrementReferenceCount method")
 //			},
 //			DeleteImageFunc: func(ctx context.Context, id pgtype.UUID) error {
 //				panic("mock out the DeleteImage method")
@@ -60,6 +66,9 @@ var _ Querier = &QuerierMock{}
 //			},
 //			DeleteOldProcessedEventsFunc: func(ctx context.Context, receivedAt pgtype.Timestamptz) error {
 //				panic("mock out the DeleteOldProcessedEvents method")
+//			},
+//			DeleteOriginalImageFunc: func(ctx context.Context, id pgtype.UUID) error {
+//				panic("mock out the DeleteOriginalImage method")
 //			},
 //			DeleteProjectFunc: func(ctx context.Context, id pgtype.UUID) error {
 //				panic("mock out the DeleteProject method")
@@ -96,6 +105,21 @@ var _ Querier = &QuerierMock{}
 //			},
 //			GetJobsByImageIDFunc: func(ctx context.Context, imageID pgtype.UUID) ([]*Job, error) {
 //				panic("mock out the GetJobsByImageID method")
+//			},
+//			GetOriginalImageByHashFunc: func(ctx context.Context, contentHash string) (*OriginalImage, error) {
+//				panic("mock out the GetOriginalImageByHash method")
+//			},
+//			GetOriginalImageByIDFunc: func(ctx context.Context, id pgtype.UUID) (*OriginalImage, error) {
+//				panic("mock out the GetOriginalImageByID method")
+//			},
+//			GetOriginalImageIDForImageFunc: func(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+//				panic("mock out the GetOriginalImageIDForImage method")
+//			},
+//			GetOriginalImageIDsForProjectFunc: func(ctx context.Context, projectID pgtype.UUID) ([]pgtype.UUID, error) {
+//				panic("mock out the GetOriginalImageIDsForProject method")
+//			},
+//			GetOriginalImageStatsFunc: func(ctx context.Context) (*GetOriginalImageStatsRow, error) {
+//				panic("mock out the GetOriginalImageStats method")
 //			},
 //			GetPendingJobsFunc: func(ctx context.Context, limit int32) ([]*Job, error) {
 //				panic("mock out the GetPendingJobs method")
@@ -136,6 +160,9 @@ var _ Querier = &QuerierMock{}
 //			GetUserProfileByIDFunc: func(ctx context.Context, id pgtype.UUID) (*GetUserProfileByIDRow, error) {
 //				panic("mock out the GetUserProfileByID method")
 //			},
+//			IncrementReferenceCountFunc: func(ctx context.Context, id pgtype.UUID) error {
+//				panic("mock out the IncrementReferenceCount method")
+//			},
 //			ListAllPlansFunc: func(ctx context.Context) ([]*Plan, error) {
 //				panic("mock out the ListAllPlans method")
 //			},
@@ -144,6 +171,9 @@ var _ Querier = &QuerierMock{}
 //			},
 //			ListInvoicesByUserIDFunc: func(ctx context.Context, arg ListInvoicesByUserIDParams) ([]*Invoice, error) {
 //				panic("mock out the ListInvoicesByUserID method")
+//			},
+//			ListOrphanedOriginalImagesFunc: func(ctx context.Context, arg ListOrphanedOriginalImagesParams) ([]*OriginalImage, error) {
+//				panic("mock out the ListOrphanedOriginalImages method")
 //			},
 //			ListSubscriptionsByUserIDFunc: func(ctx context.Context, arg ListSubscriptionsByUserIDParams) ([]*Subscription, error) {
 //				panic("mock out the ListSubscriptionsByUserID method")
@@ -221,6 +251,9 @@ type QuerierMock struct {
 	// CreateJobFunc mocks the CreateJob method.
 	CreateJobFunc func(ctx context.Context, arg CreateJobParams) (*Job, error)
 
+	// CreateOriginalImageFunc mocks the CreateOriginalImage method.
+	CreateOriginalImageFunc func(ctx context.Context, arg CreateOriginalImageParams) (*OriginalImage, error)
+
 	// CreateProcessedEventFunc mocks the CreateProcessedEvent method.
 	CreateProcessedEventFunc func(ctx context.Context, arg CreateProcessedEventParams) (*ProcessedEvent, error)
 
@@ -229,6 +262,9 @@ type QuerierMock struct {
 
 	// CreateUserFunc mocks the CreateUser method.
 	CreateUserFunc func(ctx context.Context, arg CreateUserParams) (*CreateUserRow, error)
+
+	// DecrementReferenceCountFunc mocks the DecrementReferenceCount method.
+	DecrementReferenceCountFunc func(ctx context.Context, id pgtype.UUID) error
 
 	// DeleteImageFunc mocks the DeleteImage method.
 	DeleteImageFunc func(ctx context.Context, id pgtype.UUID) error
@@ -244,6 +280,9 @@ type QuerierMock struct {
 
 	// DeleteOldProcessedEventsFunc mocks the DeleteOldProcessedEvents method.
 	DeleteOldProcessedEventsFunc func(ctx context.Context, receivedAt pgtype.Timestamptz) error
+
+	// DeleteOriginalImageFunc mocks the DeleteOriginalImage method.
+	DeleteOriginalImageFunc func(ctx context.Context, id pgtype.UUID) error
 
 	// DeleteProjectFunc mocks the DeleteProject method.
 	DeleteProjectFunc func(ctx context.Context, id pgtype.UUID) error
@@ -280,6 +319,21 @@ type QuerierMock struct {
 
 	// GetJobsByImageIDFunc mocks the GetJobsByImageID method.
 	GetJobsByImageIDFunc func(ctx context.Context, imageID pgtype.UUID) ([]*Job, error)
+
+	// GetOriginalImageByHashFunc mocks the GetOriginalImageByHash method.
+	GetOriginalImageByHashFunc func(ctx context.Context, contentHash string) (*OriginalImage, error)
+
+	// GetOriginalImageByIDFunc mocks the GetOriginalImageByID method.
+	GetOriginalImageByIDFunc func(ctx context.Context, id pgtype.UUID) (*OriginalImage, error)
+
+	// GetOriginalImageIDForImageFunc mocks the GetOriginalImageIDForImage method.
+	GetOriginalImageIDForImageFunc func(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error)
+
+	// GetOriginalImageIDsForProjectFunc mocks the GetOriginalImageIDsForProject method.
+	GetOriginalImageIDsForProjectFunc func(ctx context.Context, projectID pgtype.UUID) ([]pgtype.UUID, error)
+
+	// GetOriginalImageStatsFunc mocks the GetOriginalImageStats method.
+	GetOriginalImageStatsFunc func(ctx context.Context) (*GetOriginalImageStatsRow, error)
 
 	// GetPendingJobsFunc mocks the GetPendingJobs method.
 	GetPendingJobsFunc func(ctx context.Context, limit int32) ([]*Job, error)
@@ -320,6 +374,9 @@ type QuerierMock struct {
 	// GetUserProfileByIDFunc mocks the GetUserProfileByID method.
 	GetUserProfileByIDFunc func(ctx context.Context, id pgtype.UUID) (*GetUserProfileByIDRow, error)
 
+	// IncrementReferenceCountFunc mocks the IncrementReferenceCount method.
+	IncrementReferenceCountFunc func(ctx context.Context, id pgtype.UUID) error
+
 	// ListAllPlansFunc mocks the ListAllPlans method.
 	ListAllPlansFunc func(ctx context.Context) ([]*Plan, error)
 
@@ -328,6 +385,9 @@ type QuerierMock struct {
 
 	// ListInvoicesByUserIDFunc mocks the ListInvoicesByUserID method.
 	ListInvoicesByUserIDFunc func(ctx context.Context, arg ListInvoicesByUserIDParams) ([]*Invoice, error)
+
+	// ListOrphanedOriginalImagesFunc mocks the ListOrphanedOriginalImages method.
+	ListOrphanedOriginalImagesFunc func(ctx context.Context, arg ListOrphanedOriginalImagesParams) ([]*OriginalImage, error)
 
 	// ListSubscriptionsByUserIDFunc mocks the ListSubscriptionsByUserID method.
 	ListSubscriptionsByUserIDFunc func(ctx context.Context, arg ListSubscriptionsByUserIDParams) ([]*Subscription, error)
@@ -422,6 +482,13 @@ type QuerierMock struct {
 			// Arg is the arg argument value.
 			Arg CreateJobParams
 		}
+		// CreateOriginalImage holds details about calls to the CreateOriginalImage method.
+		CreateOriginalImage []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Arg is the arg argument value.
+			Arg CreateOriginalImageParams
+		}
 		// CreateProcessedEvent holds details about calls to the CreateProcessedEvent method.
 		CreateProcessedEvent []struct {
 			// Ctx is the ctx argument value.
@@ -442,6 +509,13 @@ type QuerierMock struct {
 			Ctx context.Context
 			// Arg is the arg argument value.
 			Arg CreateUserParams
+		}
+		// DecrementReferenceCount holds details about calls to the DecrementReferenceCount method.
+		DecrementReferenceCount []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ID is the id argument value.
+			ID pgtype.UUID
 		}
 		// DeleteImage holds details about calls to the DeleteImage method.
 		DeleteImage []struct {
@@ -477,6 +551,13 @@ type QuerierMock struct {
 			Ctx context.Context
 			// ReceivedAt is the receivedAt argument value.
 			ReceivedAt pgtype.Timestamptz
+		}
+		// DeleteOriginalImage holds details about calls to the DeleteOriginalImage method.
+		DeleteOriginalImage []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ID is the id argument value.
+			ID pgtype.UUID
 		}
 		// DeleteProject holds details about calls to the DeleteProject method.
 		DeleteProject []struct {
@@ -559,6 +640,39 @@ type QuerierMock struct {
 			Ctx context.Context
 			// ImageID is the imageID argument value.
 			ImageID pgtype.UUID
+		}
+		// GetOriginalImageByHash holds details about calls to the GetOriginalImageByHash method.
+		GetOriginalImageByHash []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ContentHash is the contentHash argument value.
+			ContentHash string
+		}
+		// GetOriginalImageByID holds details about calls to the GetOriginalImageByID method.
+		GetOriginalImageByID []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ID is the id argument value.
+			ID pgtype.UUID
+		}
+		// GetOriginalImageIDForImage holds details about calls to the GetOriginalImageIDForImage method.
+		GetOriginalImageIDForImage []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ID is the id argument value.
+			ID pgtype.UUID
+		}
+		// GetOriginalImageIDsForProject holds details about calls to the GetOriginalImageIDsForProject method.
+		GetOriginalImageIDsForProject []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ProjectID is the projectID argument value.
+			ProjectID pgtype.UUID
+		}
+		// GetOriginalImageStats holds details about calls to the GetOriginalImageStats method.
+		GetOriginalImageStats []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
 		}
 		// GetPendingJobs holds details about calls to the GetPendingJobs method.
 		GetPendingJobs []struct {
@@ -651,6 +765,13 @@ type QuerierMock struct {
 			// ID is the id argument value.
 			ID pgtype.UUID
 		}
+		// IncrementReferenceCount holds details about calls to the IncrementReferenceCount method.
+		IncrementReferenceCount []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ID is the id argument value.
+			ID pgtype.UUID
+		}
 		// ListAllPlans holds details about calls to the ListAllPlans method.
 		ListAllPlans []struct {
 			// Ctx is the ctx argument value.
@@ -669,6 +790,13 @@ type QuerierMock struct {
 			Ctx context.Context
 			// Arg is the arg argument value.
 			Arg ListInvoicesByUserIDParams
+		}
+		// ListOrphanedOriginalImages holds details about calls to the ListOrphanedOriginalImages method.
+		ListOrphanedOriginalImages []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Arg is the arg argument value.
+			Arg ListOrphanedOriginalImagesParams
 		}
 		// ListSubscriptionsByUserID holds details about calls to the ListSubscriptionsByUserID method.
 		ListSubscriptionsByUserID []struct {
@@ -796,14 +924,17 @@ type QuerierMock struct {
 	lockCountUsers                           sync.RWMutex
 	lockCreateImage                          sync.RWMutex
 	lockCreateJob                            sync.RWMutex
+	lockCreateOriginalImage                  sync.RWMutex
 	lockCreateProcessedEvent                 sync.RWMutex
 	lockCreateProject                        sync.RWMutex
 	lockCreateUser                           sync.RWMutex
+	lockDecrementReferenceCount              sync.RWMutex
 	lockDeleteImage                          sync.RWMutex
 	lockDeleteImagesByProjectID              sync.RWMutex
 	lockDeleteJob                            sync.RWMutex
 	lockDeleteJobsByImageID                  sync.RWMutex
 	lockDeleteOldProcessedEvents             sync.RWMutex
+	lockDeleteOriginalImage                  sync.RWMutex
 	lockDeleteProject                        sync.RWMutex
 	lockDeleteProjectByUserID                sync.RWMutex
 	lockDeleteStuckQueuedImages              sync.RWMutex
@@ -816,6 +947,11 @@ type QuerierMock struct {
 	lockGetInvoiceByStripeID                 sync.RWMutex
 	lockGetJobByID                           sync.RWMutex
 	lockGetJobsByImageID                     sync.RWMutex
+	lockGetOriginalImageByHash               sync.RWMutex
+	lockGetOriginalImageByID                 sync.RWMutex
+	lockGetOriginalImageIDForImage           sync.RWMutex
+	lockGetOriginalImageIDsForProject        sync.RWMutex
+	lockGetOriginalImageStats                sync.RWMutex
 	lockGetPendingJobs                       sync.RWMutex
 	lockGetPlanByCode                        sync.RWMutex
 	lockGetPlanByPriceID                     sync.RWMutex
@@ -829,9 +965,11 @@ type QuerierMock struct {
 	lockGetUserByStripeCustomerID            sync.RWMutex
 	lockGetUserProfileByAuth0Sub             sync.RWMutex
 	lockGetUserProfileByID                   sync.RWMutex
+	lockIncrementReferenceCount              sync.RWMutex
 	lockListAllPlans                         sync.RWMutex
 	lockListImagesForReconcile               sync.RWMutex
 	lockListInvoicesByUserID                 sync.RWMutex
+	lockListOrphanedOriginalImages           sync.RWMutex
 	lockListSubscriptionsByUserID            sync.RWMutex
 	lockListSubscriptionsByUserIDAndStatuses sync.RWMutex
 	lockListUsers                            sync.RWMutex
@@ -1063,6 +1201,42 @@ func (mock *QuerierMock) CreateJobCalls() []struct {
 	return calls
 }
 
+// CreateOriginalImage calls CreateOriginalImageFunc.
+func (mock *QuerierMock) CreateOriginalImage(ctx context.Context, arg CreateOriginalImageParams) (*OriginalImage, error) {
+	if mock.CreateOriginalImageFunc == nil {
+		panic("QuerierMock.CreateOriginalImageFunc: method is nil but Querier.CreateOriginalImage was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Arg CreateOriginalImageParams
+	}{
+		Ctx: ctx,
+		Arg: arg,
+	}
+	mock.lockCreateOriginalImage.Lock()
+	mock.calls.CreateOriginalImage = append(mock.calls.CreateOriginalImage, callInfo)
+	mock.lockCreateOriginalImage.Unlock()
+	return mock.CreateOriginalImageFunc(ctx, arg)
+}
+
+// CreateOriginalImageCalls gets all the calls that were made to CreateOriginalImage.
+// Check the length with:
+//
+//	len(mockedQuerier.CreateOriginalImageCalls())
+func (mock *QuerierMock) CreateOriginalImageCalls() []struct {
+	Ctx context.Context
+	Arg CreateOriginalImageParams
+} {
+	var calls []struct {
+		Ctx context.Context
+		Arg CreateOriginalImageParams
+	}
+	mock.lockCreateOriginalImage.RLock()
+	calls = mock.calls.CreateOriginalImage
+	mock.lockCreateOriginalImage.RUnlock()
+	return calls
+}
+
 // CreateProcessedEvent calls CreateProcessedEventFunc.
 func (mock *QuerierMock) CreateProcessedEvent(ctx context.Context, arg CreateProcessedEventParams) (*ProcessedEvent, error) {
 	if mock.CreateProcessedEventFunc == nil {
@@ -1168,6 +1342,42 @@ func (mock *QuerierMock) CreateUserCalls() []struct {
 	mock.lockCreateUser.RLock()
 	calls = mock.calls.CreateUser
 	mock.lockCreateUser.RUnlock()
+	return calls
+}
+
+// DecrementReferenceCount calls DecrementReferenceCountFunc.
+func (mock *QuerierMock) DecrementReferenceCount(ctx context.Context, id pgtype.UUID) error {
+	if mock.DecrementReferenceCountFunc == nil {
+		panic("QuerierMock.DecrementReferenceCountFunc: method is nil but Querier.DecrementReferenceCount was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}{
+		Ctx: ctx,
+		ID:  id,
+	}
+	mock.lockDecrementReferenceCount.Lock()
+	mock.calls.DecrementReferenceCount = append(mock.calls.DecrementReferenceCount, callInfo)
+	mock.lockDecrementReferenceCount.Unlock()
+	return mock.DecrementReferenceCountFunc(ctx, id)
+}
+
+// DecrementReferenceCountCalls gets all the calls that were made to DecrementReferenceCount.
+// Check the length with:
+//
+//	len(mockedQuerier.DecrementReferenceCountCalls())
+func (mock *QuerierMock) DecrementReferenceCountCalls() []struct {
+	Ctx context.Context
+	ID  pgtype.UUID
+} {
+	var calls []struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}
+	mock.lockDecrementReferenceCount.RLock()
+	calls = mock.calls.DecrementReferenceCount
+	mock.lockDecrementReferenceCount.RUnlock()
 	return calls
 }
 
@@ -1348,6 +1558,42 @@ func (mock *QuerierMock) DeleteOldProcessedEventsCalls() []struct {
 	mock.lockDeleteOldProcessedEvents.RLock()
 	calls = mock.calls.DeleteOldProcessedEvents
 	mock.lockDeleteOldProcessedEvents.RUnlock()
+	return calls
+}
+
+// DeleteOriginalImage calls DeleteOriginalImageFunc.
+func (mock *QuerierMock) DeleteOriginalImage(ctx context.Context, id pgtype.UUID) error {
+	if mock.DeleteOriginalImageFunc == nil {
+		panic("QuerierMock.DeleteOriginalImageFunc: method is nil but Querier.DeleteOriginalImage was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}{
+		Ctx: ctx,
+		ID:  id,
+	}
+	mock.lockDeleteOriginalImage.Lock()
+	mock.calls.DeleteOriginalImage = append(mock.calls.DeleteOriginalImage, callInfo)
+	mock.lockDeleteOriginalImage.Unlock()
+	return mock.DeleteOriginalImageFunc(ctx, id)
+}
+
+// DeleteOriginalImageCalls gets all the calls that were made to DeleteOriginalImage.
+// Check the length with:
+//
+//	len(mockedQuerier.DeleteOriginalImageCalls())
+func (mock *QuerierMock) DeleteOriginalImageCalls() []struct {
+	Ctx context.Context
+	ID  pgtype.UUID
+} {
+	var calls []struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}
+	mock.lockDeleteOriginalImage.RLock()
+	calls = mock.calls.DeleteOriginalImage
+	mock.lockDeleteOriginalImage.RUnlock()
 	return calls
 }
 
@@ -1776,6 +2022,182 @@ func (mock *QuerierMock) GetJobsByImageIDCalls() []struct {
 	mock.lockGetJobsByImageID.RLock()
 	calls = mock.calls.GetJobsByImageID
 	mock.lockGetJobsByImageID.RUnlock()
+	return calls
+}
+
+// GetOriginalImageByHash calls GetOriginalImageByHashFunc.
+func (mock *QuerierMock) GetOriginalImageByHash(ctx context.Context, contentHash string) (*OriginalImage, error) {
+	if mock.GetOriginalImageByHashFunc == nil {
+		panic("QuerierMock.GetOriginalImageByHashFunc: method is nil but Querier.GetOriginalImageByHash was just called")
+	}
+	callInfo := struct {
+		Ctx         context.Context
+		ContentHash string
+	}{
+		Ctx:         ctx,
+		ContentHash: contentHash,
+	}
+	mock.lockGetOriginalImageByHash.Lock()
+	mock.calls.GetOriginalImageByHash = append(mock.calls.GetOriginalImageByHash, callInfo)
+	mock.lockGetOriginalImageByHash.Unlock()
+	return mock.GetOriginalImageByHashFunc(ctx, contentHash)
+}
+
+// GetOriginalImageByHashCalls gets all the calls that were made to GetOriginalImageByHash.
+// Check the length with:
+//
+//	len(mockedQuerier.GetOriginalImageByHashCalls())
+func (mock *QuerierMock) GetOriginalImageByHashCalls() []struct {
+	Ctx         context.Context
+	ContentHash string
+} {
+	var calls []struct {
+		Ctx         context.Context
+		ContentHash string
+	}
+	mock.lockGetOriginalImageByHash.RLock()
+	calls = mock.calls.GetOriginalImageByHash
+	mock.lockGetOriginalImageByHash.RUnlock()
+	return calls
+}
+
+// GetOriginalImageByID calls GetOriginalImageByIDFunc.
+func (mock *QuerierMock) GetOriginalImageByID(ctx context.Context, id pgtype.UUID) (*OriginalImage, error) {
+	if mock.GetOriginalImageByIDFunc == nil {
+		panic("QuerierMock.GetOriginalImageByIDFunc: method is nil but Querier.GetOriginalImageByID was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}{
+		Ctx: ctx,
+		ID:  id,
+	}
+	mock.lockGetOriginalImageByID.Lock()
+	mock.calls.GetOriginalImageByID = append(mock.calls.GetOriginalImageByID, callInfo)
+	mock.lockGetOriginalImageByID.Unlock()
+	return mock.GetOriginalImageByIDFunc(ctx, id)
+}
+
+// GetOriginalImageByIDCalls gets all the calls that were made to GetOriginalImageByID.
+// Check the length with:
+//
+//	len(mockedQuerier.GetOriginalImageByIDCalls())
+func (mock *QuerierMock) GetOriginalImageByIDCalls() []struct {
+	Ctx context.Context
+	ID  pgtype.UUID
+} {
+	var calls []struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}
+	mock.lockGetOriginalImageByID.RLock()
+	calls = mock.calls.GetOriginalImageByID
+	mock.lockGetOriginalImageByID.RUnlock()
+	return calls
+}
+
+// GetOriginalImageIDForImage calls GetOriginalImageIDForImageFunc.
+func (mock *QuerierMock) GetOriginalImageIDForImage(ctx context.Context, id pgtype.UUID) (pgtype.UUID, error) {
+	if mock.GetOriginalImageIDForImageFunc == nil {
+		panic("QuerierMock.GetOriginalImageIDForImageFunc: method is nil but Querier.GetOriginalImageIDForImage was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}{
+		Ctx: ctx,
+		ID:  id,
+	}
+	mock.lockGetOriginalImageIDForImage.Lock()
+	mock.calls.GetOriginalImageIDForImage = append(mock.calls.GetOriginalImageIDForImage, callInfo)
+	mock.lockGetOriginalImageIDForImage.Unlock()
+	return mock.GetOriginalImageIDForImageFunc(ctx, id)
+}
+
+// GetOriginalImageIDForImageCalls gets all the calls that were made to GetOriginalImageIDForImage.
+// Check the length with:
+//
+//	len(mockedQuerier.GetOriginalImageIDForImageCalls())
+func (mock *QuerierMock) GetOriginalImageIDForImageCalls() []struct {
+	Ctx context.Context
+	ID  pgtype.UUID
+} {
+	var calls []struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}
+	mock.lockGetOriginalImageIDForImage.RLock()
+	calls = mock.calls.GetOriginalImageIDForImage
+	mock.lockGetOriginalImageIDForImage.RUnlock()
+	return calls
+}
+
+// GetOriginalImageIDsForProject calls GetOriginalImageIDsForProjectFunc.
+func (mock *QuerierMock) GetOriginalImageIDsForProject(ctx context.Context, projectID pgtype.UUID) ([]pgtype.UUID, error) {
+	if mock.GetOriginalImageIDsForProjectFunc == nil {
+		panic("QuerierMock.GetOriginalImageIDsForProjectFunc: method is nil but Querier.GetOriginalImageIDsForProject was just called")
+	}
+	callInfo := struct {
+		Ctx       context.Context
+		ProjectID pgtype.UUID
+	}{
+		Ctx:       ctx,
+		ProjectID: projectID,
+	}
+	mock.lockGetOriginalImageIDsForProject.Lock()
+	mock.calls.GetOriginalImageIDsForProject = append(mock.calls.GetOriginalImageIDsForProject, callInfo)
+	mock.lockGetOriginalImageIDsForProject.Unlock()
+	return mock.GetOriginalImageIDsForProjectFunc(ctx, projectID)
+}
+
+// GetOriginalImageIDsForProjectCalls gets all the calls that were made to GetOriginalImageIDsForProject.
+// Check the length with:
+//
+//	len(mockedQuerier.GetOriginalImageIDsForProjectCalls())
+func (mock *QuerierMock) GetOriginalImageIDsForProjectCalls() []struct {
+	Ctx       context.Context
+	ProjectID pgtype.UUID
+} {
+	var calls []struct {
+		Ctx       context.Context
+		ProjectID pgtype.UUID
+	}
+	mock.lockGetOriginalImageIDsForProject.RLock()
+	calls = mock.calls.GetOriginalImageIDsForProject
+	mock.lockGetOriginalImageIDsForProject.RUnlock()
+	return calls
+}
+
+// GetOriginalImageStats calls GetOriginalImageStatsFunc.
+func (mock *QuerierMock) GetOriginalImageStats(ctx context.Context) (*GetOriginalImageStatsRow, error) {
+	if mock.GetOriginalImageStatsFunc == nil {
+		panic("QuerierMock.GetOriginalImageStatsFunc: method is nil but Querier.GetOriginalImageStats was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockGetOriginalImageStats.Lock()
+	mock.calls.GetOriginalImageStats = append(mock.calls.GetOriginalImageStats, callInfo)
+	mock.lockGetOriginalImageStats.Unlock()
+	return mock.GetOriginalImageStatsFunc(ctx)
+}
+
+// GetOriginalImageStatsCalls gets all the calls that were made to GetOriginalImageStats.
+// Check the length with:
+//
+//	len(mockedQuerier.GetOriginalImageStatsCalls())
+func (mock *QuerierMock) GetOriginalImageStatsCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockGetOriginalImageStats.RLock()
+	calls = mock.calls.GetOriginalImageStats
+	mock.lockGetOriginalImageStats.RUnlock()
 	return calls
 }
 
@@ -2247,6 +2669,42 @@ func (mock *QuerierMock) GetUserProfileByIDCalls() []struct {
 	return calls
 }
 
+// IncrementReferenceCount calls IncrementReferenceCountFunc.
+func (mock *QuerierMock) IncrementReferenceCount(ctx context.Context, id pgtype.UUID) error {
+	if mock.IncrementReferenceCountFunc == nil {
+		panic("QuerierMock.IncrementReferenceCountFunc: method is nil but Querier.IncrementReferenceCount was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}{
+		Ctx: ctx,
+		ID:  id,
+	}
+	mock.lockIncrementReferenceCount.Lock()
+	mock.calls.IncrementReferenceCount = append(mock.calls.IncrementReferenceCount, callInfo)
+	mock.lockIncrementReferenceCount.Unlock()
+	return mock.IncrementReferenceCountFunc(ctx, id)
+}
+
+// IncrementReferenceCountCalls gets all the calls that were made to IncrementReferenceCount.
+// Check the length with:
+//
+//	len(mockedQuerier.IncrementReferenceCountCalls())
+func (mock *QuerierMock) IncrementReferenceCountCalls() []struct {
+	Ctx context.Context
+	ID  pgtype.UUID
+} {
+	var calls []struct {
+		Ctx context.Context
+		ID  pgtype.UUID
+	}
+	mock.lockIncrementReferenceCount.RLock()
+	calls = mock.calls.IncrementReferenceCount
+	mock.lockIncrementReferenceCount.RUnlock()
+	return calls
+}
+
 // ListAllPlans calls ListAllPlansFunc.
 func (mock *QuerierMock) ListAllPlans(ctx context.Context) ([]*Plan, error) {
 	if mock.ListAllPlansFunc == nil {
@@ -2348,6 +2806,42 @@ func (mock *QuerierMock) ListInvoicesByUserIDCalls() []struct {
 	mock.lockListInvoicesByUserID.RLock()
 	calls = mock.calls.ListInvoicesByUserID
 	mock.lockListInvoicesByUserID.RUnlock()
+	return calls
+}
+
+// ListOrphanedOriginalImages calls ListOrphanedOriginalImagesFunc.
+func (mock *QuerierMock) ListOrphanedOriginalImages(ctx context.Context, arg ListOrphanedOriginalImagesParams) ([]*OriginalImage, error) {
+	if mock.ListOrphanedOriginalImagesFunc == nil {
+		panic("QuerierMock.ListOrphanedOriginalImagesFunc: method is nil but Querier.ListOrphanedOriginalImages was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Arg ListOrphanedOriginalImagesParams
+	}{
+		Ctx: ctx,
+		Arg: arg,
+	}
+	mock.lockListOrphanedOriginalImages.Lock()
+	mock.calls.ListOrphanedOriginalImages = append(mock.calls.ListOrphanedOriginalImages, callInfo)
+	mock.lockListOrphanedOriginalImages.Unlock()
+	return mock.ListOrphanedOriginalImagesFunc(ctx, arg)
+}
+
+// ListOrphanedOriginalImagesCalls gets all the calls that were made to ListOrphanedOriginalImages.
+// Check the length with:
+//
+//	len(mockedQuerier.ListOrphanedOriginalImagesCalls())
+func (mock *QuerierMock) ListOrphanedOriginalImagesCalls() []struct {
+	Ctx context.Context
+	Arg ListOrphanedOriginalImagesParams
+} {
+	var calls []struct {
+		Ctx context.Context
+		Arg ListOrphanedOriginalImagesParams
+	}
+	mock.lockListOrphanedOriginalImages.RLock()
+	calls = mock.calls.ListOrphanedOriginalImages
+	mock.lockListOrphanedOriginalImages.RUnlock()
 	return calls
 }
 

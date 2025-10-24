@@ -129,7 +129,14 @@ func (s *DefaultService) ReconcileImages(ctx context.Context, opts ReconcileOpti
 			defer checkSpan.End()
 
 			// Extract key from URL
-			origKey, origErr := extractS3Key(img.OriginalUrl)
+			var origKey string
+			var origErr error
+			if img.OriginalUrl.Valid {
+				origKey, origErr = extractS3Key(img.OriginalUrl.String)
+			} else {
+				origErr = fmt.Errorf("original_url is null")
+			}
+
 			var stagedKey string
 			var stagedErr error
 			if img.StagedUrl.Valid {
