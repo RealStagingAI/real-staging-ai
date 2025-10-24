@@ -84,7 +84,13 @@ type GroupedImageListResponse = {
 
 export default function ImagesPage() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(() => {
+    // Load from localStorage on mount
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedProjectId') || ""
+    }
+    return ""
+  });
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [groupedImages, setGroupedImages] = useState<GroupedImage[]>([]);
   const [useGroupedView] = useState(true); // Always use grouped view for now
@@ -493,8 +499,18 @@ export default function ImagesPage() {
         return;
       }
 
+      // If no project selected or selected project doesn't exist, try to restore from localStorage
       if (!selectedProjectId || !list.some((project) => project.id === selectedProjectId)) {
-        setSelectedProjectId(list[0].id);
+        const savedProjectId = typeof window !== 'undefined' 
+          ? localStorage.getItem('selectedProjectId') 
+          : null
+        
+        // Check if saved project still exists
+        if (savedProjectId && list.some(p => p.id === savedProjectId)) {
+          setSelectedProjectId(savedProjectId);
+        } else {
+          setSelectedProjectId(list[0].id);
+        }
       }
       setStatusMessage("");
     } catch (err: unknown) {
@@ -588,6 +604,13 @@ export default function ImagesPage() {
       }
     }
   }
+
+  // Persist selected project to localStorage
+  useEffect(() => {
+    if (selectedProjectId) {
+      localStorage.setItem('selectedProjectId', selectedProjectId)
+    }
+  }, [selectedProjectId])
 
   useEffect(() => {
     loadProjects();

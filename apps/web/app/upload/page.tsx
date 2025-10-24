@@ -55,7 +55,13 @@ export default function UploadPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<FileWithOverrides[]>([])
-  const [projectId, setProjectId] = useState("")
+  const [projectId, setProjectId] = useState(() => {
+    // Load from localStorage on mount
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('selectedProjectId') || ""
+    }
+    return ""
+  })
   const [defaultRoomType, setDefaultRoomType] = useState("")
   const [defaultStyles, setDefaultStyles] = useState<string[]>([])
   const [defaultPrompt, setDefaultPrompt] = useState("")
@@ -99,8 +105,19 @@ export default function UploadPage() {
       setStatus("Loading projects...")
       const res = await apiFetch<ProjectListResponse>("/v1/projects")
       setProjects(res.projects || [])
+      
+      // If no project selected, try to restore from localStorage or use first project
       if (!projectId && res.projects && res.projects.length > 0) {
-        setProjectId(res.projects[0].id)
+        const savedProjectId = typeof window !== 'undefined' 
+          ? localStorage.getItem('selectedProjectId') 
+          : null
+        
+        // Check if saved project still exists
+        if (savedProjectId && res.projects.some(p => p.id === savedProjectId)) {
+          setProjectId(savedProjectId)
+        } else {
+          setProjectId(res.projects[0].id)
+        }
       }
       setStatus("")
     } catch (err: unknown) {
@@ -129,6 +146,13 @@ export default function UploadPage() {
       setStatus(message)
     }
   }
+
+  // Persist selected project to localStorage
+  useEffect(() => {
+    if (projectId) {
+      localStorage.setItem('selectedProjectId', projectId)
+    }
+  }, [projectId])
 
   useEffect(() => {
     checkSubscriptionAndUsage()
