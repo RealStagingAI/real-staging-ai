@@ -56,10 +56,38 @@ type ImageListResponse = {
   images: ImageRecord[];
 };
 
+type ImageVariant = {
+  id: string;
+  style?: string | null;
+  status: string;
+  staged_url?: string | null;
+  error?: string | null;
+  cost_usd?: number | null;
+  processing_time_ms?: number | null;
+  model_used?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type GroupedImage = {
+  original_image_id?: string | null;
+  original_url: string;
+  room_type?: string | null;
+  seed?: number | null;
+  prompt?: string | null;
+  variants: ImageVariant[];
+};
+
+type GroupedImageListResponse = {
+  images: GroupedImage[];
+};
+
 export default function ImagesPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [images, setImages] = useState<ImageRecord[]>([]);
+  const [groupedImages, setGroupedImages] = useState<GroupedImage[]>([]);
+  const [useGroupedView, setUseGroupedView] = useState(true);
   const [selectedImageIds, setSelectedImageIds] = useState<Set<string>>(new Set());
   const [focusedImageId, setFocusedImageId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
@@ -491,25 +519,60 @@ export default function ImagesPage() {
     }
     
     try {
-      const res = await apiFetch<ImageListResponse>(`/v1/projects/${projectId}/images`);
-      const list = res.images ?? [];
-      setImages(list);
-      
-      // Only clear selection on initial load
-      if (!isBackground) {
-        setSelectedImageIds(new Set());
-        setStatusMessage(list.length === 0 ? "No images found for this project yet." : "");
-      }
-      
-      // Prefetch image URLs for display
-      if (list.length > 0) {
-        prefetchImageUrls(list);
+      if (useGroupedView) {
+        // Fetch grouped images
+        const res = await apiFetch<GroupedImageListResponse>(`/v1/projects/${projectId}/images/grouped`);
+        const groupedList = res.images ?? [];
+        setGroupedImages(groupedList);
+        
+        // Flatten for compatibility with existing code
+        const flatList: ImageRecord[] = groupedList.flatMap(group =>
+          group.variants.map(variant => ({
+            id: variant.id,
+            project_id: projectId,
+            original_url: group.original_url,
+            staged_url: variant.staged_url,
+            status: variant.status,
+            error: variant.error,
+            room_type: group.room_type,
+            style: variant.style,
+            seed: group.seed,
+            created_at: variant.created_at,
+            updated_at: variant.updated_at,
+          }))
+        );
+        setImages(flatList);
+        
+        if (!isBackground) {
+          setSelectedImageIds(new Set());
+          setStatusMessage(flatList.length === 0 ? "No images found for this project yet." : "");
+        }
+        
+        if (flatList.length > 0) {
+          prefetchImageUrls(flatList);
+        }
+      } else {
+        // Fetch flat list
+        const res = await apiFetch<ImageListResponse>(`/v1/projects/${projectId}/images`);
+        const list = res.images ?? [];
+        setImages(list);
+        setGroupedImages([]);
+        
+        if (!isBackground) {
+          setSelectedImageIds(new Set());
+          setStatusMessage(list.length === 0 ? "No images found for this project yet." : "");
+        }
+        
+        if (list.length > 0) {
+          prefetchImageUrls(list);
+        }
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       if (!isBackground) {
         setStatusMessage(message);
         setImages([]);
+        setGroupedImages([]);
         setImageUrls({});
       }
       // Silently fail for background refreshes

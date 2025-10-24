@@ -20,7 +20,7 @@ type FileWithOverrides = {
   id: string
   previewUrl: string
   roomType?: string
-  style?: string
+  styles?: string[]
   prompt?: string
 }
 
@@ -57,7 +57,7 @@ export default function UploadPage() {
   const [files, setFiles] = useState<FileWithOverrides[]>([])
   const [projectId, setProjectId] = useState("")
   const [defaultRoomType, setDefaultRoomType] = useState("")
-  const [defaultStyle, setDefaultStyle] = useState("")
+  const [defaultStyles, setDefaultStyles] = useState<string[]>([])
   const [defaultPrompt, setDefaultPrompt] = useState("")
   const [status, setStatus] = useState<string>("")
   const [projects, setProjects] = useState<Project[]>([])
@@ -196,10 +196,17 @@ export default function UploadPage() {
     })
   }
 
-  const updateFileOverride = (fileId: string, field: 'roomType' | 'style', value: string) => {
-    setFiles(prev => prev.map(f => 
-      f.id === fileId ? { ...f, [field]: value || undefined } : f
-    ))
+  const updateFileOverride = (fileId: string, field: 'roomType' | 'styles', value: string | string[]) => {
+    setFiles(prev => prev.map(f => {
+      if (f.id === fileId) {
+        if (field === 'styles') {
+          return { ...f, styles: Array.isArray(value) ? value : (value ? [value] : undefined) }
+        }
+        // roomType is always string
+        return { ...f, roomType: typeof value === 'string' ? (value || undefined) : undefined }
+      }
+      return f
+    }))
   }
 
   async function uploadSingleFile(fileData: FileWithOverrides): Promise<{ success: boolean; imageId?: string; error?: string }> {
@@ -251,29 +258,64 @@ export default function UploadPage() {
       const originalUrl = `${u.origin}${u.pathname}`
 
       const roomType = fileData.roomType || defaultRoomType
-      const style = fileData.style || defaultStyle
+      const styles = fileData.styles && fileData.styles.length > 0 ? fileData.styles : defaultStyles
       const prompt = fileData.prompt || defaultPrompt
 
-      const body: { project_id: string; original_url: string; room_type?: string; style?: string; prompt?: string } = {
-        project_id: projectId,
-        original_url: originalUrl,
+      // If multiple styles selected, use batch endpoint
+      if (styles.length > 1) {
+        const images = styles.map(style => {
+          const body: { project_id: string; original_url: string; room_type?: string; style?: string; prompt?: string } = {
+            project_id: projectId,
+            original_url: originalUrl,
+          }
+          if (roomType) body.room_type = roomType
+          if (style) body.style = style
+          if (prompt && prompt.length >= 10) body.prompt = prompt
+          return body
+        })
+
+        const batchResponse = await apiFetch<{ images: Array<{ id: string }>, success: number, failed: number }>("/v1/images/batch", {
+          method: "POST",
+          body: JSON.stringify({ images }),
+        })
+        
+        if (batchResponse.failed > 0) {
+          throw new Error(`${batchResponse.failed} of ${styles.length} variants failed to create`)
+        }
+        
+        updateProgress('success', 100)
+        const firstImageId = batchResponse.images[0]?.id
+        if (firstImageId) {
+          setUploadProgress(prev => ({
+            ...prev,
+            [fileData.id]: { ...prev[fileData.id], imageId: firstImageId }
+          }))
+        }
+        return { success: true, imageId: firstImageId }
+      } else {
+        // Single style or no style - use single endpoint
+        const body: { project_id: string; original_url: string; room_type?: string; style?: string; prompt?: string } = {
+          project_id: projectId,
+          original_url: originalUrl,
+        }
+        if (roomType) body.room_type = roomType
+        if (styles.length > 0) body.style = styles[0]
+        if (prompt && prompt.length >= 10) body.prompt = prompt
+
+        const created = await apiFetch<{ id: string }>("/v1/images", {
+          method: "POST",
+          body: JSON.stringify(body),
+        })
+        
+        updateProgress('success', 100)
+        setUploadProgress(prev => ({
+          ...prev,
+          [fileData.id]: { ...prev[fileData.id], imageId: created.id }
+        }))
+        
+        return { success: true, imageId: created.id }
       }
-      if (roomType) body.room_type = roomType
-      if (style) body.style = style
-      if (prompt && prompt.length >= 10) body.prompt = prompt
 
-      const created = await apiFetch<{ id: string }>("/v1/images", {
-        method: "POST",
-        body: JSON.stringify(body),
-      })
-
-      updateProgress('success', 100)
-      setUploadProgress(prev => ({
-        ...prev,
-        [fileData.id]: { ...prev[fileData.id], imageId: created.id }
-      }))
-      
-      return { success: true, imageId: created.id }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err)
       updateProgress('error', 0, message)
@@ -322,7 +364,7 @@ export default function UploadPage() {
         setFiles([])
         setUploadProgress({})
         setDefaultRoomType("")
-        setDefaultStyle("")
+        setDefaultStyles([])
       }, 3000)
     } else if (successCount === 0) {
       setStatus(`Upload failed for all ${errorCount} images. See individual errors above.`)
@@ -571,21 +613,39 @@ export default function UploadPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Furniture Style <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
+                    Furniture Styles <span className="text-gray-400 dark:text-gray-500 font-normal">(select multiple)</span>
                   </label>
-                  <select
-                    className="input"
-                    value={defaultStyle}
-                    onChange={(e) => setDefaultStyle(e.target.value)}
-                    disabled={isUploading}
-                  >
-                    <option value="">Default</option>
-                    <option value="modern">Modern</option>
-                    <option value="contemporary">Contemporary</option>
-                    <option value="traditional">Traditional</option>
-                    <option value="industrial">Industrial</option>
-                    <option value="scandinavian">Scandinavian</option>
-                  </select>
+                  <div className="space-y-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    {[
+                      { value: 'modern', label: 'Modern' },
+                      { value: 'contemporary', label: 'Contemporary' },
+                      { value: 'traditional', label: 'Traditional' },
+                      { value: 'industrial', label: 'Industrial' },
+                      { value: 'scandinavian', label: 'Scandinavian' }
+                    ].map(({ value, label }) => (
+                      <label key={value} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded">
+                        <input
+                          type="checkbox"
+                          checked={defaultStyles.includes(value)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setDefaultStyles([...defaultStyles, value])
+                            } else {
+                              setDefaultStyles(defaultStyles.filter(s => s !== value))
+                            }
+                          }}
+                          disabled={isUploading}
+                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {defaultStyles.length > 0 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {defaultStyles.length} style{defaultStyles.length > 1 ? 's' : ''} selected · Creates {defaultStyles.length} variant{defaultStyles.length > 1 ? 's' : ''} per image
+                    </p>
+                  )}
                 </div>
               </div>
               
@@ -722,19 +782,19 @@ export default function UploadPage() {
                               </div>
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  Style
+                                  Style Override
                                 </label>
                                 <select
                                   className="input text-sm"
-                                  value={fileData.style || ''}
-                                  onChange={(e) => updateFileOverride(fileData.id, 'style', e.target.value)}
+                                  value={fileData.styles?.[0] || ''}
+                                  onChange={(e) => updateFileOverride(fileData.id, 'styles', e.target.value)}
                                 >
                                   <option value="">Use Default</option>
-                                  <option value="modern">Modern</option>
-                                  <option value="contemporary">Contemporary</option>
-                                  <option value="traditional">Traditional</option>
-                                  <option value="industrial">Industrial</option>
-                                  <option value="scandinavian">Scandinavian</option>
+                                  <option value="modern">Modern (single)</option>
+                                  <option value="contemporary">Contemporary (single)</option>
+                                  <option value="traditional">Traditional (single)</option>
+                                  <option value="industrial">Industrial (single)</option>
+                                  <option value="scandinavian">Scandinavian (single)</option>
                                 </select>
                               </div>
                             </div>
