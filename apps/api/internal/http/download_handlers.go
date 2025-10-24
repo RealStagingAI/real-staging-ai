@@ -124,7 +124,12 @@ func (s *Server) presignImageDownloadHandler(c echo.Context) error {
 	} else {
 		p = strings.TrimPrefix(p, bucket+"/")
 	}
-	fileKey := p
+	
+	// URL-decode the file key since u.Path is URL-encoded
+	fileKey, err := url.PathUnescape(p)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "bad_request", Message: "invalid file key encoding"})
+	}
 	if fileKey == "" {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Error: "bad_request", Message: "could not derive file key"})
 	}
