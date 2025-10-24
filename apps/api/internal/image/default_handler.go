@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 
 	"github.com/real-staging-ai/api/internal/auth"
+	"github.com/real-staging-ai/api/internal/project"
 	"github.com/real-staging-ai/api/internal/user"
 )
 
@@ -25,14 +26,21 @@ type DefaultHandler struct {
 	service      Service
 	usageChecker UsageChecker
 	userRepo     user.Repository
+	projectRepo  project.Repository
 }
 
 // NewDefaultHandler creates a new Handler instance.
-func NewDefaultHandler(service Service, usageChecker UsageChecker, userRepo user.Repository) *DefaultHandler {
+func NewDefaultHandler(
+	service Service,
+	usageChecker UsageChecker,
+	userRepo user.Repository,
+	projectRepo project.Repository,
+) *DefaultHandler {
 	return &DefaultHandler{
 		service:      service,
 		usageChecker: usageChecker,
 		userRepo:     userRepo,
+		projectRepo:  projectRepo,
 	}
 }
 
@@ -263,6 +271,32 @@ func (h *DefaultHandler) GetGroupedProjectImages(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error:   "bad_request",
 			Message: "Invalid project ID format",
+		})
+	}
+
+	// Verify user owns the project
+	auth0Sub, err := auth.GetUserIDOrDefault(c)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Invalid or missing JWT token",
+		})
+	}
+
+	user, err := h.userRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+	if err != nil {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "User not found",
+		})
+	}
+
+	// Verify project belongs to user by attempting to fetch it
+	_, err = h.projectRepo.GetProjectByIDAndUserID(c.Request().Context(), projectID, user.ID.String())
+	if err != nil {
+		return c.JSON(http.StatusForbidden, ErrorResponse{
+			Error:   "forbidden",
+			Message: "Project not found or access denied",
 		})
 	}
 

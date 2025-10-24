@@ -74,7 +74,7 @@ func TestDefaultHandler_CreateImage(t *testing.T) {
 			serviceMock := &ServiceMock{}
 			tc.setupMock(serviceMock)
 
-			h := NewDefaultHandler(serviceMock, nil, nil)
+			h := NewDefaultHandler(serviceMock, nil, nil, nil)
 
 			if assert.NoError(t, h.CreateImage(c)) {
 				assert.Equal(t, tc.expectedCode, rec.Code)
@@ -146,7 +146,7 @@ func TestDefaultHandler_GetImage(t *testing.T) {
 			serviceMock := &ServiceMock{}
 			tc.setupMock(serviceMock)
 
-			h := NewDefaultHandler(serviceMock, nil, nil)
+			h := NewDefaultHandler(serviceMock, nil, nil, nil)
 
 			if assert.NoError(t, h.GetImage(c)) {
 				assert.Equal(t, tc.expectedCode, rec.Code)
@@ -208,7 +208,7 @@ func TestDefaultHandler_GetProjectImages(t *testing.T) {
 			serviceMock := &ServiceMock{}
 			tc.setupMock(serviceMock)
 
-			h := NewDefaultHandler(serviceMock, nil, nil)
+			h := NewDefaultHandler(serviceMock, nil, nil, nil)
 
 			if assert.NoError(t, h.GetProjectImages(c)) {
 				assert.Equal(t, tc.expectedCode, rec.Code)
@@ -280,7 +280,7 @@ func TestDefaultHandler_DeleteImage(t *testing.T) {
 			serviceMock := &ServiceMock{}
 			tc.setupMock(serviceMock)
 
-			h := NewDefaultHandler(serviceMock, nil, nil)
+			h := NewDefaultHandler(serviceMock, nil, nil, nil)
 
 			if assert.NoError(t, h.DeleteImage(c)) {
 				assert.Equal(t, tc.expectedCode, rec.Code)
@@ -365,7 +365,7 @@ func TestDefaultHandler_validateCreateImageRequest(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			h := NewDefaultHandler(nil, nil, nil)
+			h := NewDefaultHandler(nil, nil, nil, nil)
 			errs := h.validateCreateImageRequest(tc.req)
 			if tc.expectError {
 				assert.NotEmpty(t, errs)

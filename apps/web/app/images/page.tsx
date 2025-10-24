@@ -1218,7 +1218,7 @@ export default function ImagesPage() {
 
                 {/* Group Indicator Badge - Bottom Center */}
                 {isGrouped && group && (
-                  <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex items-center gap-1 z-30">
+                  <div className="absolute top-1 left-1/2 -translate-x-1/2 flex items-center gap-1 z-30">
                     <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-2 border-current shadow-lg text-xs font-semibold"
                       style={{
                         borderColor: groupColors[groupColorIndex].includes('purple') ? '#a78bfa' :

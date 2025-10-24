@@ -76,8 +76,11 @@ func NewServer(
 	// Initialize user repository for usage checks
 	userRepo := user.NewDefaultRepository(db)
 
+	// Initialize project repository for ownership verification
+	projectRepo := project.NewDefaultRepository(db)
+
 	// Initialize image handler with usage checking
-	imgHandler := image.NewDefaultHandler(imageService, usageService, userRepo)
+	imgHandler := image.NewDefaultHandler(imageService, usageService, userRepo, projectRepo)
 
 	// Initialize Pub/Sub (Redis) if configured
 	var ps PubSub
@@ -204,8 +207,11 @@ func NewTestServer(
 	userRepo := user.NewDefaultRepository(db)
 	subscriptionChecker := billing.NewDefaultSubscriptionChecker(db)
 
+	// Initialize project repository for ownership verification
+	projectRepo := project.NewDefaultRepository(db)
+
 	// Initialize image handler with usage checking
-	imgHandler := image.NewDefaultHandler(imageService, usageService, userRepo)
+	imgHandler := image.NewDefaultHandler(imageService, usageService, userRepo, projectRepo)
 
 	s := &Server{
 		log:                 log,
