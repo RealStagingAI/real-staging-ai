@@ -1,7 +1,7 @@
 ### Overview
 
-[![codecov](https://codecov.io/gh/jasonkradams/real-staging-ai/graph/badge.svg?token=SXDCPC1HOK)](https://codecov.io/gh/jasonkradams/real-staging-ai)
-[![CI](https://github.com/jasonkradams/real-staging-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/jasonkradams/real-staging-ai/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/RealStagingAI/real-staging-ai/graph/badge.svg?token=SXDCPC1HOK)](https://codecov.io/gh/RealStagingAI/real-staging-ai)
+[![CI](https://github.com/RealStagingAI/real-staging-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/RealStagingAI/real-staging-ai/actions/workflows/ci.yml)
 
 A DIY virtual staging SaaS for real-estate photos. Upload a room photo → receive an AI-staged image using Replicate's SDXL-Lightning model. Fast time-to-market with production-ready AI staging.
 
@@ -121,8 +121,8 @@ See `docs/configuration.md` for all environment variables. Highlights:
 
 **Full Documentation:**
 
-- **Live:** https://jasonkradams.github.io/real-staging-ai/ (Material for MkDocs)
-- **API Reference:** https://jasonkradams.github.io/real-staging-ai/api/ (OpenAPI/Swagger)
+- **Live:** https://api.real-staging-ai/api/v1/docs/ (Material for MkDocs)
+- **API Reference:** https://api.real-staging-ai/api/v1/docs/api/ (OpenAPI/Swagger)
 - **Local:** `make docs-serve` then open http://localhost:8000
 
 **Documentation Status (75% Complete):**

@@ -4,8 +4,8 @@ site_author: Real Staging AI Team
 site_url: https://docs.real-staging.ai
 
 # Repository
-repo_name: jasonkradams/real-staging-ai
-repo_url: https://github.com/jasonkradams/real-staging-ai
+repo_name: RealStagingAI/real-staging-ai
+repo_url: https://github.com/RealStagingAI/real-staging-ai
 edit_uri: edit/main/apps/docs/docs/
 
 # Copyright
@@ -163,7 +163,7 @@ extra:
       link: https://api.real-staging.ai/api/v1/docs/
       name: API Reference
     - icon: fontawesome/brands/github
-      link: https://github.com/jasonkradams/real-staging-ai
+      link: https://github.com/RealStagingAI/real-staging-ai
       name: GitHub Repository
   
   analytics:
@@ -182,7 +182,7 @@ extra:
           data: 0
           note: >-
             Thanks for your feedback! Help us improve by
-            <a href="https://github.com/jasonkradams/real-staging-ai/issues/new" target="_blank" rel="noopener">opening an issue</a>.
+            <a href="https://github.com/RealStagingAI/real-staging-ai/issues/new" target="_blank" rel="noopener">opening an issue</a>.
   
   version:
     provider: mike

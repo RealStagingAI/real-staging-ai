@@ -127,7 +127,7 @@ Final polish and release:
 - 📝 [DOCUMENTATION_GUIDE.md](DOCUMENTATION_GUIDE.md) - Writing standards
 
 ### Existing Documentation
-- 🌐 Live docs: https://jasonkradams.github.io/real-staging-ai/
+- 🌐 Live docs: https://api.real-staging-ai/api/v1/docs/
 - 📁 Source: `apps/docs/docs/`
 - 🗺️ Roadmap: `apps/docs/docs/project-history/roadmap.md`
 - ⚙️ Config: `apps/docs/mkdocs.yml`

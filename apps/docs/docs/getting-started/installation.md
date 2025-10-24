@@ -27,7 +27,7 @@ You'll need accounts for:
 ## Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/jasonkradams/real-staging-ai.git
+git clone https://github.com/RealStagingAI/real-staging-ai.git
 cd real-staging-ai
 ```
 

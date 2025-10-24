@@ -26,7 +26,7 @@ The fastest way to get started:
 
 ```bash
 # Clone the repository
-git clone https://github.com/jasonkradams/real-staging-ai.git
+git clone https://github.com/RealStagingAI/real-staging-ai.git
 cd real-staging-ai
 
 # Get a Replicate API token
@@ -71,20 +71,20 @@ make generate
 
 ## Common Commands
 
-| Command | Description |
-|---------|-------------|
-| `make up` | Start development stack |
-| `make down` | Stop all services |
-| `make test` | Run unit tests |
-| `make test-integration` | Run integration tests |
-| `make lint` | Run linters |
-| `make migrate` | Run database migrations |
-| `make token` | Generate Auth0 test token |
+| Command                 | Description               |
+| ----------------------- | ------------------------- |
+| `make up`               | Start development stack   |
+| `make down`             | Stop all services         |
+| `make test`             | Run unit tests            |
+| `make test-integration` | Run integration tests     |
+| `make lint`             | Run linters               |
+| `make migrate`          | Run database migrations   |
+| `make token`            | Generate Auth0 test token |
 
 ## Getting Help
 
 - **Documentation**: You're reading it! Check the sidebar for specific topics
-- **GitHub Issues**: [Report bugs or request features](https://github.com/jasonkradams/real-staging-ai/issues)
+- **GitHub Issues**: [Report bugs or request features](https://github.com/RealStagingAI/real-staging-ai/issues)
 - **Contributing**: See the [Contributing Guide](../development/contributing.md)
 
 ---

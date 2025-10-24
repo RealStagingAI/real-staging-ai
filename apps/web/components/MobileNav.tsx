@@ -49,10 +49,10 @@ export default function MobileNav() {
   const navLinks = user
     ? [
         { href: '/', label: 'Home', icon: Home },
-        { href: '/docs', label: 'Docs', icon: BookOpen },
-        { href: '/pricing', label: 'Pricing', icon: DollarSign },
         { href: '/upload', label: 'Upload', icon: Upload },
         { href: '/images', label: 'Images', icon: ImageIcon },
+        { href: '/docs', label: 'Docs', icon: BookOpen },
+        { href: '/pricing', label: 'Pricing', icon: DollarSign },
         { href: '/billing', label: 'Billing', icon: CreditCard },
         { href: '/profile', label: 'Profile', icon: User },
       ]

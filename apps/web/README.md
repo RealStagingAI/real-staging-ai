@@ -134,7 +134,7 @@ The Next.js app proxies `/api/*` requests to the backend API at `http://localhos
 
 - **Auth0 Integration**: [docs/frontend/AUTH0_INTEGRATION.md](../../docs/frontend/AUTH0_INTEGRATION.md)
 - **Phase 1 Implementation**: [docs/frontend/PHASE1_IMPLEMENTATION.md](../../docs/frontend/PHASE1_IMPLEMENTATION.md)
-- **API Documentation**: https://jasonkradams.github.io/real-staging-ai/
+- **API Documentation**: https://api.real-staging-ai/api/v1/docs/
 
 ## Troubleshooting
 

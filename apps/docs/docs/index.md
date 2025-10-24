@@ -103,8 +103,8 @@ real-staging-ai/
 ## Key Resources
 
 - **Live App**: [real-staging.ai](https://real-staging.ai)
-- **API Docs**: [OpenAPI Specification](https://jasonkradams.github.io/real-staging-ai/)
-- **Source Code**: [GitHub Repository](https://github.com/jasonkradams/real-staging-ai)
+- **API Docs**: [OpenAPI Specification](https://api.real-staging-ai/api/v1/docs/)
+- **Source Code**: [GitHub Repository](https://github.com/RealStagingAI/real-staging-ai)
 
 ## Getting Help
 

@@ -7,7 +7,7 @@ Complete REST API documentation for Real Staging AI.
 The API is fully documented using OpenAPI 3.0 specification.
 
 **Live API Documentation:**  
-[https://jasonkradams.github.io/real-staging-ai/api/](https://jasonkradams.github.io/real-staging-ai/api/) - Interactive Swagger UI
+[https://api.real-staging-ai/api/v1/docs/api/](https://api.real-staging-ai/api/v1/docs/api/) - Interactive Swagger UI
 
 **Local API Documentation:**  
 [http://localhost:8080/api/v1/docs/](http://localhost:8080/api/v1/docs/) (when running locally)
@@ -353,7 +353,7 @@ Breaking changes will result in a new version (`v2`), with v1 maintained for bac
 ---
 
 **Full OpenAPI Specification:**  
-[View on GitHub Pages →](https://jasonkradams.github.io/real-staging-ai/)
+[View on GitHub Pages →](https://api.real-staging-ai/api/v1/docs/)
 
 **Related Documentation:**
 - [Authentication Guide](../guides/authentication.md)

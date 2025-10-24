@@ -122,7 +122,7 @@ Real Staging AI is production-ready with core features implemented:
 
 Have a feature request?
 
-1. Check [existing issues](https://github.com/jasonkradams/real-staging-ai/issues)
+1. Check [existing issues](https://github.com/RealStagingAI/real-staging-ai/issues)
 2. Open a new issue with the `feature-request` label
 3. Describe the problem and proposed solution
 4. Discuss with the community

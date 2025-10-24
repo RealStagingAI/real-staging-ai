@@ -150,7 +150,7 @@ When working on documentation:
 
 ## Related Resources
 
-- **Published Docs:** https://jasonkradams.github.io/real-staging-ai/
+- **Published Docs:** https://api.real-staging-ai/api/v1/docs/
 - **Docs Source:** [../docs/](../docs/)
 - **Roadmap:** [../docs/project-history/roadmap.md](../docs/project-history/roadmap.md)
 - **MkDocs Config:** [../mkdocs.yml](../mkdocs.yml)

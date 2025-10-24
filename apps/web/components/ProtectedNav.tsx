@@ -12,20 +12,6 @@ export default function ProtectedNav() {
 
   return (
     <>
-      <Link
-        href="/docs"
-        className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-slate-800"
-      >
-        <BookOpen className="h-4 w-4" />
-        Docs
-      </Link>
-      <Link
-        href="/pricing"
-        className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-slate-800"
-      >
-        <DollarSign className="h-4 w-4" />
-        Pricing
-      </Link>
       {!isLoading && user && (
         <>
           <Link
@@ -51,6 +37,20 @@ export default function ProtectedNav() {
           </Link>
         </>
       )}
+      <Link
+        href="/docs"
+        className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-slate-800"
+      >
+        <BookOpen className="h-4 w-4" />
+        Docs
+      </Link>
+      <Link
+        href="/pricing"
+        className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-slate-800"
+      >
+        <DollarSign className="h-4 w-4" />
+        Pricing
+      </Link>
     </>
   );
 }
