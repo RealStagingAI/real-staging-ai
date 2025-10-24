@@ -87,7 +87,7 @@ export default function ImagesPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [groupedImages, setGroupedImages] = useState<GroupedImage[]>([]);
-  const [useGroupedView, setUseGroupedView] = useState(true);
+  const [useGroupedView] = useState(true); // Always use grouped view for now
   const [selectedImageIds, setSelectedImageIds] = useState<Set<string>>(new Set());
   const [focusedImageId, setFocusedImageId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string>("");
@@ -1099,6 +1099,22 @@ export default function ImagesPage() {
             const originalSrc = urls?.original ?? null;
             // Prioritize first 3 images for LCP optimization
             const isPriority = index < 3;
+            
+            // Find which group this image belongs to
+            const group = groupedImages.find(g => 
+              g.variants.some(v => v.id === image.id)
+            );
+            const variantIndex = group?.variants.findIndex(v => v.id === image.id) ?? -1;
+            const isGrouped = group && group.variants.length > 1;
+            const groupColors = [
+              'border-purple-300 dark:border-purple-600 bg-purple-50/50 dark:bg-purple-900/20',
+              'border-emerald-300 dark:border-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/20',
+              'border-amber-300 dark:border-amber-600 bg-amber-50/50 dark:bg-amber-900/20',
+              'border-rose-300 dark:border-rose-600 bg-rose-50/50 dark:bg-rose-900/20',
+              'border-cyan-300 dark:border-cyan-600 bg-cyan-50/50 dark:bg-cyan-900/20',
+            ];
+            const groupColorIndex = groupedImages.findIndex(g => g === group) % groupColors.length;
+            const groupColor = isGrouped ? groupColors[groupColorIndex] : '';
 
             return (
               <div
@@ -1106,6 +1122,7 @@ export default function ImagesPage() {
                 ref={(el) => registerImageObserver(el, image.id)}
                 className={cn(
                   "card group cursor-pointer transition-all duration-200 relative",
+                  isGrouped && `border-2 ${groupColor}`,
                   selectedImageIds.has(image.id) && "ring-2 ring-blue-500 shadow-xl",
                   focusedImageId === image.id && "ring-4 ring-amber-400 shadow-2xl shadow-amber-500/20"
                 )}
@@ -1172,9 +1189,32 @@ export default function ImagesPage() {
                     )
                   )}
 
-                  {/* Selection Indicator */}
-                  <div className={cn(
-                  "absolute top-3 left-3 flex items-center justify-center h-6 w-6 rounded-full border-2 transition-all",
+                {/* Group Indicator Badge */}
+                {isGrouped && group && (
+                  <div className="absolute top-3 left-3 flex items-center gap-1 z-20">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-current shadow-sm text-xs font-medium"
+                      style={{
+                        borderColor: groupColors[groupColorIndex].includes('purple') ? '#a78bfa' :
+                                    groupColors[groupColorIndex].includes('emerald') ? '#34d399' :
+                                    groupColors[groupColorIndex].includes('amber') ? '#fbbf24' :
+                                    groupColors[groupColorIndex].includes('rose') ? '#fb7185' : '#22d3ee',
+                        color: groupColors[groupColorIndex].includes('purple') ? '#7c3aed' :
+                              groupColors[groupColorIndex].includes('emerald') ? '#059669' :
+                              groupColors[groupColorIndex].includes('amber') ? '#d97706' :
+                              groupColors[groupColorIndex].includes('rose') ? '#e11d48' : '#0891b2'
+                      }}
+                    >
+                      <Grid3x3 className="h-3 w-3" />
+                      {variantIndex + 1}/{group.variants.length}
+                      {image.style && <span className="text-[10px] opacity-75">· {image.style}</span>}
+                    </span>
+                  </div>
+                )}
+
+                {/* Selection Indicator */}
+                <div className={cn(
+                  "absolute flex items-center justify-center h-6 w-6 rounded-full border-2 transition-all z-20",
+                  isGrouped ? "top-3 left-20" : "top-3 left-3",
                   selectedImageIds.has(image.id)
                     ? "bg-blue-600 border-blue-600"
                     : "bg-white border-white group-hover:border-blue-400"

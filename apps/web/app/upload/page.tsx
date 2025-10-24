@@ -615,36 +615,49 @@ export default function UploadPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Furniture Styles <span className="text-gray-400 dark:text-gray-500 font-normal">(select multiple)</span>
                   </label>
-                  <div className="space-y-2 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    {[
-                      { value: 'modern', label: 'Modern' },
-                      { value: 'contemporary', label: 'Contemporary' },
-                      { value: 'traditional', label: 'Traditional' },
-                      { value: 'industrial', label: 'Industrial' },
-                      { value: 'scandinavian', label: 'Scandinavian' }
-                    ].map(({ value, label }) => (
-                      <label key={value} className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded">
-                        <input
-                          type="checkbox"
-                          checked={defaultStyles.includes(value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setDefaultStyles([...defaultStyles, value])
-                            } else {
-                              setDefaultStyles(defaultStyles.filter(s => s !== value))
-                            }
-                          }}
-                          disabled={isUploading}
-                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
-                      </label>
-                    ))}
+                  <div className="relative">
+                    <select
+                      multiple
+                      className="input min-h-[120px]"
+                      value={defaultStyles}
+                      onChange={(e) => {
+                        const selected = Array.from(e.target.selectedOptions, option => option.value);
+                        setDefaultStyles(selected);
+                      }}
+                      disabled={isUploading}
+                    >
+                      <option value="modern">Modern</option>
+                      <option value="contemporary">Contemporary</option>
+                      <option value="traditional">Traditional</option>
+                      <option value="industrial">Industrial</option>
+                      <option value="scandinavian">Scandinavian</option>
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Hold Cmd/Ctrl to select multiple styles
+                    </p>
                   </div>
                   {defaultStyles.length > 0 && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {defaultStyles.length} style{defaultStyles.length > 1 ? 's' : ''} selected · Creates {defaultStyles.length} variant{defaultStyles.length > 1 ? 's' : ''} per image
-                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {defaultStyles.map(style => (
+                        <span
+                          key={style}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 text-xs font-medium"
+                        >
+                          {style.charAt(0).toUpperCase() + style.slice(1)}
+                          <button
+                            type="button"
+                            onClick={() => setDefaultStyles(defaultStyles.filter(s => s !== style))}
+                            disabled={isUploading}
+                            className="hover:text-blue-600 dark:hover:text-blue-200"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                      <span className="text-xs text-gray-500 dark:text-gray-400 py-1">
+                        → {defaultStyles.length} variant{defaultStyles.length > 1 ? 's' : ''} per image
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -782,20 +795,37 @@ export default function UploadPage() {
                               </div>
                               <div>
                                 <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                  Style Override
+                                  Style Override <span className="text-gray-400 font-normal">(multi-select)</span>
                                 </label>
                                 <select
-                                  className="input text-sm"
-                                  value={fileData.styles?.[0] || ''}
-                                  onChange={(e) => updateFileOverride(fileData.id, 'styles', e.target.value)}
+                                  multiple
+                                  className="input text-sm min-h-[80px]"
+                                  value={fileData.styles || []}
+                                  onChange={(e) => {
+                                    const selected = Array.from(e.target.selectedOptions, option => option.value);
+                                    updateFileOverride(fileData.id, 'styles', selected.length > 0 ? selected : []);
+                                  }}
                                 >
-                                  <option value="">Use Default</option>
-                                  <option value="modern">Modern (single)</option>
-                                  <option value="contemporary">Contemporary (single)</option>
-                                  <option value="traditional">Traditional (single)</option>
-                                  <option value="industrial">Industrial (single)</option>
-                                  <option value="scandinavian">Scandinavian (single)</option>
+                                  <option value="modern">Modern</option>
+                                  <option value="contemporary">Contemporary</option>
+                                  <option value="traditional">Traditional</option>
+                                  <option value="industrial">Industrial</option>
+                                  <option value="scandinavian">Scandinavian</option>
                                 </select>
+                                {fileData.styles && fileData.styles.length > 0 ? (
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {fileData.styles.map(style => (
+                                      <span
+                                        key={style}
+                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100"
+                                      >
+                                        {style}
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-gray-400 mt-1">Using default styles</p>
+                                )}
                               </div>
                             </div>
                           )}
