@@ -8,25 +8,25 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
 
 - [ ] **Render Account**
   - [x] Sign up at [render.com](https://render.com)
-  - [ ] Add payment method
+  - [x] Add payment method
   - [x] Verify account
 
 - [ ] **Backblaze B2 Storage**
-  - [ ] Create account at [backblaze.com](https://www.backblaze.com/b2/cloud-storage.html)
-  - [ ] Add payment method
-  - [ ] Create bucket: `realstaging-prod` (Private)
-  - [ ] Note bucket region (e.g., `us-west-004`)
-  - [ ] Create Application Key with bucket access
-  - [ ] Save `keyID` and `applicationKey` securely
+  - [x] Create account at [backblaze.com](https://www.backblaze.com/b2/cloud-storage.html)
+  - [x] Add payment method
+  - [x] Create bucket: `realstaging-prod` (Private)
+  - [x] Note bucket region (e.g., `us-west-004`)
+  - [x] Create Application Key with bucket access
+  - [x] Save `keyID` and `applicationKey` securely
   - [ ] Configure CORS for your frontend domain
 
 - [ ] **Auth0 Configuration**
   - [x] Create production application
-  - [ ] Configure allowed callback URLs for production
-  - [ ] Configure allowed logout URLs
-  - [ ] Configure allowed web origins
-  - [ ] Enable refresh token rotation
-  - [ ] Save Domain and Audience values
+  - [x] Configure allowed callback URLs for production
+  - [x] Configure allowed logout URLs
+  - [x] Configure allowed web origins
+  - [x] Enable refresh token rotation
+  - [x] Save Domain and Audience values
 
 - [ ] **Stripe Configuration**
   - [x] Complete business verification
@@ -38,20 +38,20 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
   - [ ] Test checkout flow in live mode
 
 - [ ] **Replicate Account**
-  - [ ] Create account at [replicate.com](https://replicate.com)
-  - [ ] Get API token
-  - [ ] Add payment method
-  - [ ] Verify model access (`qwen/qwen-image-edit`)
+  - [x] Create account at [replicate.com](https://replicate.com)
+  - [x] Get API token
+  - [x] Add payment method
+  - [x] Verify model access (`qwen/qwen-image-edit`)
 
 ### Code Preparation
 
-- [ ] **Update Configuration**
-  - [ ] Review `render.yaml` in repository root
-  - [ ] Update region to your preferred location
-  - [ ] Update S3 endpoint to match B2 bucket region
-  - [ ] Update S3 bucket name
-  - [ ] Update frontend URL
-  - [ ] Commit changes to main branch
+- [x] **Update Configuration**
+  - [x] Review `render.yaml` in repository root
+  - [x] Update region to your preferred location
+  - [x] Update S3 endpoint to match B2 bucket region
+  - [x] Update S3 bucket name
+  - [x] Update frontend URL
+  - [x] Commit changes to main branch
 
 - [ ] **Version Control**
   - [ ] Tag release version: `git tag -a v1.0.0 -m "Production release"`
@@ -89,10 +89,10 @@ Complete checklist for deploying Real Staging AI to production on Render with Ba
   - [x] `S3_SECRET_KEY`: B2 applicationKey
   - [x] `REPLICATE_API_TOKEN`: `r8_...`
 
-- [ ] **Database Setup**
-- [ ] Get DATABASE_URL from Render dashboard:
+- [x] **Database Setup**
+- [x] Get DATABASE_URL from Render dashboard:
   - Go to `realstaging-db` → Connect → Copy Internal Database URL
-  - [ ] **Run Migrations (Choose ONE method):**
+  - [x] **Run Migrations (Choose ONE method):**
     
     **Option A: From Local Machine (Recommended)**
     ```bash

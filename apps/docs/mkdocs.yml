@@ -204,15 +204,20 @@ nav:
     - Local Development: guides/local-development.md
     - Testing: guides/testing.md
     - Authentication: guides/authentication.md
-    - Backblaze B2 Setup: guides/backblaze-b2-setup.md
+    - Admin Features: guides/admin-features.md
+    - Stripe Setup: guides/stripe-setup.md
+    - Stripe Billing: guides/stripe-billing.md
     - Stripe Webhook Setup: guides/stripe-webhook-setup.md
+    - Backblaze B2 Setup: guides/backblaze-b2-setup.md
     - Adding AI Models: guides/adding-models.md
     - Server-Sent Events: guides/sse-events.md
+    - Codecov Setup: guides/codecov-setup.md
     - Linting & Code Quality: guides/linting.md
   
   - Operations:
     - operations/index.md
     - Deployment: operations/deployment.md
+    - Migrations: operations/migrations.md
     - Production Checklist: operations/production-checklist.md
     - Storage Reconciliation: operations/reconciliation.md
     - Monitoring: operations/monitoring.md
