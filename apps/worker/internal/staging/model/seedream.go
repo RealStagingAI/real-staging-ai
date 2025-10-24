@@ -30,10 +30,10 @@ func (b *SeedreamInputBuilder) BuildInput(
 
 	input := replicate.PredictionInput{
 		"prompt":         req.Prompt,
-		"size":           "2K",                // 2048px output
-		"aspect_ratio":   "match_input_image", // Match input image aspect ratio
-		"enhance_prompt": true,                // Enable prompt enhancement for better quality
-		"max_images":     1,                   // Single image output
+		"size":           "big",    // Options: "small", "regular", "big"
+		"aspect_ratio":   "custom", // Use custom to preserve input image dimensions
+		"enhance_prompt": true,     // Enable prompt enhancement for better quality
+		"max_images":     1,        // Single image output
 	}
 
 	// Add input image if provided

@@ -45,11 +45,11 @@ func TestSeedreamInputBuilder_BuildInput(t *testing.T) {
 		}
 
 		// Verify default parameters
-		if input["size"] != "2K" {
-			t.Errorf("expected size to be '2K', got %q", input["size"])
+		if input["size"] != "big" {
+			t.Errorf("expected size to be 'big', got %q", input["size"])
 		}
-		if input["aspect_ratio"] != "match_input_image" {
-			t.Errorf("expected aspect_ratio to be 'match_input_image', got %q", input["aspect_ratio"])
+		if input["aspect_ratio"] != "custom" {
+			t.Errorf("expected aspect_ratio to be 'custom', got %q", input["aspect_ratio"])
 		}
 		if input["enhance_prompt"] != true {
 			t.Errorf("expected enhance_prompt to be true, got %v", input["enhance_prompt"])
@@ -125,8 +125,8 @@ func TestSeedreamInputBuilder_BuildInput(t *testing.T) {
 		if input["seed"] != seed {
 			t.Errorf("expected seed %d, got %v", seed, input["seed"])
 		}
-		if input["size"] != "2K" {
-			t.Error("expected size to be 2K")
+		if input["size"] != "big" {
+			t.Error("expected size to be big")
 		}
 	})
 
