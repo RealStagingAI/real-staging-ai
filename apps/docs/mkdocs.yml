@@ -1,5 +1,5 @@
-site_name: Real Staging AI
-site_description: Professional AI-powered virtual staging for real estate
+site_name: Real Staging AI - Technical Documentation
+site_description: Technical documentation for developers and operators of Real Staging AI
 site_author: Real Staging AI Team
 site_url: https://docs.real-staging.ai
 
@@ -153,12 +153,18 @@ plugins:
 # Customization
 extra:
   social:
+    - icon: fontawesome/solid/home
+      link: https://real-staging.ai
+      name: Real Staging AI Home
+    - icon: fontawesome/solid/book-open
+      link: https://real-staging.ai/docs
+      name: User Documentation
+    - icon: fontawesome/solid/code
+      link: https://api.real-staging.ai/api/v1/docs/
+      name: API Reference
     - icon: fontawesome/brands/github
       link: https://github.com/jasonkradams/real-staging-ai
       name: GitHub Repository
-    - icon: fontawesome/solid/globe
-      link: https://real-staging.ai
-      name: Real Staging AI
   
   analytics:
     provider: google

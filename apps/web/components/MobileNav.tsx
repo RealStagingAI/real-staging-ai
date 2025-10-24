@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@auth0/nextjs-auth0';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Upload, ImageIcon, CreditCard, User, Home, LogOut, LogIn } from 'lucide-react';
+import { Upload, ImageIcon, CreditCard, User, Home, LogOut, LogIn, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -49,6 +49,7 @@ export default function MobileNav() {
   const navLinks = user
     ? [
         { href: '/', label: 'Home', icon: Home },
+        { href: '/docs', label: 'Docs', icon: BookOpen },
         { href: '/upload', label: 'Upload', icon: Upload },
         { href: '/images', label: 'Images', icon: ImageIcon },
         { href: '/billing', label: 'Billing', icon: CreditCard },
@@ -56,6 +57,7 @@ export default function MobileNav() {
       ]
     : [
         { href: '/', label: 'Home', icon: Home },
+        { href: '/docs', label: 'Docs', icon: BookOpen },
       ];
 
   return (

@@ -1,9 +1,14 @@
-# Real Staging AI Documentation
+# Real Staging AI - Technical Documentation
 
 <div class="hero-section">
-  <h1>Professional AI-Powered Virtual Staging</h1>
-  <p>Transform empty real estate spaces into beautifully furnished rooms in seconds</p>
+  <h1>Developer & Operations Documentation</h1>
+  <p>Technical guides for developers, integrators, and operators of Real Staging AI</p>
 </div>
+
+!!! info "Looking for something else?"
+    - **End Users**: Visit [real-staging.ai/docs](https://real-staging.ai/docs) for user guides and how-to information
+    - **API Developers**: See [api.real-staging.ai/api/v1/docs](https://api.real-staging.ai/api/v1/docs/) for REST API reference
+    - **Technical Users**: You're in the right place! Browse the navigation for architecture, deployment, and development guides
 
 ## Overview
 
