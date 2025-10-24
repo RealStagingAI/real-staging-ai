@@ -539,16 +539,10 @@ export default function ImagesPage() {
         // Fetch grouped images
         const res = await apiFetch<GroupedImageListResponse>(`/v1/projects/${projectId}/images/grouped`);
         const groupedList = res.images ?? [];
-        // Sort groups by original_url for consistent ordering
-        const sortedGroups = [...groupedList].sort((a, b) => a.original_url.localeCompare(b.original_url));
-        // Sort variants within each group by style for consistent sub-ordering
-        sortedGroups.forEach(group => {
-          group.variants.sort((a, b) => (a.style || '').localeCompare(b.style || ''));
-        });
-        setGroupedImages(sortedGroups);
+        setGroupedImages(groupedList);
         
-        // Flatten for compatibility with existing code (use sorted groups)
-        const flatList: ImageRecord[] = sortedGroups.flatMap(group =>
+        // Flatten for compatibility with existing code
+        const flatList: ImageRecord[] = groupedList.flatMap(group =>
           group.variants.map(variant => ({
             id: variant.id,
             project_id: projectId,
@@ -563,6 +557,14 @@ export default function ImagesPage() {
             updated_at: variant.updated_at,
           }))
         );
+        
+        // Sort by staging date (updated_at), newest first
+        flatList.sort((a, b) => {
+          const dateA = new Date(a.updated_at).getTime();
+          const dateB = new Date(b.updated_at).getTime();
+          return dateB - dateA; // Descending order (newest first)
+        });
+        
         setImages(flatList);
         
         if (!isBackground) {
@@ -577,6 +579,14 @@ export default function ImagesPage() {
         // Fetch flat list
         const res = await apiFetch<ImageListResponse>(`/v1/projects/${projectId}/images`);
         const list = res.images ?? [];
+        
+        // Sort by staging date (updated_at), newest first
+        list.sort((a, b) => {
+          const dateA = new Date(a.updated_at).getTime();
+          const dateB = new Date(b.updated_at).getTime();
+          return dateB - dateA; // Descending order (newest first)
+        });
+        
         setImages(list);
         setGroupedImages([]);
         
