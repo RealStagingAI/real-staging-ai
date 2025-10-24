@@ -41,7 +41,7 @@ export default function DocsPage() {
                   Create your account and select a plan that fits your needs. Free tier includes 10 staged images per month.
                 </p>
                 <Link 
-                  href="/billing" 
+                  href="/pricing" 
                   className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
                 >
                   View Plans <CreditCard className="h-4 w-4" />
