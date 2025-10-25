@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth0 } from './lib/auth0';
 
 /**
- * Middleware to handle authentication.
+ * Proxy to handle authentication.
  * 
- * Auth0 SDK v4 middleware automatically handles:
+ * Auth0 SDK v4 proxy automatically handles:
  * - /auth/login - Redirects to Auth0 Universal Login
  * - /auth/logout - Logs out and clears session
  * - /auth/callback - Handles Auth0 callback
@@ -13,7 +13,7 @@ import { auth0 } from './lib/auth0';
  * - Session management and rolling sessions
  * - Protecting routes based on authentication
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = await auth0.middleware(request);
   
   // Protected routes that require authentication
