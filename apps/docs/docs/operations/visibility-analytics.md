@@ -17,6 +17,7 @@ Your OTEL setup provides excellent **technical visibility**:
 ### ✅ What OTEL Metrics Give You
 
 **System Performance:**
+
 - Request rates, latency (P50, P95, P99)
 - Error rates and types
 - Job processing throughput
@@ -24,6 +25,7 @@ Your OTEL setup provides excellent **technical visibility**:
 - Memory/CPU utilization
 
 **Infrastructure Health:**
+
 - Service uptime
 - Queue depths (Redis)
 - S3 operation success rates
@@ -31,6 +33,7 @@ Your OTEL setup provides excellent **technical visibility**:
 - Goroutine counts, memory leaks
 
 **Example Queries:**
+
 ```promql
 # How many images are being processed per hour?
 sum(increase(jobs_processed_total{status="completed"}[1h]))
@@ -45,9 +48,10 @@ rate(job_processing_duration_seconds_sum[5m]) / rate(job_processing_duration_sec
 ### ❌ What OTEL Metrics DON'T Give You
 
 OTEL metrics are **event-based counters**, not a **queryable database**. They tell you:
+
 - "10 users signed up in the last hour" ✅
 - But NOT "Show me all users who signed up this month" ❌
-- "5 subscriptions canceled today" ✅  
+- "5 subscriptions canceled today" ✅
 - But NOT "Which users are on the Pro plan?" ❌
 - "100 images processed" ✅
 - But NOT "Which user processed the most images?" ❌
@@ -63,7 +67,9 @@ Build an **admin analytics dashboard** with direct database queries.
 ### Key Business Questions to Answer
 
 #### User Intelligence
+
 - **Who are my users?**
+
   - Total users, new signups (daily/weekly/monthly)
   - User growth rate, cohort analysis
   - Geographic distribution (from IP/Auth0 metadata)
@@ -76,7 +82,9 @@ Build an **admin analytics dashboard** with direct database queries.
   - Power users vs casual users
 
 #### Subscription & Revenue
+
 - **Who's paying?**
+
   - Active subscriptions by plan (Free/Pro/Business)
   - MRR (Monthly Recurring Revenue)
   - Churn rate, cancellation reasons
@@ -90,7 +98,9 @@ Build an **admin analytics dashboard** with direct database queries.
   - Top revenue-generating users
 
 #### Product Usage
+
 - **What features are used?**
+
   - Most popular room types (bedroom, living room, etc.)
   - Most popular styles (modern, traditional, etc.)
   - Upload patterns (time of day, day of week)
@@ -110,14 +120,14 @@ Create a `/admin/analytics` page with real-time database queries.
 
 ```sql
 -- Total users and new signups
-SELECT 
+SELECT
   COUNT(*) as total_users,
   COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '7 days') as new_this_week,
   COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '30 days') as new_this_month
 FROM users;
 
 -- Active subscriptions by plan
-SELECT 
+SELECT
   plan_code,
   COUNT(*) as active_subscriptions,
   SUM(CASE WHEN plan_code = 'pro' THEN 29 WHEN plan_code = 'business' THEN 99 ELSE 0 END) as mrr
@@ -126,7 +136,7 @@ WHERE status = 'active'
 GROUP BY plan_code;
 
 -- Top users by image count
-SELECT 
+SELECT
   u.email,
   u.created_at,
   s.plan_code,
@@ -140,7 +150,7 @@ ORDER BY total_images DESC
 LIMIT 20;
 
 -- Popular room types and styles
-SELECT 
+SELECT
   room_type,
   style,
   COUNT(*) as count,
@@ -152,7 +162,7 @@ GROUP BY room_type, style
 ORDER BY count DESC;
 
 -- Churn analysis
-SELECT 
+SELECT
   DATE_TRUNC('day', canceled_at) as cancellation_date,
   plan_code,
   COUNT(*) as cancellations
@@ -162,18 +172,18 @@ GROUP BY DATE_TRUNC('day', canceled_at), plan_code
 ORDER BY cancellation_date DESC;
 
 -- User cohort retention (users still active 30/60/90 days after signup)
-SELECT 
+SELECT
   DATE_TRUNC('month', created_at) as cohort_month,
   COUNT(*) as total_users,
   COUNT(*) FILTER (
     WHERE id IN (
-      SELECT DISTINCT user_id FROM images 
+      SELECT DISTINCT user_id FROM images
       WHERE created_at > users.created_at + INTERVAL '30 days'
     )
   ) as retained_30d,
   COUNT(*) FILTER (
     WHERE id IN (
-      SELECT DISTINCT user_id FROM images 
+      SELECT DISTINCT user_id FROM images
       WHERE created_at > users.created_at + INTERVAL '60 days'
     )
   ) as retained_60d
@@ -201,6 +211,7 @@ Real Staging AI now includes **Metabase** for business analytics:
   - Auto-refresh
 
 **Quick Start:**
+
 ```bash
 make up  # Starts Metabase with all services
 # Visit http://localhost:3001
@@ -214,12 +225,14 @@ See [`apps/analytics/README.md`](../../analytics/README.md) for detailed setup i
 #### Other Options
 
 2. **Grafana + PostgreSQL Plugin**
+
    - You already use Grafana for metrics
    - Add PostgreSQL datasource
    - Build business dashboards alongside operational ones
    - Unified interface
 
 3. **Posthog** (Product Analytics)
+
    - Event tracking
    - User behavior analysis
    - Feature flags
@@ -239,6 +252,7 @@ See [`apps/analytics/README.md`](../../analytics/README.md) for detailed setup i
 Metabase is **included in your stack** at `apps/analytics/`:
 
 **Pros:**
+
 - ✅ No code needed
 - ✅ Already configured in Docker Compose
 - ✅ Visual query builder + SQL editor
@@ -248,6 +262,7 @@ Metabase is **included in your stack** at `apps/analytics/`:
 - ✅ User permissions and sharing
 
 **Get Started:**
+
 ```bash
 make up
 # Visit http://localhost:3001
@@ -271,6 +286,7 @@ You already have `/admin` for model management. Extend it with analytics:
 ```
 
 **When to Choose This:**
+
 - Need tight integration with your app
 - Want custom UI/UX
 - Need real-time updates via SSE
@@ -284,18 +300,19 @@ Your OTEL setup exports logs to Loki (Grafana's solution). ELK is an alternative
 
 ### ELK Stack vs Loki
 
-| Feature | Loki (You Have) | ELK Stack |
-|---------|----------------|-----------|
-| **Search** | Label-based, LogQL | Full-text, Elasticsearch Query DSL |
-| **Indexing** | Minimal (labels only) | Full text indexing |
-| **Cost** | Lower (less storage) | Higher (more storage) |
-| **Query Speed** | Fast for label queries | Fast for text search |
-| **Best For** | Structured logs, metrics-like | Unstructured logs, deep search |
-| **Integration** | Native with Grafana | Kibana dashboard |
+| Feature         | Loki (You Have)               | ELK Stack                          |
+| --------------- | ----------------------------- | ---------------------------------- |
+| **Search**      | Label-based, LogQL            | Full-text, Elasticsearch Query DSL |
+| **Indexing**    | Minimal (labels only)         | Full text indexing                 |
+| **Cost**        | Lower (less storage)          | Higher (more storage)              |
+| **Query Speed** | Fast for label queries        | Fast for text search               |
+| **Best For**    | Structured logs, metrics-like | Unstructured logs, deep search     |
+| **Integration** | Native with Grafana           | Kibana dashboard                   |
 
 ### When to Use ELK
 
 Choose ELK if you need:
+
 - **Full-text search** across log messages
 - **Complex queries** (regex, wildcards, fuzzy matching)
 - **Log correlation** across many fields
@@ -305,6 +322,7 @@ Choose ELK if you need:
 ### Recommended: Stick with Loki for Now
 
 You already have Loki configured. Add ELK later if:
+
 - You need compliance/audit requirements
 - Full-text search becomes critical
 - You have security/fraud detection needs
@@ -366,14 +384,14 @@ filter {
       add_field => { "[@metadata][index]" => "realstaging-%{service}" }
     }
   }
-  
+
   # Extract user_id for user-specific searches
   if [user_id] {
     mutate {
       add_tag => [ "has_user" ]
     }
   }
-  
+
   # Flag errors for quick filtering
   if [level] == "error" or [level] == "fatal" {
     mutate {
@@ -419,7 +437,7 @@ graph TB
         API[API Service]
         Worker[Worker Service]
     end
-    
+
     subgraph "Operational Monitoring (OTEL)"
         API --> OTEL[OTel Collector]
         Worker --> OTEL
@@ -430,20 +448,20 @@ graph TB
         Loki --> Grafana
         Jaeger --> Grafana
     end
-    
+
     subgraph "Business Analytics"
         API --> Postgres[(PostgreSQL)]
         Postgres --> Metabase[Metabase/Admin]
         Stripe[Stripe API] --> Metabase
     end
-    
+
     subgraph "Centralized Logging (Optional)"
         API --> Logstash[Logstash]
         Worker --> Logstash
         Logstash --> ES[Elasticsearch]
         ES --> Kibana[Kibana]
     end
-    
+
     subgraph "Alerts & Notifications"
         Prometheus --> AlertMgr[Alertmanager]
         AlertMgr --> Slack[Slack/Email]
@@ -457,19 +475,20 @@ graph TB
 ### Phase 1: Get Started with Metabase (30 minutes)
 
 **Quick Start:**
+
 1. ✅ Start Metabase: `make up`
 2. ✅ Visit http://localhost:3001
 3. ✅ Complete initial setup wizard
 4. ✅ Verify database connection (auto-configured)
 5. ✅ Create your first question using SQL from `scripts/analytics-queries.sql`
 
-**First Dashboard (1 hour):**
-6. ✅ Create "Executive Dashboard"
-   - Add "Total Users" card
-   - Add "MRR" card  
-   - Add "Images This Week" card
-   - Add "User Growth" chart (last 30 days)
-   - Add "Revenue by Plan" pie chart
+**First Dashboard (1 hour):** 6. ✅ Create "Executive Dashboard"
+
+- Add "Total Users" card
+- Add "MRR" card
+- Add "Images This Week" card
+- Add "User Growth" chart (last 30 days)
+- Add "Revenue by Plan" pie chart
 
 7. ✅ Share with team
    - Set up user accounts
@@ -480,13 +499,14 @@ graph TB
 
 ### Phase 2: Advanced Analytics (1 week)
 
-**Deep Dive Analytics:**
-5. ⏱️ User cohort analysis
-   - Retention curves
-   - Feature adoption by cohort
-   - Conversion funnels (free → pro → business)
+**Deep Dive Analytics:** 5. ⏱️ User cohort analysis
+
+- Retention curves
+- Feature adoption by cohort
+- Conversion funnels (free → pro → business)
 
 6. ⏱️ Usage pattern analysis
+
    - Most popular room types/styles
    - Time-of-day usage patterns
    - Batch vs single image uploads
@@ -513,7 +533,7 @@ graph TB
 ```sql
 -- Create a materialized view for fast analytics
 CREATE MATERIALIZED VIEW analytics_user_summary AS
-SELECT 
+SELECT
   u.id as user_id,
   u.email,
   u.created_at as signup_date,
@@ -525,7 +545,7 @@ SELECT
   COUNT(DISTINCT i.id) FILTER (WHERE i.created_at > NOW() - INTERVAL '7 days') as images_last_7d,
   MAX(i.created_at) as last_image_date,
   COALESCE(
-    EXTRACT(EPOCH FROM (MAX(i.created_at) - MIN(i.created_at))) / 86400, 
+    EXTRACT(EPOCH FROM (MAX(i.created_at) - MIN(i.created_at))) / 86400,
     0
   ) as days_active
 FROM users u
@@ -550,7 +570,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY analytics_user_summary;
 // GET /admin/analytics/overview
 func (h *Handler) GetAnalyticsOverview(c echo.Context) error {
     ctx := c.Request().Context()
-    
+
     var stats struct {
         TotalUsers      int     `db:"total_users"`
         NewThisWeek     int     `db:"new_this_week"`
@@ -561,15 +581,15 @@ func (h *Handler) GetAnalyticsOverview(c echo.Context) error {
         TotalImages     int     `db:"total_images"`
         ImagesThisWeek  int     `db:"images_this_week"`
     }
-    
+
     err := h.db.QueryRow(ctx, `
-        SELECT 
+        SELECT
             COUNT(*) as total_users,
             COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '7 days') as new_this_week,
             COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '30 days') as new_this_month,
             (SELECT COUNT(*) FROM subscriptions WHERE plan_code = 'pro' AND status = 'active') as active_pro_users,
             (SELECT COUNT(*) FROM subscriptions WHERE plan_code = 'business' AND status = 'active') as active_biz_users,
-            (SELECT SUM(CASE WHEN plan_code = 'pro' THEN 29 WHEN plan_code = 'business' THEN 99 ELSE 0 END) 
+            (SELECT SUM(CASE WHEN plan_code = 'pro' THEN 29 WHEN plan_code = 'business' THEN 99 ELSE 0 END)
              FROM subscriptions WHERE status = 'active') as mrr,
             (SELECT COUNT(*) FROM images) as total_images,
             (SELECT COUNT(*) FROM images WHERE created_at > NOW() - INTERVAL '7 days') as images_this_week
@@ -584,20 +604,20 @@ func (h *Handler) GetAnalyticsOverview(c echo.Context) error {
         &stats.TotalImages,
         &stats.ImagesThisWeek,
     )
-    
+
     if err != nil {
         return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
     }
-    
+
     return c.JSON(http.StatusOK, stats)
 }
 
 // GET /admin/analytics/users
 func (h *Handler) GetAnalyticsUsers(c echo.Context) error {
     ctx := c.Request().Context()
-    
+
     rows, err := h.db.Query(ctx, `
-        SELECT 
+        SELECT
             user_id,
             email,
             signup_date,
@@ -615,7 +635,7 @@ func (h *Handler) GetAnalyticsUsers(c echo.Context) error {
         return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
     }
     defer rows.Close()
-    
+
     var users []UserSummary
     for rows.Next() {
         var u UserSummary
@@ -635,9 +655,47 @@ func (h *Handler) GetAnalyticsUsers(c echo.Context) error {
         }
         users = append(users, u)
     }
-    
+
     return c.JSON(http.StatusOK, users)
 }
+```
+
+---
+
+## Production Deployment
+
+Metabase is deployed to Render as a **private internal service**, accessible only through your authenticated web app.
+
+### Access in Production
+
+**URL**: https://real-staging.ai/admin/analytics
+
+- ✅ Protected by Auth0 authentication
+- ✅ Not publicly accessible
+- ✅ Proxied through Next.js
+- ⏱️ TODO: Add RBAC to restrict to admin users
+
+### Deployment Steps
+
+See [`apps/analytics/PRODUCTION.md`](../../analytics/PRODUCTION.md) for complete deployment guide:
+
+1. Create `metabase` database in production PostgreSQL
+2. Deploy via `render.yaml` (auto-configured)
+3. Set `MB_EMBEDDING_SECRET_KEY` in Render dashboard
+4. Complete Metabase setup wizard on first visit
+5. Import analytics queries
+
+**Quick deployment:**
+```bash
+# 1. Create metabase database
+# Connect to production database and run:
+CREATE DATABASE metabase;
+
+# 2. Deploy (automatic via git push)
+git push origin main
+
+# 3. Visit and complete setup
+open https://real-staging.ai/admin/analytics
 ```
 
 ---
@@ -645,7 +703,9 @@ func (h *Handler) GetAnalyticsUsers(c echo.Context) error {
 ## Quick Wins You Can Implement Today
 
 ### 1. Stripe Dashboard
+
 You already have Stripe! Use it for:
+
 - Revenue metrics
 - Subscription analytics
 - Customer lifetime value
@@ -662,16 +722,16 @@ Connect to your DB and run these queries now:
 psql $DATABASE_URL
 
 # Who are your users?
-SELECT email, created_at, 
+SELECT email, created_at,
        (SELECT plan_code FROM subscriptions WHERE user_id = users.id AND status = 'active' LIMIT 1) as plan
-FROM users 
-ORDER BY created_at DESC 
+FROM users
+ORDER BY created_at DESC
 LIMIT 20;
 
 # What's your MRR?
-SELECT plan_code, COUNT(*) as count, 
+SELECT plan_code, COUNT(*) as count,
        SUM(CASE WHEN plan_code = 'pro' THEN 29 WHEN plan_code = 'business' THEN 99 ELSE 0 END) as revenue
-FROM subscriptions 
+FROM subscriptions
 WHERE status = 'active'
 GROUP BY plan_code;
 
@@ -687,6 +747,7 @@ LIMIT 10;
 ### 3. Add Basic Charts to Admin Page
 
 Update `/admin` to show:
+
 - User count
 - Active subscriptions
 - Images processed today
@@ -698,14 +759,14 @@ Simple, quick, gives you visibility immediately.
 
 ## Summary: Your Visibility Stack
 
-| Layer | Tool | Purpose | Status |
-|-------|------|---------|--------|
-| **Operational** | Prometheus + Grafana | System metrics, performance | ✅ Have |
-| **Tracing** | Jaeger/Tempo | Request flow, debugging | ✅ Have |
-| **Logging** | Loki | Structured logs | ✅ Have |
-| **Business** | Admin Dashboard | Users, revenue, usage | ❌ Need to Build |
-| **Business** | Stripe Dashboard | Payment analytics | ✅ Have |
-| **Advanced Logs** | ELK Stack | Full-text search, compliance | ⏱️ Optional Later |
-| **Product Analytics** | Posthog/Mixpanel | User behavior tracking | ⏱️ Optional Later |
+| Layer                 | Tool                 | Purpose                      | Status            |
+| --------------------- | -------------------- | ---------------------------- | ----------------- |
+| **Operational**       | Prometheus + Grafana | System metrics, performance  | ✅ Have           |
+| **Tracing**           | Jaeger/Tempo         | Request flow, debugging      | ✅ Have           |
+| **Logging**           | Loki                 | Structured logs              | ✅ Have           |
+| **Business**          | Admin Dashboard      | Users, revenue, usage        | ❌ Need to Build  |
+| **Business**          | Stripe Dashboard     | Payment analytics            | ✅ Have           |
+| **Advanced Logs**     | ELK Stack            | Full-text search, compliance | ⏱️ Optional Later |
+| **Product Analytics** | Posthog/Mixpanel     | User behavior tracking       | ⏱️ Optional Later |
 
 **Recommendation:** Focus on building the **Admin Analytics Dashboard** first. This gives you the business insights you're asking for without adding new infrastructure.

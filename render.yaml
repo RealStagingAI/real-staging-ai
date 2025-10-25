@@ -158,6 +158,53 @@ services:
       # Optional: Public API base for client-side calls
       - key: NEXT_PUBLIC_API_BASE
         value: /api
+      # Metabase Internal Service
+      - key: METABASE_INTERNAL_URL
+        fromService:
+          name: realstaging-metabase
+          type: web
+          property: url
+
+  # Metabase Analytics (Private Internal Service)
+  - type: web
+    name: realstaging-metabase
+    runtime: docker
+    dockerfilePath: ./apps/analytics/Dockerfile
+    dockerContext: .
+    region: oregon  # Same region as database
+    plan: starter
+    # Make this service private (not publicly accessible)
+    # Access only via proxy through web app
+    envVars:
+      - key: MB_DB_TYPE
+        value: postgres
+      - key: MB_DB_HOST
+        fromDatabase:
+          name: realstaging-db
+          property: host
+      - key: MB_DB_PORT
+        fromDatabase:
+          name: realstaging-db
+          property: port
+      - key: MB_DB_DBNAME
+        value: metabase
+      - key: MB_DB_USER
+        fromDatabase:
+          name: realstaging-db
+          property: user
+      - key: MB_DB_PASS
+        fromDatabase:
+          name: realstaging-db
+          property: password
+      # Metabase configuration
+      - key: MB_SITE_URL
+        value: https://real-staging.ai/admin/analytics
+      - key: MB_SITE_NAME
+        value: Real Staging AI Analytics
+      # Disable Metabase's own authentication (we'll use Next.js auth)
+      - key: MB_EMBEDDING_SECRET_KEY
+        sync: false  # Set in Render dashboard - random string for embedding
+
   # Redis Service
   - type: redis
     name: realstaging-redis
