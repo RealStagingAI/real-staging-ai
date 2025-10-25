@@ -84,13 +84,7 @@ type GroupedImageListResponse = {
 
 export default function ImagesPage() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(() => {
-    // Load from localStorage on mount
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('selectedProjectId') || ""
-    }
-    return ""
-  });
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [groupedImages, setGroupedImages] = useState<GroupedImage[]>([]);
   const [useGroupedView] = useState(true); // Always use grouped view for now
@@ -117,6 +111,14 @@ export default function ImagesPage() {
   const [visibleImageIds, setVisibleImageIds] = useState<Set<string>>(new Set());
   const visibleImageIdsRef = useRef<Set<string>>(new Set());
   const imageObserverRef = useRef<IntersectionObserver | null>(null);
+
+  // Load selected project from localStorage after mount (avoids hydration mismatch)
+  useEffect(() => {
+    const savedProjectId = localStorage.getItem('selectedProjectId');
+    if (savedProjectId) {
+      setSelectedProjectId(savedProjectId);
+    }
+  }, []);
 
   // Keep refs in sync with state
   useEffect(() => {

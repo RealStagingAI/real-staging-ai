@@ -266,4 +266,4 @@ tidy: ## Run go mod tidy for each app
 
 reconcile-images: ## Run storage reconciliation CLI (use DRY_RUN=1 for dry-run)
 	@echo "Running storage reconciliation..."
-	docker compose exec api /bin/sh -c "/app/reconcile --dry-run=$(or $(DRY_RUN),true) --batch-size=$(or $(BATCH_SIZE),100) --concurrency=$(or $(CONCURRENCY),5)"
+	docker compose exec api /bin/sh -c "/app/reconcile images --dry-run=$(or $(DRY_RUN),true) --batch-size=$(or $(BATCH_SIZE),100) --concurrency=$(or $(CONCURRENCY),5)"
