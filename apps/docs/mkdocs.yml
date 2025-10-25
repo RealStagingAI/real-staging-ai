@@ -221,12 +221,13 @@ nav:
     - Linting & Code Quality: guides/linting.md
   
   - Operations:
-    - operations/index.md
-    - Deployment: operations/deployment.md
-    - Migrations: operations/migrations.md
-    - Production Checklist: operations/production-checklist.md
-    - Storage Reconciliation: operations/reconciliation.md
-    - Monitoring: operations/monitoring.md
+      - operations/index.md
+      - Deployment: operations/deployment.md
+      - Production Checklist: operations/production-checklist.md
+      - Database Migrations: operations/migrations.md
+      - Storage Reconciliation: operations/reconciliation.md
+      - Monitoring: operations/monitoring.md
+      - Visibility & Analytics: operations/visibility-analytics.md
   
   - API Reference:
     - api-reference/index.md
