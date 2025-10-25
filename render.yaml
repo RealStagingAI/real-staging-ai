@@ -215,7 +215,7 @@ services:
 databases:
   # PostgreSQL Database
   - name: realstaging-db
-    plan: starter  # Free tier for getting started (upgrade to standard/pro as needed)
+    plan: free  # Free tier for getting started (upgrade to basic/standard/pro as needed)
     region: oregon  # Same region as services
     databaseName: realstaging
     user: realstaging
