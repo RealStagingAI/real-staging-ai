@@ -1,12 +1,23 @@
 FROM metabase/metabase:v0.51.2
 
-# Set environment variables for PostgreSQL as the application database
-ENV MB_DB_TYPE=postgres
-ENV MB_DB_DBNAME=metabase
-ENV MB_DB_PORT=5432
-ENV MB_DB_USER=postgres
-ENV MB_DB_PASS=postgres
-ENV MB_DB_HOST=postgres
+# Metabase requires environment variables to be set at runtime
+# These are configured in:
+# - docker-compose.yml (local development)
+# - render.yaml (production)
+#
+# Required environment variables:
+# - MB_DB_TYPE: Database type (postgres)
+# - MB_DB_HOST: Database host
+# - MB_DB_PORT: Database port
+# - MB_DB_DBNAME: Database name (metabase)
+# - MB_DB_USER: Database user
+# - MB_DB_PASS: Database password
+#
+# Optional environment variables:
+# - MB_SITE_URL: Public URL for Metabase
+# - MB_SITE_NAME: Display name
+# - MB_ENABLE_EMBEDDING: Enable iframe embedding
+# - MB_EMBEDDING_SECRET_KEY: Secret for signed embeds
 
 # Expose Metabase port
 EXPOSE 3000
