@@ -217,9 +217,15 @@ lint-fix: ## Run golangci-lint with --fix locally or in Docker if not available 
 	@echo "--> Running web lint with --fix"
 	cd apps/web && npm run lint:fix
 
-up: migrate ## Run the api server
+setup-metabase: ## Ensure metabase database exists
+	@echo "Ensuring metabase database exists..."
+	@docker compose exec -T postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'metabase'" | grep -q 1 || \
+		docker compose exec -T postgres psql -U postgres -c "CREATE DATABASE metabase;"
+	@echo "✓ Metabase database ready"
+
+up: migrate setup-metabase ## Run the api server
 	@echo Starting Application...
-	docker compose -f docker-compose.yml up --build -d --remove-orphans api worker
+	docker compose -f docker-compose.yml up --build -d --remove-orphans api worker metabase
 	$(MAKE) up-web
 
 down: ## Stop the api server

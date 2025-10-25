@@ -1,0 +1,7 @@
+# Metabase specific
+*.db
+*.mv.db
+*.trace.db
+
+# Logs
+*.log

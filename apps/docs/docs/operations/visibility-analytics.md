@@ -183,16 +183,35 @@ GROUP BY DATE_TRUNC('month', created_at)
 ORDER BY cohort_month DESC;
 ```
 
-### Pre-Built Analytics Tools to Consider
+### Pre-Built Analytics Tools
 
-Instead of building from scratch, consider:
+#### ✅ Metabase (Included in Stack)
 
-1. **Metabase** (Open Source)
-   - Self-hosted BI tool
-   - Connect directly to Postgres
-   - Build dashboards with SQL
-   - Share with team
-   - Free, Docker-based
+Real Staging AI now includes **Metabase** for business analytics:
+
+- **Location**: `apps/analytics/`
+- **Access**: http://localhost:3001 (local dev)
+- **Setup**: Automated with Docker Compose
+- **Features**:
+  - Visual query builder
+  - SQL query editor
+  - Dashboard creation
+  - Email/Slack alerts
+  - User permissions
+  - Auto-refresh
+
+**Quick Start:**
+```bash
+make up  # Starts Metabase with all services
+# Visit http://localhost:3001
+# Complete initial setup wizard
+# Connect to PostgreSQL (already configured)
+# Import queries from scripts/analytics-queries.sql
+```
+
+See [`apps/analytics/README.md`](../../analytics/README.md) for detailed setup instructions.
+
+#### Other Options
 
 2. **Grafana + PostgreSQL Plugin**
    - You already use Grafana for metrics
@@ -213,7 +232,30 @@ Instead of building from scratch, consider:
    - Payment analytics
    - Customer lifetime value
 
-### Quick Win: Extend Your Admin Page
+### Analytics Implementation Options
+
+#### Option A: Use Metabase (Recommended - Already Set Up!)
+
+Metabase is **included in your stack** at `apps/analytics/`:
+
+**Pros:**
+- ✅ No code needed
+- ✅ Already configured in Docker Compose
+- ✅ Visual query builder + SQL editor
+- ✅ Drag-and-drop dashboards
+- ✅ Built-in charts and visualizations
+- ✅ Email/Slack alerts
+- ✅ User permissions and sharing
+
+**Get Started:**
+```bash
+make up
+# Visit http://localhost:3001
+# Follow setup wizard
+# Start building dashboards!
+```
+
+#### Option B: Extend Your Admin Page
 
 You already have `/admin` for model management. Extend it with analytics:
 
@@ -227,6 +269,12 @@ You already have `/admin` for model management. Extend it with analytics:
     /usage       - Image processing stats
     /health      - System status from OTEL
 ```
+
+**When to Choose This:**
+- Need tight integration with your app
+- Want custom UI/UX
+- Need real-time updates via SSE
+- Building user-specific analytics
 
 ---
 
@@ -406,34 +454,29 @@ graph TB
 
 ## Recommended Implementation Plan
 
-### Phase 1: Enhance Existing Visibility (1-2 days)
+### Phase 1: Get Started with Metabase (30 minutes)
 
-**Admin Analytics Dashboard:**
-1. ✅ Add `/admin/analytics/overview` page
-   - Total users, new signups this week/month
-   - Active subscriptions by plan
-   - MRR, revenue trends
-   - Total images processed
-   - System health summary (from OTEL)
+**Quick Start:**
+1. ✅ Start Metabase: `make up`
+2. ✅ Visit http://localhost:3001
+3. ✅ Complete initial setup wizard
+4. ✅ Verify database connection (auto-configured)
+5. ✅ Create your first question using SQL from `scripts/analytics-queries.sql`
 
-2. ✅ Add `/admin/analytics/users` page
-   - Searchable user list
-   - User details (email, plan, signup date, last login)
-   - Image count, usage stats
-   - Subscription status
+**First Dashboard (1 hour):**
+6. ✅ Create "Executive Dashboard"
+   - Add "Total Users" card
+   - Add "MRR" card  
+   - Add "Images This Week" card
+   - Add "User Growth" chart (last 30 days)
+   - Add "Revenue by Plan" pie chart
 
-3. ✅ Add `/admin/analytics/revenue` page
-   - Subscription breakdown
-   - Revenue trends (daily/weekly/monthly)
-   - Churn rate
-   - Plan upgrade/downgrade flow
+7. ✅ Share with team
+   - Set up user accounts
+   - Configure permissions
+   - Set dashboard auto-refresh
 
-**Grafana Dashboards:**
-4. ✅ Add "Business Metrics" dashboard
-   - Use Grafana + PostgreSQL plugin
-   - Chart user growth
-   - Chart revenue trends
-   - Chart image processing volume
+**See:** [`apps/analytics/README.md`](../../analytics/README.md) for detailed walkthrough
 
 ### Phase 2: Advanced Analytics (1 week)
 
