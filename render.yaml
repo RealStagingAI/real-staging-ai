@@ -200,6 +200,9 @@ services:
         value: https://real-staging.ai/admin/analytics
       - key: MB_SITE_NAME
         value: Real Staging AI Analytics
+      # Java memory settings for Standard plan (512 MB RAM)
+      - key: JAVA_OPTS
+        value: -Xmx256m -Xms128m
       # Disable Metabase's own authentication (we'll use Next.js auth)
       - key: MB_EMBEDDING_SECRET_KEY
         sync: false  # Set in Render dashboard - random string for embedding
