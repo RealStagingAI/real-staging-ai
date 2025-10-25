@@ -1,4 +1,4 @@
-FROM metabase/metabase:v0.51.2
+FROM metabase/metabase:v0.56.11
 
 # Metabase requires environment variables to be set at runtime
 # These are configured in:

@@ -179,7 +179,7 @@ And in Auth0:
 Update the version in `apps/analytics/Dockerfile`:
 
 ```dockerfile
-FROM metabase/metabase:v0.51.2  # Update version here
+FROM metabase/metabase:v0.56.11  # Update version here
 ```
 
 Then deploy via git push or manual deploy.
