@@ -12,6 +12,15 @@ import { ThemeToggle } from '@/components/ThemeToggle'
 export const metadata: Metadata = {
   title: 'Real Staging AI | Transform Properties with AI',
   description: 'Professional AI-powered virtual staging for real estate. Transform empty spaces into beautifully furnished rooms in seconds.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/icon.png', type: 'image/png', sizes: '180x180' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', type: 'image/png', sizes: '192x192' },
+    ],
+  },
 }
 
 export const viewport: Viewport = {
