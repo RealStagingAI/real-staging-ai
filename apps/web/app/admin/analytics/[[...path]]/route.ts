@@ -75,7 +75,13 @@ async function handleProxy(
   // }
 
   // Build target URL
-  const pathString = path?.join('/') || '';
+  // Strip '/app' prefix if present (used for iframe routing)
+  let pathSegments = path || [];
+  if (pathSegments[0] === 'app') {
+    pathSegments = pathSegments.slice(1);
+  }
+  
+  const pathString = pathSegments.join('/');
   const searchParams = request.nextUrl.searchParams.toString();
   const targetUrl = `${METABASE_URL}/${pathString}${searchParams ? `?${searchParams}` : ''}`;
 
@@ -124,8 +130,15 @@ async function handleProxy(
     // Prepare response headers
     const responseHeaders = new Headers();
     response.headers.forEach((value, key) => {
-      // Skip problematic headers
-      if (!['transfer-encoding', 'connection', 'keep-alive'].includes(key.toLowerCase())) {
+      // Skip problematic headers and iframe-blocking headers
+      const skipHeaders = [
+        'transfer-encoding',
+        'connection',
+        'keep-alive',
+        'x-frame-options',  // Remove to allow iframe embedding
+        'content-security-policy'  // Remove CSP that blocks framing
+      ];
+      if (!skipHeaders.includes(key.toLowerCase())) {
         responseHeaders.set(key, value);
       }
     });

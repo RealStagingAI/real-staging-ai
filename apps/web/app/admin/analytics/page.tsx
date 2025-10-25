@@ -38,7 +38,7 @@ export default async function AnalyticsPage() {
       </div>
       <div className="flex-1 relative">
         <iframe
-          src="/admin/analytics/"
+          src="/admin/analytics/app"
           className="absolute inset-0 w-full h-full border-0"
           title="Analytics Dashboard"
           sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"
