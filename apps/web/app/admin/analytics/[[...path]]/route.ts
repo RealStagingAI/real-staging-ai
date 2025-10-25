@@ -12,7 +12,14 @@ import { auth0 } from '@/lib/auth0';
  * - /admin/analytics/** -> Proxied to Metabase
  */
 
-const METABASE_URL = process.env.METABASE_INTERNAL_URL || 'http://localhost:3001';
+// METABASE_INTERNAL_URL is the hostname from Render (e.g., realstaging-metabase.onrender.com)
+// For local dev, it defaults to http://localhost:3001
+const METABASE_HOST = process.env.METABASE_INTERNAL_URL || 'localhost:3001';
+const METABASE_URL = METABASE_HOST.startsWith('http') 
+  ? METABASE_HOST 
+  : METABASE_HOST.includes('localhost')
+    ? `http://${METABASE_HOST}`
+    : `https://${METABASE_HOST}`;
 
 export async function GET(
   request: NextRequest,

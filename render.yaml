@@ -154,7 +154,7 @@ services:
         fromService:
           name: realstaging-api
           type: web
-          property: url
+          property: host
       # Optional: Public API base for client-side calls
       - key: NEXT_PUBLIC_API_BASE
         value: /api
@@ -163,7 +163,7 @@ services:
         fromService:
           name: realstaging-metabase
           type: web
-          property: url
+          property: host
 
   # Metabase Analytics (Private Internal Service)
   - type: web
@@ -215,7 +215,7 @@ services:
 databases:
   # PostgreSQL Database
   - name: realstaging-db
-    plan: standardPlus  # use non-legacy plan (starter/standard deprecated)
+    plan: starter  # Free tier for getting started (upgrade to standard/pro as needed)
     region: oregon  # Same region as services
     databaseName: realstaging
     user: realstaging

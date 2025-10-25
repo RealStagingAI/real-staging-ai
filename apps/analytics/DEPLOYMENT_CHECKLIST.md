@@ -4,9 +4,9 @@ Quick checklist for deploying Metabase to Render.
 
 ## Pre-Deployment
 
-- [ ] Commit and push all changes to `main` branch
-- [ ] Verify `render.yaml` includes `realstaging-metabase` service
-- [ ] Verify Next.js proxy routes exist at `apps/web/app/admin/analytics`
+- [x] Commit and push all changes to `main` branch
+- [x] Verify `render.yaml` includes `realstaging-metabase` service
+- [x] Verify Next.js proxy routes exist at `apps/web/app/admin/analytics`
 
 ## Database Setup (One-Time)
 
