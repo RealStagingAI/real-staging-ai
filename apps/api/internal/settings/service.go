@@ -25,4 +25,13 @@ type Service interface {
 
 	// ListSettings retrieves all settings.
 	ListSettings(ctx context.Context) ([]Setting, error)
+
+	// GetModelConfig retrieves the configuration for a specific model.
+	GetModelConfig(ctx context.Context, modelID string) (*ModelConfig, error)
+
+	// UpdateModelConfig updates the configuration for a specific model.
+	UpdateModelConfig(ctx context.Context, modelID string, config map[string]interface{}, userID string) error
+
+	// GetModelConfigSchema returns the schema for a model's configuration.
+	GetModelConfigSchema(ctx context.Context, modelID string) (*ModelConfigSchema, error)
 }

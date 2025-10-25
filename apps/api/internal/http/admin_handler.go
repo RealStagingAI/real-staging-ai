@@ -182,6 +182,67 @@ func (h *AdminHandler) UpdateSetting(c echo.Context) error {
 	})
 }
 
+// GetModelConfig handles GET /admin/models/:id/config - Gets the configuration for a model.
+func (h *AdminHandler) GetModelConfig(c echo.Context) error {
+	ctx := c.Request().Context()
+	modelID := c.Param("id")
+
+	config, err := h.settingsService.GetModelConfig(ctx, modelID)
+	if err != nil {
+		h.log.Error(ctx, "failed to get model config", "error", err, "model_id", modelID)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, config)
+}
+
+// UpdateModelConfig handles PUT /admin/models/:id/config - Updates the configuration for a model.
+func (h *AdminHandler) UpdateModelConfig(c echo.Context) error {
+	ctx := c.Request().Context()
+	modelID := c.Param("id")
+
+	var req map[string]interface{}
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+
+	// Get user UUID from Auth0 sub
+	userUUID, err := h.resolveUserUUID(c)
+	if err != nil {
+		h.log.Error(ctx, "failed to resolve user", "error", err)
+		return echo.NewHTTPError(http.StatusUnauthorized, map[string]string{
+			"message": "User not authenticated",
+		})
+	}
+
+	err = h.settingsService.UpdateModelConfig(ctx, modelID, req, userUUID)
+	if err != nil {
+		h.log.Error(ctx, "failed to update model config", "error", err, "model_id", modelID)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	h.log.Info(ctx, "model config updated", "model_id", modelID, "user_uuid", userUUID)
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message":  "Model configuration updated successfully",
+		"model_id": modelID,
+	})
+}
+
+// GetModelConfigSchema handles GET /admin/models/:id/config/schema - Gets the schema for a model's configuration.
+func (h *AdminHandler) GetModelConfigSchema(c echo.Context) error {
+	ctx := c.Request().Context()
+	modelID := c.Param("id")
+
+	schema, err := h.settingsService.GetModelConfigSchema(ctx, modelID)
+	if err != nil {
+		h.log.Error(ctx, "failed to get model config schema", "error", err, "model_id", modelID)
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, schema)
+}
+
 // resolveUserUUID looks up or creates a user based on Auth0 sub, returning the user's UUID.
 func (h *AdminHandler) resolveUserUUID(c echo.Context) (string, error) {
 	ctx := c.Request().Context()

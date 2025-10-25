@@ -21,11 +21,17 @@ var _ Repository = &RepositoryMock{}
 //			GetByKeyFunc: func(ctx context.Context, key string) (*Setting, error) {
 //				panic("mock out the GetByKey method")
 //			},
+//			GetModelConfigFunc: func(ctx context.Context, modelID string) ([]byte, error) {
+//				panic("mock out the GetModelConfig method")
+//			},
 //			ListFunc: func(ctx context.Context) ([]Setting, error) {
 //				panic("mock out the List method")
 //			},
 //			UpdateFunc: func(ctx context.Context, key string, value string, userID string) error {
 //				panic("mock out the Update method")
+//			},
+//			UpdateModelConfigFunc: func(ctx context.Context, modelID string, configJSON []byte, userID string) error {
+//				panic("mock out the UpdateModelConfig method")
 //			},
 //		}
 //
@@ -37,11 +43,17 @@ type RepositoryMock struct {
 	// GetByKeyFunc mocks the GetByKey method.
 	GetByKeyFunc func(ctx context.Context, key string) (*Setting, error)
 
+	// GetModelConfigFunc mocks the GetModelConfig method.
+	GetModelConfigFunc func(ctx context.Context, modelID string) ([]byte, error)
+
 	// ListFunc mocks the List method.
 	ListFunc func(ctx context.Context) ([]Setting, error)
 
 	// UpdateFunc mocks the Update method.
 	UpdateFunc func(ctx context.Context, key string, value string, userID string) error
+
+	// UpdateModelConfigFunc mocks the UpdateModelConfig method.
+	UpdateModelConfigFunc func(ctx context.Context, modelID string, configJSON []byte, userID string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -51,6 +63,13 @@ type RepositoryMock struct {
 			Ctx context.Context
 			// Key is the key argument value.
 			Key string
+		}
+		// GetModelConfig holds details about calls to the GetModelConfig method.
+		GetModelConfig []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ModelID is the modelID argument value.
+			ModelID string
 		}
 		// List holds details about calls to the List method.
 		List []struct {
@@ -68,10 +87,23 @@ type RepositoryMock struct {
 			// UserID is the userID argument value.
 			UserID string
 		}
+		// UpdateModelConfig holds details about calls to the UpdateModelConfig method.
+		UpdateModelConfig []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ModelID is the modelID argument value.
+			ModelID string
+			// ConfigJSON is the configJSON argument value.
+			ConfigJSON []byte
+			// UserID is the userID argument value.
+			UserID string
+		}
 	}
-	lockGetByKey sync.RWMutex
-	lockList     sync.RWMutex
-	lockUpdate   sync.RWMutex
+	lockGetByKey          sync.RWMutex
+	lockGetModelConfig    sync.RWMutex
+	lockList              sync.RWMutex
+	lockUpdate            sync.RWMutex
+	lockUpdateModelConfig sync.RWMutex
 }
 
 // GetByKey calls GetByKeyFunc.
@@ -107,6 +139,42 @@ func (mock *RepositoryMock) GetByKeyCalls() []struct {
 	mock.lockGetByKey.RLock()
 	calls = mock.calls.GetByKey
 	mock.lockGetByKey.RUnlock()
+	return calls
+}
+
+// GetModelConfig calls GetModelConfigFunc.
+func (mock *RepositoryMock) GetModelConfig(ctx context.Context, modelID string) ([]byte, error) {
+	if mock.GetModelConfigFunc == nil {
+		panic("RepositoryMock.GetModelConfigFunc: method is nil but Repository.GetModelConfig was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		ModelID string
+	}{
+		Ctx:     ctx,
+		ModelID: modelID,
+	}
+	mock.lockGetModelConfig.Lock()
+	mock.calls.GetModelConfig = append(mock.calls.GetModelConfig, callInfo)
+	mock.lockGetModelConfig.Unlock()
+	return mock.GetModelConfigFunc(ctx, modelID)
+}
+
+// GetModelConfigCalls gets all the calls that were made to GetModelConfig.
+// Check the length with:
+//
+//	len(mockedRepository.GetModelConfigCalls())
+func (mock *RepositoryMock) GetModelConfigCalls() []struct {
+	Ctx     context.Context
+	ModelID string
+} {
+	var calls []struct {
+		Ctx     context.Context
+		ModelID string
+	}
+	mock.lockGetModelConfig.RLock()
+	calls = mock.calls.GetModelConfig
+	mock.lockGetModelConfig.RUnlock()
 	return calls
 }
 
@@ -183,5 +251,49 @@ func (mock *RepositoryMock) UpdateCalls() []struct {
 	mock.lockUpdate.RLock()
 	calls = mock.calls.Update
 	mock.lockUpdate.RUnlock()
+	return calls
+}
+
+// UpdateModelConfig calls UpdateModelConfigFunc.
+func (mock *RepositoryMock) UpdateModelConfig(ctx context.Context, modelID string, configJSON []byte, userID string) error {
+	if mock.UpdateModelConfigFunc == nil {
+		panic("RepositoryMock.UpdateModelConfigFunc: method is nil but Repository.UpdateModelConfig was just called")
+	}
+	callInfo := struct {
+		Ctx        context.Context
+		ModelID    string
+		ConfigJSON []byte
+		UserID     string
+	}{
+		Ctx:        ctx,
+		ModelID:    modelID,
+		ConfigJSON: configJSON,
+		UserID:     userID,
+	}
+	mock.lockUpdateModelConfig.Lock()
+	mock.calls.UpdateModelConfig = append(mock.calls.UpdateModelConfig, callInfo)
+	mock.lockUpdateModelConfig.Unlock()
+	return mock.UpdateModelConfigFunc(ctx, modelID, configJSON, userID)
+}
+
+// UpdateModelConfigCalls gets all the calls that were made to UpdateModelConfig.
+// Check the length with:
+//
+//	len(mockedRepository.UpdateModelConfigCalls())
+func (mock *RepositoryMock) UpdateModelConfigCalls() []struct {
+	Ctx        context.Context
+	ModelID    string
+	ConfigJSON []byte
+	UserID     string
+} {
+	var calls []struct {
+		Ctx        context.Context
+		ModelID    string
+		ConfigJSON []byte
+		UserID     string
+	}
+	mock.lockUpdateModelConfig.RLock()
+	calls = mock.calls.UpdateModelConfig
+	mock.lockUpdateModelConfig.RUnlock()
 	return calls
 }

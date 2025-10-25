@@ -24,3 +24,28 @@ type ModelInfo struct {
 type UpdateSettingRequest struct {
 	Value string `json:"value"`
 }
+
+// ModelConfigField represents metadata for a configuration field.
+type ModelConfigField struct {
+	Name        string      `json:"name"`
+	Type        string      `json:"type"`
+	Default     interface{} `json:"default"`
+	Description string      `json:"description"`
+	Options     []string    `json:"options,omitempty"`
+	Min         *float64    `json:"min,omitempty"`
+	Max         *float64    `json:"max,omitempty"`
+	Required    bool        `json:"required"`
+}
+
+// ModelConfigSchema describes the configuration structure for a model.
+type ModelConfigSchema struct {
+	ModelID     string             `json:"model_id"`
+	DisplayName string             `json:"display_name"`
+	Fields      []ModelConfigField `json:"fields"`
+}
+
+// ModelConfig represents the stored configuration for a model.
+type ModelConfig struct {
+	ModelID string                 `json:"model_id"`
+	Config  map[string]interface{} `json:"config"`
+}

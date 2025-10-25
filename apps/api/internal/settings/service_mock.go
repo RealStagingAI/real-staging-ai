@@ -21,6 +21,12 @@ var _ Service = &ServiceMock{}
 //			GetActiveModelFunc: func(ctx context.Context) (string, error) {
 //				panic("mock out the GetActiveModel method")
 //			},
+//			GetModelConfigFunc: func(ctx context.Context, modelID string) (*ModelConfig, error) {
+//				panic("mock out the GetModelConfig method")
+//			},
+//			GetModelConfigSchemaFunc: func(ctx context.Context, modelID string) (*ModelConfigSchema, error) {
+//				panic("mock out the GetModelConfigSchema method")
+//			},
 //			GetSettingFunc: func(ctx context.Context, key string) (*Setting, error) {
 //				panic("mock out the GetSetting method")
 //			},
@@ -32,6 +38,9 @@ var _ Service = &ServiceMock{}
 //			},
 //			UpdateActiveModelFunc: func(ctx context.Context, modelID string, userID string) error {
 //				panic("mock out the UpdateActiveModel method")
+//			},
+//			UpdateModelConfigFunc: func(ctx context.Context, modelID string, config map[string]interface{}, userID string) error {
+//				panic("mock out the UpdateModelConfig method")
 //			},
 //			UpdateSettingFunc: func(ctx context.Context, key string, value string, userID string) error {
 //				panic("mock out the UpdateSetting method")
@@ -46,6 +55,12 @@ type ServiceMock struct {
 	// GetActiveModelFunc mocks the GetActiveModel method.
 	GetActiveModelFunc func(ctx context.Context) (string, error)
 
+	// GetModelConfigFunc mocks the GetModelConfig method.
+	GetModelConfigFunc func(ctx context.Context, modelID string) (*ModelConfig, error)
+
+	// GetModelConfigSchemaFunc mocks the GetModelConfigSchema method.
+	GetModelConfigSchemaFunc func(ctx context.Context, modelID string) (*ModelConfigSchema, error)
+
 	// GetSettingFunc mocks the GetSetting method.
 	GetSettingFunc func(ctx context.Context, key string) (*Setting, error)
 
@@ -58,6 +73,9 @@ type ServiceMock struct {
 	// UpdateActiveModelFunc mocks the UpdateActiveModel method.
 	UpdateActiveModelFunc func(ctx context.Context, modelID string, userID string) error
 
+	// UpdateModelConfigFunc mocks the UpdateModelConfig method.
+	UpdateModelConfigFunc func(ctx context.Context, modelID string, config map[string]interface{}, userID string) error
+
 	// UpdateSettingFunc mocks the UpdateSetting method.
 	UpdateSettingFunc func(ctx context.Context, key string, value string, userID string) error
 
@@ -67,6 +85,20 @@ type ServiceMock struct {
 		GetActiveModel []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+		}
+		// GetModelConfig holds details about calls to the GetModelConfig method.
+		GetModelConfig []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ModelID is the modelID argument value.
+			ModelID string
+		}
+		// GetModelConfigSchema holds details about calls to the GetModelConfigSchema method.
+		GetModelConfigSchema []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ModelID is the modelID argument value.
+			ModelID string
 		}
 		// GetSetting holds details about calls to the GetSetting method.
 		GetSetting []struct {
@@ -94,6 +126,17 @@ type ServiceMock struct {
 			// UserID is the userID argument value.
 			UserID string
 		}
+		// UpdateModelConfig holds details about calls to the UpdateModelConfig method.
+		UpdateModelConfig []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// ModelID is the modelID argument value.
+			ModelID string
+			// Config is the config argument value.
+			Config map[string]interface{}
+			// UserID is the userID argument value.
+			UserID string
+		}
 		// UpdateSetting holds details about calls to the UpdateSetting method.
 		UpdateSetting []struct {
 			// Ctx is the ctx argument value.
@@ -106,12 +149,15 @@ type ServiceMock struct {
 			UserID string
 		}
 	}
-	lockGetActiveModel      sync.RWMutex
-	lockGetSetting          sync.RWMutex
-	lockListAvailableModels sync.RWMutex
-	lockListSettings        sync.RWMutex
-	lockUpdateActiveModel   sync.RWMutex
-	lockUpdateSetting       sync.RWMutex
+	lockGetActiveModel       sync.RWMutex
+	lockGetModelConfig       sync.RWMutex
+	lockGetModelConfigSchema sync.RWMutex
+	lockGetSetting           sync.RWMutex
+	lockListAvailableModels  sync.RWMutex
+	lockListSettings         sync.RWMutex
+	lockUpdateActiveModel    sync.RWMutex
+	lockUpdateModelConfig    sync.RWMutex
+	lockUpdateSetting        sync.RWMutex
 }
 
 // GetActiveModel calls GetActiveModelFunc.
@@ -143,6 +189,78 @@ func (mock *ServiceMock) GetActiveModelCalls() []struct {
 	mock.lockGetActiveModel.RLock()
 	calls = mock.calls.GetActiveModel
 	mock.lockGetActiveModel.RUnlock()
+	return calls
+}
+
+// GetModelConfig calls GetModelConfigFunc.
+func (mock *ServiceMock) GetModelConfig(ctx context.Context, modelID string) (*ModelConfig, error) {
+	if mock.GetModelConfigFunc == nil {
+		panic("ServiceMock.GetModelConfigFunc: method is nil but Service.GetModelConfig was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		ModelID string
+	}{
+		Ctx:     ctx,
+		ModelID: modelID,
+	}
+	mock.lockGetModelConfig.Lock()
+	mock.calls.GetModelConfig = append(mock.calls.GetModelConfig, callInfo)
+	mock.lockGetModelConfig.Unlock()
+	return mock.GetModelConfigFunc(ctx, modelID)
+}
+
+// GetModelConfigCalls gets all the calls that were made to GetModelConfig.
+// Check the length with:
+//
+//	len(mockedService.GetModelConfigCalls())
+func (mock *ServiceMock) GetModelConfigCalls() []struct {
+	Ctx     context.Context
+	ModelID string
+} {
+	var calls []struct {
+		Ctx     context.Context
+		ModelID string
+	}
+	mock.lockGetModelConfig.RLock()
+	calls = mock.calls.GetModelConfig
+	mock.lockGetModelConfig.RUnlock()
+	return calls
+}
+
+// GetModelConfigSchema calls GetModelConfigSchemaFunc.
+func (mock *ServiceMock) GetModelConfigSchema(ctx context.Context, modelID string) (*ModelConfigSchema, error) {
+	if mock.GetModelConfigSchemaFunc == nil {
+		panic("ServiceMock.GetModelConfigSchemaFunc: method is nil but Service.GetModelConfigSchema was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		ModelID string
+	}{
+		Ctx:     ctx,
+		ModelID: modelID,
+	}
+	mock.lockGetModelConfigSchema.Lock()
+	mock.calls.GetModelConfigSchema = append(mock.calls.GetModelConfigSchema, callInfo)
+	mock.lockGetModelConfigSchema.Unlock()
+	return mock.GetModelConfigSchemaFunc(ctx, modelID)
+}
+
+// GetModelConfigSchemaCalls gets all the calls that were made to GetModelConfigSchema.
+// Check the length with:
+//
+//	len(mockedService.GetModelConfigSchemaCalls())
+func (mock *ServiceMock) GetModelConfigSchemaCalls() []struct {
+	Ctx     context.Context
+	ModelID string
+} {
+	var calls []struct {
+		Ctx     context.Context
+		ModelID string
+	}
+	mock.lockGetModelConfigSchema.RLock()
+	calls = mock.calls.GetModelConfigSchema
+	mock.lockGetModelConfigSchema.RUnlock()
 	return calls
 }
 
@@ -283,6 +401,50 @@ func (mock *ServiceMock) UpdateActiveModelCalls() []struct {
 	mock.lockUpdateActiveModel.RLock()
 	calls = mock.calls.UpdateActiveModel
 	mock.lockUpdateActiveModel.RUnlock()
+	return calls
+}
+
+// UpdateModelConfig calls UpdateModelConfigFunc.
+func (mock *ServiceMock) UpdateModelConfig(ctx context.Context, modelID string, config map[string]interface{}, userID string) error {
+	if mock.UpdateModelConfigFunc == nil {
+		panic("ServiceMock.UpdateModelConfigFunc: method is nil but Service.UpdateModelConfig was just called")
+	}
+	callInfo := struct {
+		Ctx     context.Context
+		ModelID string
+		Config  map[string]interface{}
+		UserID  string
+	}{
+		Ctx:     ctx,
+		ModelID: modelID,
+		Config:  config,
+		UserID:  userID,
+	}
+	mock.lockUpdateModelConfig.Lock()
+	mock.calls.UpdateModelConfig = append(mock.calls.UpdateModelConfig, callInfo)
+	mock.lockUpdateModelConfig.Unlock()
+	return mock.UpdateModelConfigFunc(ctx, modelID, config, userID)
+}
+
+// UpdateModelConfigCalls gets all the calls that were made to UpdateModelConfig.
+// Check the length with:
+//
+//	len(mockedService.UpdateModelConfigCalls())
+func (mock *ServiceMock) UpdateModelConfigCalls() []struct {
+	Ctx     context.Context
+	ModelID string
+	Config  map[string]interface{}
+	UserID  string
+} {
+	var calls []struct {
+		Ctx     context.Context
+		ModelID string
+		Config  map[string]interface{}
+		UserID  string
+	}
+	mock.lockUpdateModelConfig.RLock()
+	calls = mock.calls.UpdateModelConfig
+	mock.lockUpdateModelConfig.RUnlock()
 	return calls
 }
 

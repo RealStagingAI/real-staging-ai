@@ -16,4 +16,10 @@ type Repository interface {
 
 	// List retrieves all settings.
 	List(ctx context.Context) ([]Setting, error)
+
+	// GetModelConfig retrieves the configuration JSON for a specific model.
+	GetModelConfig(ctx context.Context, modelID string) ([]byte, error)
+
+	// UpdateModelConfig updates the configuration JSON for a specific model.
+	UpdateModelConfig(ctx context.Context, modelID string, configJSON []byte, userID string) error
 }

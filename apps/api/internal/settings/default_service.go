@@ -2,6 +2,7 @@ package settings
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 )
 
@@ -114,4 +115,228 @@ func (s *DefaultService) UpdateSetting(ctx context.Context, key, value, userID s
 // ListSettings retrieves all settings.
 func (s *DefaultService) ListSettings(ctx context.Context) ([]Setting, error) {
 	return s.repo.List(ctx)
+}
+
+// GetModelConfig retrieves the configuration for a specific model.
+func (s *DefaultService) GetModelConfig(ctx context.Context, modelID string) (*ModelConfig, error) {
+	configJSON, err := s.repo.GetModelConfig(ctx, modelID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get model config: %w", err)
+	}
+
+	// Parse JSON into map
+	var configMap map[string]interface{}
+	if err := json.Unmarshal(configJSON, &configMap); err != nil {
+		return nil, fmt.Errorf("failed to parse model config: %w", err)
+	}
+
+	return &ModelConfig{
+		ModelID: modelID,
+		Config:  configMap,
+	}, nil
+}
+
+// UpdateModelConfig updates the configuration for a specific model.
+func (s *DefaultService) UpdateModelConfig(
+	ctx context.Context, modelID string, config map[string]interface{}, userID string,
+) error {
+	// Validate model exists
+	models, err := s.ListAvailableModels(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to list models: %w", err)
+	}
+
+	valid := false
+	for _, model := range models {
+		if model.ID == modelID {
+			valid = true
+			break
+		}
+	}
+
+	if !valid {
+		return fmt.Errorf("invalid model ID: %s", modelID)
+	}
+
+	// Marshal config to JSON
+	configJSON, err := json.Marshal(config)
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	// Update in database
+	return s.repo.UpdateModelConfig(ctx, modelID, configJSON, userID)
+}
+
+// GetModelConfigSchema returns the schema for a model's configuration.
+func (s *DefaultService) GetModelConfigSchema(ctx context.Context, modelID string) (*ModelConfigSchema, error) {
+	// Return schema based on model ID
+	switch modelID {
+	case "qwen/qwen-image-edit":
+		return getQwenSchema(), nil
+	case "black-forest-labs/flux-kontext-max", "black-forest-labs/flux-kontext-pro":
+		return getFluxKontextSchema(modelID), nil
+	case "bytedance/seedream-3", "bytedance/seedream-4":
+		return getSeedreamSchema(modelID), nil
+	default:
+		return nil, fmt.Errorf("unknown model ID: %s", modelID)
+	}
+}
+
+func getQwenSchema() *ModelConfigSchema {
+	return &ModelConfigSchema{
+		ModelID:     "qwen/qwen-image-edit",
+		DisplayName: "Qwen Image Edit",
+		Fields: []ModelConfigField{
+			{
+				Name:        "go_fast",
+				Type:        "bool",
+				Default:     true,
+				Description: "Enable fast mode for quicker processing",
+				Required:    true,
+			},
+			{
+				Name:        "aspect_ratio",
+				Type:        "string",
+				Default:     "match_input_image",
+				Description: "Output aspect ratio",
+				Options:     []string{"1:1", "16:9", "4:3", "3:2", "match_input_image"},
+				Required:    true,
+			},
+			{
+				Name:        "output_format",
+				Type:        "string",
+				Default:     "webp",
+				Description: "Output image format",
+				Options:     []string{"webp", "png", "jpg"},
+				Required:    true,
+			},
+			{
+				Name:        "output_quality",
+				Type:        "int",
+				Default:     80,
+				Description: "Output image quality (1-100)",
+				Min:         ptr(1.0),
+				Max:         ptr(100.0),
+				Required:    true,
+			},
+		},
+	}
+}
+
+func getFluxKontextSchema(modelID string) *ModelConfigSchema {
+	displayName := "Flux Kontext Max"
+	if modelID == "black-forest-labs/flux-kontext-pro" {
+		displayName = "Flux Kontext Pro"
+	}
+
+	return &ModelConfigSchema{
+		ModelID:     modelID,
+		DisplayName: displayName,
+		Fields: []ModelConfigField{
+			{
+				Name:        "aspect_ratio",
+				Type:        "string",
+				Default:     "match_input_image",
+				Description: "Output aspect ratio",
+				Options:     []string{"1:1", "16:9", "4:3", "3:2", "match_input_image"},
+				Required:    true,
+			},
+			{
+				Name:        "output_format",
+				Type:        "string",
+				Default:     "png",
+				Description: "Output image format",
+				Options:     []string{"webp", "png", "jpg"},
+				Required:    true,
+			},
+			{
+				Name:        "safety_tolerance",
+				Type:        "int",
+				Default:     4,
+				Description: "Safety filter tolerance (1=strict, 6=permissive)",
+				Min:         ptr(1.0),
+				Max:         ptr(6.0),
+				Required:    true,
+			},
+			{
+				Name:        "prompt_upsampling",
+				Type:        "bool",
+				Default:     false,
+				Description: "Enhance prompts automatically",
+				Required:    true,
+			},
+			{
+				Name:        "num_outputs",
+				Type:        "int",
+				Default:     1,
+				Description: "Number of images to generate",
+				Min:         ptr(1.0),
+				Max:         ptr(4.0),
+				Required:    true,
+			},
+			{
+				Name:        "output_quality",
+				Type:        "int",
+				Default:     90,
+				Description: "Output image quality (1-100)",
+				Min:         ptr(1.0),
+				Max:         ptr(100.0),
+				Required:    true,
+			},
+		},
+	}
+}
+
+func getSeedreamSchema(modelID string) *ModelConfigSchema {
+	displayName := "Seedream 3"
+	if modelID == "bytedance/seedream-4" {
+		displayName = "Seedream 4"
+	}
+
+	return &ModelConfigSchema{
+		ModelID:     modelID,
+		DisplayName: displayName,
+		Fields: []ModelConfigField{
+			{
+				Name:        "aspect_ratio",
+				Type:        "string",
+				Default:     "1:1",
+				Description: "Output aspect ratio",
+				Options:     []string{"1:1", "16:9", "4:3", "3:2"},
+				Required:    true,
+			},
+			{
+				Name:        "num_inference_steps",
+				Type:        "int",
+				Default:     50,
+				Description: "Number of denoising steps (more = higher quality, slower)",
+				Min:         ptr(20.0),
+				Max:         ptr(100.0),
+				Required:    true,
+			},
+			{
+				Name:        "guidance_scale",
+				Type:        "float",
+				Default:     7.5,
+				Description: "How closely to follow the prompt (1.0-20.0)",
+				Min:         ptr(1.0),
+				Max:         ptr(20.0),
+				Required:    true,
+			},
+			{
+				Name:        "output_quality",
+				Type:        "int",
+				Default:     95,
+				Description: "Output image quality (1-100)",
+				Min:         ptr(1.0),
+				Max:         ptr(100.0),
+				Required:    true,
+			},
+		},
+	}
+}
+
+func ptr(f float64) *float64 {
+	return &f
 }

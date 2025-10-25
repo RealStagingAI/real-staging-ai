@@ -237,14 +237,14 @@ curl -s https://api.realstaging.ai/api/v1/admin/models/active \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
 
-### Model Configuration (Phase 1 & 2 Complete)
+### Model Configuration (Phases 1, 2 & 3 Complete!)
 
-Each AI model supports specific configuration parameters that control output quality, format, and behavior. Model configurations are stored in the database and can be managed through the API (Phase 3, planned).
+Each AI model supports specific configuration parameters that control output quality, format, and behavior. Model configurations are stored in the database and can be managed through the API.
 
 **Current Status:**
 - ✅ Phase 1: Configuration structs and database schema
 - ✅ Phase 2: Worker integration - configs loaded from database
-- ⏳ Phase 3: API endpoints for config management (planned)
+- ✅ Phase 3: API endpoints for config management - **LIVE!**
 - ⏳ Phase 4: Admin UI for easy configuration (planned)
 
 **Available Configuration Parameters:**
@@ -295,6 +295,100 @@ WHERE key = 'model_config_flux_kontext_pro';
 - Falls back to defaults if configuration is unavailable
 - Validates all parameters before sending to AI API
 - Logs warnings if config loading fails
+
+**API Endpoints:**
+
+**Get Model Configuration**
+
+```bash
+GET /api/v1/admin/models/{modelId}/config
+```
+
+Retrieves the current configuration for a specific model.
+
+```bash
+curl -X GET "https://api.realstaging.ai/api/v1/admin/models/qwen%2Fqwen-image-edit/config" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Response:
+```json
+{
+  "model_id": "qwen/qwen-image-edit",
+  "config": {
+    "go_fast": true,
+    "aspect_ratio": "match_input_image",
+    "output_format": "webp",
+    "output_quality": 80
+  }
+}
+```
+
+**Update Model Configuration**
+
+```bash
+PUT /api/v1/admin/models/{modelId}/config
+```
+
+Updates the configuration parameters for a specific model. Changes take effect immediately for new jobs.
+
+```bash
+curl -X PUT "https://api.realstaging.ai/api/v1/admin/models/qwen%2Fqwen-image-edit/config" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "go_fast": true,
+    "aspect_ratio": "16:9",
+    "output_format": "png",
+    "output_quality": 95
+  }'
+```
+
+Response:
+```json
+{
+  "message": "Model configuration updated successfully",
+  "model_id": "qwen/qwen-image-edit"
+}
+```
+
+**Get Configuration Schema**
+
+```bash
+GET /api/v1/admin/models/{modelId}/config/schema
+```
+
+Retrieves the schema definition for a model's configuration. Use this to dynamically generate configuration UIs.
+
+```bash
+curl -X GET "https://api.realstaging.ai/api/v1/admin/models/qwen%2Fqwen-image-edit/config/schema" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Response:
+```json
+{
+  "model_id": "qwen/qwen-image-edit",
+  "display_name": "Qwen Image Edit",
+  "fields": [
+    {
+      "name": "go_fast",
+      "type": "bool",
+      "default": true,
+      "description": "Enable fast mode for quicker processing",
+      "required": true
+    },
+    {
+      "name": "aspect_ratio",
+      "type": "string",
+      "default": "match_input_image",
+      "description": "Output aspect ratio",
+      "options": ["1:1", "16:9", "4:3", "3:2", "match_input_image"],
+      "required": true
+    }
+  ]
+}
+```
 
 **For more details, see:**
 - [Model Settings Architecture](/development/model-settings-architecture.md)

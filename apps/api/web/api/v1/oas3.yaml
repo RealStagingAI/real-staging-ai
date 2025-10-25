@@ -1227,6 +1227,175 @@ paths:
           $ref: "#/components/responses/ForbiddenError"
         "500":
           $ref: "#/components/responses/InternalServerError"
+  /api/v1/admin/models/{modelId}/config:
+    get:
+      summary: Get model configuration
+      description: |
+        Retrieve the current configuration for a specific AI model.
+        Requires admin privileges.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          description: Model ID (e.g., "qwen/qwen-image-edit")
+          schema:
+            type: string
+          example: "qwen/qwen-image-edit"
+      responses:
+        "200":
+          description: Model configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model_id:
+                    type: string
+                    example: "qwen/qwen-image-edit"
+                  config:
+                    type: object
+                    additionalProperties: true
+                    example:
+                      go_fast: true
+                      aspect_ratio: "match_input_image"
+                      output_format: "webp"
+                      output_quality: 80
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      summary: Update model configuration
+      description: |
+        Update the configuration parameters for a specific AI model.
+        Changes take effect immediately for new jobs.
+        Requires admin privileges.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          description: Model ID
+          schema:
+            type: string
+          example: "qwen/qwen-image-edit"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              example:
+                go_fast: true
+                aspect_ratio: "16:9"
+                output_format: "png"
+                output_quality: 95
+      responses:
+        "200":
+          description: Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Model configuration updated successfully"
+                  model_id:
+                    type: string
+                    example: "qwen/qwen-image-edit"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/admin/models/{modelId}/config/schema:
+    get:
+      summary: Get model configuration schema
+      description: |
+        Retrieve the schema definition for a model's configuration.
+        This describes available parameters, types, defaults, and validation rules.
+        Use this to dynamically generate configuration UIs.
+        Requires admin privileges.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: modelId
+          in: path
+          required: true
+          description: Model ID
+          schema:
+            type: string
+          example: "qwen/qwen-image-edit"
+      responses:
+        "200":
+          description: Configuration schema
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model_id:
+                    type: string
+                    example: "qwen/qwen-image-edit"
+                  display_name:
+                    type: string
+                    example: "Qwen Image Edit"
+                  fields:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        type:
+                          type: string
+                        default:
+                          oneOf:
+                            - type: string
+                            - type: number
+                            - type: boolean
+                        description:
+                          type: string
+                        options:
+                          type: array
+                          items:
+                            type: string
+                        min:
+                          type: number
+                        max:
+                          type: number
+                        required:
+                          type: boolean
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 components:
   securitySchemes:
     bearerAuth:

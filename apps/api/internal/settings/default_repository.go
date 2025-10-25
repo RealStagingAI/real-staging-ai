@@ -114,3 +114,63 @@ func (r *DefaultRepository) List(ctx context.Context) ([]Setting, error) {
 
 	return settings, nil
 }
+
+// GetModelConfig retrieves the configuration JSON for a specific model.
+func (r *DefaultRepository) GetModelConfig(ctx context.Context, modelID string) ([]byte, error) {
+	key := getConfigKey(modelID)
+
+	query := `SELECT model_settings FROM settings WHERE key = $1`
+	var configJSON []byte
+	err := r.db.QueryRow(ctx, query, key).Scan(&configJSON)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("config not found for model: %s", modelID)
+		}
+		return nil, fmt.Errorf("failed to query config: %w", err)
+	}
+
+	return configJSON, nil
+}
+
+// UpdateModelConfig updates the configuration JSON for a specific model.
+func (r *DefaultRepository) UpdateModelConfig(
+	ctx context.Context, modelID string, configJSON []byte, userID string,
+) error {
+	key := getConfigKey(modelID)
+
+	query := `
+		UPDATE settings 
+		SET model_settings = $1, updated_at = NOW(), updated_by = $2
+		WHERE key = $3
+	`
+	result, err := r.db.Exec(ctx, query, configJSON, userID, key)
+	if err != nil {
+		return fmt.Errorf("failed to update config: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return fmt.Errorf("config not found for model: %s", modelID)
+	}
+
+	return nil
+}
+
+// getConfigKey converts a model ID to its configuration key.
+func getConfigKey(modelID string) string {
+	// Convert model ID to config key format
+	// e.g., "qwen/qwen-image-edit" -> "model_config_qwen"
+	switch modelID {
+	case "qwen/qwen-image-edit":
+		return "model_config_qwen"
+	case "black-forest-labs/flux-kontext-max":
+		return "model_config_flux_kontext_max"
+	case "black-forest-labs/flux-kontext-pro":
+		return "model_config_flux_kontext_pro"
+	case "bytedance/seedream-3":
+		return "model_config_seedream_3"
+	case "bytedance/seedream-4":
+		return "model_config_seedream_4"
+	default:
+		return fmt.Sprintf("model_config_%s", modelID)
+	}
+}
