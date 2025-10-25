@@ -237,15 +237,15 @@ curl -s https://api.realstaging.ai/api/v1/admin/models/active \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
 
-### Model Configuration (Phases 1, 2 & 3 Complete!)
+### Model Configuration (All Phases Complete! 🎉)
 
-Each AI model supports specific configuration parameters that control output quality, format, and behavior. Model configurations are stored in the database and can be managed through the API.
+Each AI model supports specific configuration parameters that control output quality, format, and behavior. Model configurations are stored in the database and can be managed through both the API and admin UI.
 
 **Current Status:**
 - ✅ Phase 1: Configuration structs and database schema
 - ✅ Phase 2: Worker integration - configs loaded from database
-- ✅ Phase 3: API endpoints for config management - **LIVE!**
-- ⏳ Phase 4: Admin UI for easy configuration (planned)
+- ✅ Phase 3: API endpoints for config management
+- ✅ Phase 4: Admin UI for easy configuration - **LIVE!**
 
 **Available Configuration Parameters:**
 
@@ -390,10 +390,25 @@ Response:
 }
 ```
 
+**Admin UI:**
+
+The easiest way to configure models is through the admin UI:
+
+1. Navigate to `/admin/settings`
+2. Click the "Configure" button on any model
+3. A dialog opens with all configurable parameters
+4. Adjust values as needed (dropdowns, switches, number inputs)
+5. Click "Save Configuration"
+6. Changes apply immediately to new jobs!
+
+The UI dynamically generates form fields based on the model's schema, so new models automatically get proper configuration interfaces.
+
 **For more details, see:**
 - [Model Settings Architecture](/development/model-settings-architecture.md)
 - [Phase 1 Complete](/development/phase1-complete.md)
 - [Phase 2 Complete](/development/phase2-complete.md)
+- [Phase 3 Complete](/development/phase3-complete.md)
+- [Phase 4 Complete](/development/phase4-complete.md)
 
 ## Settings Management
 

@@ -1,4 +1,4 @@
-package http
+package admin
 
 import (
 	"errors"
@@ -14,16 +14,16 @@ import (
 	"github.com/real-staging-ai/api/internal/user"
 )
 
-// AdminHandler handles admin-related HTTP requests.
-type AdminHandler struct {
+// DefaultHandler handles admin-related HTTP requests.
+type DefaultHandler struct {
 	settingsService settings.Service
 	db              storage.Database
 	log             logging.Logger
 }
 
-// NewAdminHandler creates a new AdminHandler.
-func NewAdminHandler(settingsService settings.Service, db storage.Database, log logging.Logger) *AdminHandler {
-	return &AdminHandler{
+// NewDefaultHandler creates a new DefaultHandler.
+func NewDefaultHandler(settingsService settings.Service, db storage.Database, log logging.Logger) *DefaultHandler {
+	return &DefaultHandler{
 		settingsService: settingsService,
 		db:              db,
 		log:             log,
@@ -31,7 +31,7 @@ func NewAdminHandler(settingsService settings.Service, db storage.Database, log 
 }
 
 // ListModels handles GET /admin/models - Lists all available AI models.
-func (h *AdminHandler) ListModels(c echo.Context) error {
+func (h *DefaultHandler) ListModels(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	models, err := h.settingsService.ListAvailableModels(ctx)
@@ -46,7 +46,7 @@ func (h *AdminHandler) ListModels(c echo.Context) error {
 }
 
 // GetActiveModel handles GET /admin/models/active - Gets the currently active model.
-func (h *AdminHandler) GetActiveModel(c echo.Context) error {
+func (h *DefaultHandler) GetActiveModel(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	modelID, err := h.settingsService.GetActiveModel(ctx)
@@ -78,7 +78,7 @@ func (h *AdminHandler) GetActiveModel(c echo.Context) error {
 }
 
 // UpdateActiveModel handles PUT /admin/models/active - Updates the active model.
-func (h *AdminHandler) UpdateActiveModel(c echo.Context) error {
+func (h *DefaultHandler) UpdateActiveModel(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var req settings.UpdateSettingRequest
@@ -115,7 +115,7 @@ func (h *AdminHandler) UpdateActiveModel(c echo.Context) error {
 }
 
 // ListSettings handles GET /admin/settings - Lists all settings.
-func (h *AdminHandler) ListSettings(c echo.Context) error {
+func (h *DefaultHandler) ListSettings(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	settings, err := h.settingsService.ListSettings(ctx)
@@ -130,7 +130,7 @@ func (h *AdminHandler) ListSettings(c echo.Context) error {
 }
 
 // GetSetting handles GET /admin/settings/:key - Gets a specific setting.
-func (h *AdminHandler) GetSetting(c echo.Context) error {
+func (h *DefaultHandler) GetSetting(c echo.Context) error {
 	ctx := c.Request().Context()
 	key := c.Param("key")
 
@@ -144,7 +144,7 @@ func (h *AdminHandler) GetSetting(c echo.Context) error {
 }
 
 // UpdateSetting handles PUT /admin/settings/:key - Updates a setting.
-func (h *AdminHandler) UpdateSetting(c echo.Context) error {
+func (h *DefaultHandler) UpdateSetting(c echo.Context) error {
 	ctx := c.Request().Context()
 	key := c.Param("key")
 
@@ -183,7 +183,7 @@ func (h *AdminHandler) UpdateSetting(c echo.Context) error {
 }
 
 // GetModelConfig handles GET /admin/models/:id/config - Gets the configuration for a model.
-func (h *AdminHandler) GetModelConfig(c echo.Context) error {
+func (h *DefaultHandler) GetModelConfig(c echo.Context) error {
 	ctx := c.Request().Context()
 	modelID := c.Param("id")
 
@@ -197,7 +197,7 @@ func (h *AdminHandler) GetModelConfig(c echo.Context) error {
 }
 
 // UpdateModelConfig handles PUT /admin/models/:id/config - Updates the configuration for a model.
-func (h *AdminHandler) UpdateModelConfig(c echo.Context) error {
+func (h *DefaultHandler) UpdateModelConfig(c echo.Context) error {
 	ctx := c.Request().Context()
 	modelID := c.Param("id")
 
@@ -230,7 +230,7 @@ func (h *AdminHandler) UpdateModelConfig(c echo.Context) error {
 }
 
 // GetModelConfigSchema handles GET /admin/models/:id/config/schema - Gets the schema for a model's configuration.
-func (h *AdminHandler) GetModelConfigSchema(c echo.Context) error {
+func (h *DefaultHandler) GetModelConfigSchema(c echo.Context) error {
 	ctx := c.Request().Context()
 	modelID := c.Param("id")
 
@@ -244,7 +244,7 @@ func (h *AdminHandler) GetModelConfigSchema(c echo.Context) error {
 }
 
 // resolveUserUUID looks up or creates a user based on Auth0 sub, returning the user's UUID.
-func (h *AdminHandler) resolveUserUUID(c echo.Context) (string, error) {
+func (h *DefaultHandler) resolveUserUUID(c echo.Context) (string, error) {
 	ctx := c.Request().Context()
 
 	// Get Auth0 sub from JWT token

@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
+	adminLib "github.com/real-staging-ai/api/internal/admin"
 	"github.com/real-staging-ai/api/internal/auth"
 	"github.com/real-staging-ai/api/internal/billing"
 	"github.com/real-staging-ai/api/internal/config"
@@ -173,7 +174,7 @@ func NewServer(
 	// Admin settings routes
 	settingsRepo := settings.NewDefaultRepository(s.db.Pool())
 	settingsService := settings.NewDefaultService(settingsRepo)
-	adminHandler := NewAdminHandler(settingsService, s.db, logging.Default())
+	adminHandler := adminLib.NewDefaultHandler(settingsService, s.db, logging.Default())
 	admin.GET("/models", adminHandler.ListModels)
 	admin.GET("/models/active", adminHandler.GetActiveModel)
 	admin.PUT("/models/active", adminHandler.UpdateActiveModel)
@@ -295,7 +296,7 @@ func NewTestServer(
 	// Admin settings routes (test server)
 	settingsRepo := settings.NewDefaultRepository(s.db.Pool())
 	settingsService := settings.NewDefaultService(settingsRepo)
-	adminHandler := NewAdminHandler(settingsService, s.db, logging.Default())
+	adminHandler := adminLib.NewDefaultHandler(settingsService, s.db, logging.Default())
 	admin.GET("/models", withTestUser(adminHandler.ListModels))
 	admin.GET("/models/active", withTestUser(adminHandler.GetActiveModel))
 	admin.PUT("/models/active", withTestUser(adminHandler.UpdateActiveModel))

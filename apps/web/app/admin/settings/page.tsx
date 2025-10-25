@@ -5,9 +5,10 @@ import { useUser } from "@auth0/nextjs-auth0";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Settings2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Settings2, Sliders } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiFetch } from "@/lib/api";
+import { ModelConfigDialog } from "@/components/admin/model-config-dialog";
 
 interface ModelInfo {
   id: string;
@@ -24,6 +25,8 @@ export default function AdminSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
 
   const fetchModels = useCallback(async () => {
     try {
@@ -150,12 +153,24 @@ export default function AdminSettingsPage() {
                         {model.id}
                       </p>
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 flex gap-2">
+                      <Button
+                        onClick={() => {
+                          setSelectedModelId(model.id);
+                          setConfigDialogOpen(true);
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Sliders className="h-4 w-4 mr-2" />
+                        Configure
+                      </Button>
                       {!model.is_active && (
                         <Button
                           onClick={() => updateActiveModel(model.id)}
                           disabled={updating === model.id}
                           variant="outline"
+                          size="sm"
                         >
                           {updating === model.id ? "Activating..." : "Activate"}
                         </Button>
@@ -167,6 +182,19 @@ export default function AdminSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Model Configuration Dialog */}
+        {selectedModelId && (
+          <ModelConfigDialog
+            modelId={selectedModelId}
+            open={configDialogOpen}
+            onOpenChange={setConfigDialogOpen}
+            onSuccess={() => {
+              setSuccessMessage("Model configuration updated successfully!");
+              setTimeout(() => setSuccessMessage(null), 3000);
+            }}
+          />
+        )}
 
         {/* Info Box */}
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
