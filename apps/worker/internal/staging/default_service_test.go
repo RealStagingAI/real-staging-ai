@@ -225,11 +225,11 @@ func TestDefaultService_CallReplicateAPI_ModelRegistry(t *testing.T) {
 			t.Fatalf("unexpected error creating service: %v", err)
 		}
 
-		// Manually set an invalid model ID to test error handling
-		service.modelID = model.ModelID("invalid/model")
+		// Test with an invalid model ID - should fail with model not found
+		invalidModelID := model.ModelID("invalid/model")
 
 		// Try to call the API - should fail with model not found
-		_, err = service.callReplicateAPI(ctx, "data:image/jpeg;base64,test", "test prompt", nil)
+		_, err = service.callReplicateAPI(ctx, invalidModelID, "data:image/jpeg;base64,test", "test prompt", nil)
 		if err == nil {
 			t.Fatal("expected error for invalid model")
 		}
@@ -259,7 +259,7 @@ func TestDefaultService_CallReplicateAPI_ModelRegistry(t *testing.T) {
 		}
 
 		// Try to call the API with empty prompt - should fail validation
-		_, err = service.callReplicateAPI(ctx, "data:image/jpeg;base64,test", "", nil)
+		_, err = service.callReplicateAPI(ctx, model.ModelQwenImageEdit, "data:image/jpeg;base64,test", "", nil)
 		if err == nil {
 			t.Fatal("expected error for empty prompt")
 		}

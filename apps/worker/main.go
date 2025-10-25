@@ -106,8 +106,8 @@ func main() {
 		pub = &events.NoopPublisher{}
 	}
 
-	// Initialize the job processor
-	proc := processor.NewImageProcessor(imgRepo, stagingService, pub)
+	// Initialize the job processor with settings repo for dynamic model selection
+	proc := processor.NewImageProcessor(imgRepo, stagingService, pub, settingsRepo)
 
 	// Initialize the queue client (Redis/asynq in production)
 	var queueClient queue.QueueClient

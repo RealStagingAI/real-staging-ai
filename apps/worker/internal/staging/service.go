@@ -11,6 +11,7 @@ import (
 type StagingRequest struct {
 	ImageID     string
 	OriginalURL string
+	ModelID     string // AI model to use for this staging request
 	RoomType    *string
 	Style       *string
 	Seed        *int64

@@ -176,8 +176,22 @@ func (s *DefaultService) StageImage(ctx context.Context, req *StagingRequest) (s
 	span.SetAttributes(
 		attribute.String("image.id", req.ImageID),
 		attribute.String("image.original_url", req.OriginalURL),
+		attribute.String("model.id", req.ModelID),
 	)
 	defer span.End()
+
+	// Validate model ID
+	modelID := model.ModelID(req.ModelID)
+	if modelID == "" {
+		// Fall back to service default if not specified
+		modelID = s.modelID
+	}
+	if !s.registry.Exists(modelID) {
+		err := fmt.Errorf("unsupported model: %s", modelID)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "invalid model")
+		return "", err
+	}
 
 	// Extract the S3 file key from the original URL
 	fileKey, err := extractS3KeyFromURL(req.OriginalURL)
@@ -217,7 +231,7 @@ func (s *DefaultService) StageImage(ctx context.Context, req *StagingRequest) (s
 	promptText := s.buildPrompt(req.RoomType, req.Style, req.Prompt)
 
 	// Call Replicate AI to stage the image
-	stagedImageURL, err := s.callReplicateAPI(ctx, dataURL, promptText, req.Seed)
+	stagedImageURL, err := s.callReplicateAPI(ctx, modelID, dataURL, promptText, req.Seed)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "Replicate API failed")
@@ -303,18 +317,18 @@ func (s *DefaultService) UploadToS3(
 
 // callReplicateAPI calls the Replicate API to stage an image.
 func (s *DefaultService) callReplicateAPI(
-	ctx context.Context, imageDataURL, prompt string, seed *int64,
+	ctx context.Context, modelID model.ModelID, imageDataURL, prompt string, seed *int64,
 ) (string, error) {
 	tracer := otel.Tracer("real-staging-worker/staging")
 	ctx, span := tracer.Start(ctx, "staging.callReplicateAPI")
 	span.SetAttributes(
-		attribute.String("model", string(s.modelID)),
+		attribute.String("model", string(modelID)),
 		attribute.String("prompt", prompt),
 	)
 	defer span.End()
 
 	// Get the model metadata from registry
-	modelMeta, err := s.registry.Get(s.modelID)
+	modelMeta, err := s.registry.Get(modelID)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "model not found")
@@ -324,11 +338,11 @@ func (s *DefaultService) callReplicateAPI(
 	// Load model configuration from database (optional)
 	var modelConfig model.ModelConfig
 	if s.configRepo != nil {
-		modelConfig, err = s.configRepo.GetModelConfig(ctx, s.modelID)
+		modelConfig, err = s.configRepo.GetModelConfig(ctx, modelID)
 		if err != nil {
 			// Log warning but continue with defaults
 			log := logging.Default()
-			log.Warn(ctx, "failed to load model config, using defaults", "error", err, "model", s.modelID)
+			log.Warn(ctx, "failed to load model config, using defaults", "error", err, "model", modelID)
 			modelConfig = nil
 		}
 	}
@@ -354,7 +368,7 @@ func (s *DefaultService) callReplicateAPI(
 		Events: []replicate.WebhookEventType{},
 	}
 
-	prediction, err := s.replicateClient.CreatePrediction(ctx, string(s.modelID), input, &webhook, false)
+	prediction, err := s.replicateClient.CreatePrediction(ctx, string(modelID), input, &webhook, false)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "CreatePrediction failed")

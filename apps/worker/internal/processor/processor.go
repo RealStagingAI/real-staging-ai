@@ -14,13 +14,20 @@ import (
 	"github.com/real-staging-ai/worker/internal/queue"
 	"github.com/real-staging-ai/worker/internal/repository"
 	"github.com/real-staging-ai/worker/internal/staging"
+	"github.com/real-staging-ai/worker/internal/staging/model"
 )
+
+// SettingsRepository defines interface for getting settings.
+type SettingsRepository interface {
+	GetActiveModel(ctx context.Context) (model.ModelID, error)
+}
 
 // ImageProcessor handles image processing jobs.
 type ImageProcessor struct {
 	imageRepo      repository.ImageRepository
 	stagingService staging.Service
 	publisher      events.Publisher
+	settingsRepo   SettingsRepository
 }
 
 // NewImageProcessor creates a new image processor.
@@ -28,11 +35,13 @@ func NewImageProcessor(
 	imageRepo repository.ImageRepository,
 	stagingService staging.Service,
 	publisher events.Publisher,
+	settingsRepo SettingsRepository,
 ) *ImageProcessor {
 	return &ImageProcessor{
 		imageRepo:      imageRepo,
 		stagingService: stagingService,
 		publisher:      publisher,
+		settingsRepo:   settingsRepo,
 	}
 }
 
@@ -104,6 +113,16 @@ func (p *ImageProcessor) processStageJob(ctx context.Context, job *queue.Job) er
 
 	log.Info(ctx, fmt.Sprintf("Processing stage job for image %s", payload.ImageID))
 
+	// Get active model from database
+	activeModel, err := p.settingsRepo.GetActiveModel(ctx)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to get active model")
+		log.Error(ctx, "Failed to get active model", "image_id", payload.ImageID, "error", err)
+		return fmt.Errorf("failed to get active model: %w", err)
+	}
+	log.Info(ctx, "Using model for staging", "model_id", string(activeModel), "image_id", payload.ImageID)
+
 	// Mark image as processing
 	if err := p.imageRepo.SetProcessing(ctx, payload.ImageID); err != nil {
 		span.RecordError(err)
@@ -125,6 +144,7 @@ func (p *ImageProcessor) processStageJob(ctx context.Context, job *queue.Job) er
 	stagedURL, err := p.stagingService.StageImage(ctx, &staging.StagingRequest{
 		ImageID:     payload.ImageID,
 		OriginalURL: payload.OriginalURL,
+		ModelID:     string(activeModel), // Use model from database
 		RoomType:    payload.RoomType,
 		Style:       payload.Style,
 		Seed:        payload.Seed,
