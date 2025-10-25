@@ -153,7 +153,7 @@ services:
         fromService:
           name: realstaging-api
           type: web
-          property: host
+          property: hostport
       # Optional: Public API base for client-side calls
       - key: NEXT_PUBLIC_API_BASE
         value: /api
@@ -162,7 +162,7 @@ services:
         fromService:
           name: realstaging-metabase
           type: web
-          property: host
+          property: hostport
 
   # Metabase Analytics (Private Internal Service)
   - type: web
