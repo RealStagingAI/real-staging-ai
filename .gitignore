@@ -13,7 +13,8 @@ coverage/
 .env*
 
 # # Local secrets (do not commit)
-secrets.yml
+apps/api/secrets.yml
+apps/worker/secrets.yml
 .secrets/
 
 # Local config overrides (do not commit)
