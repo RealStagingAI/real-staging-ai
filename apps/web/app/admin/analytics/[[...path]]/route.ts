@@ -16,42 +16,47 @@ const METABASE_URL = process.env.METABASE_INTERNAL_URL || 'http://localhost:3001
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path?: string[] } }
+  context: { params: Promise<{ path?: string[] }> }
 ) {
+  const params = await context.params;
   return handleProxy(request, params);
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path?: string[] } }
+  context: { params: Promise<{ path?: string[] }> }
 ) {
+  const params = await context.params;
   return handleProxy(request, params);
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { path?: string[] } }
+  context: { params: Promise<{ path?: string[] }> }
 ) {
+  const params = await context.params;
   return handleProxy(request, params);
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path?: string[] } }
+  context: { params: Promise<{ path?: string[] }> }
 ) {
+  const params = await context.params;
   return handleProxy(request, params);
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { path?: string[] } }
+  context: { params: Promise<{ path?: string[] }> }
 ) {
+  const params = await context.params;
   return handleProxy(request, params);
 }
 
 async function handleProxy(
   request: NextRequest,
-  { path }: { path?: string[] }
+  params: { path?: string[] }
 ) {
   // Check authentication
   const session = await auth0.getSession();
@@ -76,7 +81,7 @@ async function handleProxy(
 
   // Build target URL
   // Strip '/app' prefix if present (used for iframe routing)
-  let pathSegments = path || [];
+  let pathSegments = params.path || [];
   if (pathSegments[0] === 'app') {
     pathSegments = pathSegments.slice(1);
   }
