@@ -8,7 +8,6 @@ services:
     region: oregon  # Change to your preferred region
     plan: starter  # starter, standard, or pro
     numInstances: 1
-    healthCheckPath: /health
     preDeployCommand: migrate -path /app/migrations -database $DATABASE_URL up
     envVars:
       - key: APP_ENV
@@ -56,7 +55,7 @@ services:
 
   # Worker Service
   - type: worker
-    name: realstaging-worker
+    name: real-staging-worker
     runtime: docker
     dockerfilePath: ./apps/worker/Dockerfile
     dockerContext: .
@@ -215,7 +214,7 @@ services:
 databases:
   # PostgreSQL Database
   - name: realstaging-db
-    plan: free  # Free tier for getting started (upgrade to basic/standard/pro as needed)
+    plan: basic-1gb # use non-legacy plan (starter/standard deprecated)
     region: oregon  # Same region as services
     databaseName: realstaging
     user: realstaging

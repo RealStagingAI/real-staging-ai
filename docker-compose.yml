@@ -99,7 +99,7 @@ services:
       - MB_DB_PASS=postgres
       # Allow iframe embedding for local dev
       - MB_ENABLE_EMBEDDING=true
-      - MB_EMBEDDING_SECRET_KEY=dev-secret-key-change-in-production
+      - MB_EMBEDDING_SECRET_KEY=${MB_EMBEDDING_SECRET_KEY}
     ports: ["3001:3000"]
     volumes:
       - metabase-data:/metabase-data
