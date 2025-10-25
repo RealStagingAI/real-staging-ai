@@ -153,13 +153,13 @@ plugins:
 # Customization
 extra:
   social:
-    - icon: fontawesome/solid/home
+    - icon: material/home
       link: https://real-staging.ai
       name: Real Staging AI Home
-    - icon: fontawesome/solid/book-open
+    - icon: material/book-open-page-variant
       link: https://real-staging.ai/docs
       name: User Documentation
-    - icon: fontawesome/solid/code
+    - icon: material/code-braces
       link: https://api.real-staging.ai/api/v1/docs/
       name: API Reference
     - icon: fontawesome/brands/github
