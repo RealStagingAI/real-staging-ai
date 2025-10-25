@@ -78,10 +78,13 @@ Real Staging AI supports multiple AI models for image processing. Admins can swi
 
 ### Available Models
 
-| Model ID                             | Name             | Description                                      | Speed  | Quality    | Cost |
-| ------------------------------------ | ---------------- | ------------------------------------------------ | ------ | ---------- | ---- |
-| `qwen/qwen-image-edit`               | Qwen Image Edit  | Fast editing optimized for virtual staging       | ⚡⚡⚡ | ⭐⭐⭐     | $    |
-| `black-forest-labs/flux-kontext-max` | Flux Kontext Max | High-quality with advanced context understanding | ⚡⚡   | ⭐⭐⭐⭐⭐ | $$$  |
+| Model ID                             | Name              | Description                                      | Speed  | Quality    | Cost |
+| ------------------------------------ | ----------------- | ------------------------------------------------ | ------ | ---------- | ---- |
+| `qwen/qwen-image-edit`               | Qwen Image Edit   | Fast editing optimized for virtual staging       | ⚡⚡⚡ | ⭐⭐⭐     | $    |
+| `black-forest-labs/flux-kontext-max` | Flux Kontext Max  | High-quality with advanced context understanding | ⚡⚡   | ⭐⭐⭐⭐⭐ | $$$  |
+| `black-forest-labs/flux-kontext-pro` | Flux Kontext Pro  | State-of-the-art editing with excellent prompts  | ⚡⚡   | ⭐⭐⭐⭐⭐ | $$$  |
+| `bytedance/seedream-3`               | Seedream 3        | Unified text-to-image and precise editing        | ⚡⚡   | ⭐⭐⭐⭐   | $$   |
+| `bytedance/seedream-4`               | Seedream 4        | High-resolution editing up to 4K                 | ⚡     | ⭐⭐⭐⭐⭐ | $$$$ |
 
 **Model Characteristics:**
 
@@ -233,6 +236,70 @@ curl -X PUT https://api.realstaging.ai/api/v1/admin/models/active \
 curl -s https://api.realstaging.ai/api/v1/admin/models/active \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
+
+### Model Configuration (Phase 1 & 2 Complete)
+
+Each AI model supports specific configuration parameters that control output quality, format, and behavior. Model configurations are stored in the database and can be managed through the API (Phase 3, planned).
+
+**Current Status:**
+- ✅ Phase 1: Configuration structs and database schema
+- ✅ Phase 2: Worker integration - configs loaded from database
+- ⏳ Phase 3: API endpoints for config management (planned)
+- ⏳ Phase 4: Admin UI for easy configuration (planned)
+
+**Available Configuration Parameters:**
+
+**Qwen Image Edit:**
+- `go_fast` (boolean): Enable fast mode (default: true)
+- `aspect_ratio` (string): Output aspect ratio - "1:1", "16:9", "4:3", "3:2", "match_input_image" (default)
+- `output_format` (string): Image format - "webp" (default), "png", "jpg"
+- `output_quality` (integer): Quality 1-100 (default: 80)
+
+**Flux Kontext (Max/Pro):**
+- `aspect_ratio` (string): Output aspect ratio (default: "match_input_image")
+- `output_format` (string): Image format - "png" (default), "webp", "jpg"
+- `safety_tolerance` (integer): Safety filter 1-6, higher=more permissive (default: 4)
+- `prompt_upsampling` (boolean): Enhance prompts automatically (default: false)
+- `num_outputs` (integer): Number of images 1-4 (default: 1)
+- `output_quality` (integer): Quality 1-100 (default: 90)
+
+**Seedream (3/4):**
+- `aspect_ratio` (string): Output aspect ratio - "1:1" (default), "16:9", "4:3", "3:2"
+- `num_inference_steps` (integer): Denoising steps 20-100 (default: 50)
+- `guidance_scale` (float): Prompt adherence 1.0-20.0 (default: 7.5)
+- `output_quality` (integer): Quality 1-100 (default: 95)
+
+**Current Configuration Storage:**
+
+Configurations are stored in the `settings` table with `model_settings` JSONB column:
+
+```sql
+-- Example: View Flux Kontext Pro configuration
+SELECT model_settings 
+FROM settings 
+WHERE key = 'model_config_flux_kontext_pro';
+
+-- Result:
+{
+  "aspect_ratio": "match_input_image",
+  "output_format": "png",
+  "safety_tolerance": 4,
+  "prompt_upsampling": false,
+  "num_outputs": 1,
+  "output_quality": 90
+}
+```
+
+**Worker Behavior:**
+- Worker loads configuration from database when processing each job
+- Falls back to defaults if configuration is unavailable
+- Validates all parameters before sending to AI API
+- Logs warnings if config loading fails
+
+**For more details, see:**
+- [Model Settings Architecture](/development/model-settings-architecture.md)
+- [Phase 1 Complete](/development/phase1-complete.md)
+- [Phase 2 Complete](/development/phase2-complete.md)
 
 ## Settings Management
 

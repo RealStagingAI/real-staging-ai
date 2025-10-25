@@ -33,6 +33,7 @@ type DefaultService struct {
 	modelID         model.ModelID
 	registry        *model.ModelRegistry
 	promptLib       *prompt.Library
+	configRepo      ConfigRepository // For loading model configurations
 }
 
 // Ensure DefaultService implements Service interface.
@@ -52,6 +53,7 @@ type ServiceConfig struct {
 	S3SecretKey    string
 	S3UsePathStyle bool
 	AppEnv         string
+	ConfigRepo     ConfigRepository // Optional: for loading model configs from database
 }
 
 // NewDefaultService creates a new DefaultService instance using provided configuration.
@@ -111,6 +113,7 @@ func NewDefaultService(ctx context.Context, cfg *ServiceConfig) (*DefaultService
 			modelID:         modelID,
 			registry:        registry,
 			promptLib:       prompt.New(),
+			configRepo:      cfg.ConfigRepo,
 		}, nil
 	}
 
@@ -142,6 +145,7 @@ func NewDefaultService(ctx context.Context, cfg *ServiceConfig) (*DefaultService
 			modelID:         modelID,
 			registry:        registry,
 			promptLib:       prompt.New(),
+			configRepo:      cfg.ConfigRepo,
 		}, nil
 	}
 
@@ -160,6 +164,7 @@ func NewDefaultService(ctx context.Context, cfg *ServiceConfig) (*DefaultService
 		modelID:         modelID,
 		registry:        registry,
 		promptLib:       prompt.New(),
+		configRepo:      cfg.ConfigRepo,
 	}, nil
 }
 
@@ -316,11 +321,24 @@ func (s *DefaultService) callReplicateAPI(
 		return "", fmt.Errorf("failed to get model metadata: %w", err)
 	}
 
+	// Load model configuration from database (optional)
+	var modelConfig model.ModelConfig
+	if s.configRepo != nil {
+		modelConfig, err = s.configRepo.GetModelConfig(ctx, s.modelID)
+		if err != nil {
+			// Log warning but continue with defaults
+			log := logging.Default()
+			log.Warn(ctx, "failed to load model config, using defaults", "error", err, "model", s.modelID)
+			modelConfig = nil
+		}
+	}
+
 	// Build the input parameters using the model's input builder
 	inputReq := &model.ModelInputRequest{
 		ImageDataURL: imageDataURL,
 		Prompt:       prompt,
 		Seed:         seed,
+		Config:       modelConfig, // Will use defaults if nil
 	}
 
 	input, err := modelMeta.InputBuilder.BuildInput(ctx, inputReq)

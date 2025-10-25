@@ -24,16 +24,32 @@ func (b *QwenInputBuilder) BuildInput(ctx context.Context, req *ModelInputReques
 		return nil, err
 	}
 
+	// Use provided config or fall back to defaults
+	config := req.Config
+	if config == nil {
+		config = (&QwenConfig{}).GetDefaults()
+	}
+
+	// Type assert to QwenConfig
+	qwenConfig, ok := config.(*QwenConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid config type for Qwen model")
+	}
+
+	// Build input from config
 	input := replicate.PredictionInput{
 		"image":          req.ImageDataURL,
 		"prompt":         req.Prompt,
-		"go_fast":        true,
-		"aspect_ratio":   "match_input_image",
-		"output_format":  "webp",
-		"output_quality": 80,
+		"go_fast":        qwenConfig.GoFast,
+		"aspect_ratio":   qwenConfig.AspectRatio,
+		"output_format":  qwenConfig.OutputFormat,
+		"output_quality": qwenConfig.OutputQuality,
 	}
 
-	if req.Seed != nil {
+	// Seed from config takes precedence over request seed
+	if qwenConfig.Seed != nil {
+		input["seed"] = *qwenConfig.Seed
+	} else if req.Seed != nil {
 		input["seed"] = *req.Seed
 	}
 

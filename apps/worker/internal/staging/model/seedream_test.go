@@ -44,18 +44,18 @@ func TestSeedreamInputBuilder_BuildInput(t *testing.T) {
 			t.Errorf("expected image_input[0] to be %q, got %q", req.ImageDataURL, imageInput[0])
 		}
 
-		// Verify default parameters
-		if input["size"] != "big" {
-			t.Errorf("expected size to be 'big', got %q", input["size"])
+		// Verify default parameters (from SeedreamConfig defaults)
+		if input["aspect_ratio"] != "1:1" {
+			t.Errorf("expected aspect_ratio to be '1:1', got %q", input["aspect_ratio"])
 		}
-		if input["aspect_ratio"] != "custom" {
-			t.Errorf("expected aspect_ratio to be 'custom', got %q", input["aspect_ratio"])
+		if input["num_inference_steps"] != 50 {
+			t.Errorf("expected num_inference_steps to be 50, got %v", input["num_inference_steps"])
 		}
-		if input["enhance_prompt"] != true {
-			t.Errorf("expected enhance_prompt to be true, got %v", input["enhance_prompt"])
+		if input["guidance_scale"] != 7.5 {
+			t.Errorf("expected guidance_scale to be 7.5, got %v", input["guidance_scale"])
 		}
-		if input["max_images"] != 1 {
-			t.Errorf("expected max_images to be 1, got %v", input["max_images"])
+		if input["output_quality"] != 95 {
+			t.Errorf("expected output_quality to be 95, got %v", input["output_quality"])
 		}
 	})
 
@@ -125,8 +125,12 @@ func TestSeedreamInputBuilder_BuildInput(t *testing.T) {
 		if input["seed"] != seed {
 			t.Errorf("expected seed %d, got %v", seed, input["seed"])
 		}
-		if input["size"] != "big" {
-			t.Error("expected size to be big")
+		// Verify config-based parameters
+		if input["aspect_ratio"] == nil {
+			t.Error("expected aspect_ratio to be set")
+		}
+		if input["num_inference_steps"] == nil {
+			t.Error("expected num_inference_steps to be set")
 		}
 	})
 

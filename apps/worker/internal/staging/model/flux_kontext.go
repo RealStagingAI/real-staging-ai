@@ -18,7 +18,7 @@ func NewFluxKontextInputBuilder() *FluxKontextInputBuilder {
 	return &FluxKontextInputBuilder{}
 }
 
-// BuildInput creates the input parameters for the Flux Kontext Max model.
+// BuildInput creates the input parameters for the Flux Kontext model.
 func (b *FluxKontextInputBuilder) BuildInput(
 	ctx context.Context, req *ModelInputRequest,
 ) (replicate.PredictionInput, error) {
@@ -26,16 +26,34 @@ func (b *FluxKontextInputBuilder) BuildInput(
 		return nil, err
 	}
 
+	// Use provided config or fall back to defaults
+	config := req.Config
+	if config == nil {
+		config = (&FluxKontextConfig{}).GetDefaults()
+	}
+
+	// Type assert to FluxKontextConfig
+	fluxConfig, ok := config.(*FluxKontextConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid config type for Flux Kontext model")
+	}
+
+	// Build input from config
 	input := replicate.PredictionInput{
 		"prompt":            req.Prompt,
 		"input_image":       req.ImageDataURL,
-		"aspect_ratio":      "match_input_image",
-		"output_format":     "png",
-		"safety_tolerance":  2,
-		"prompt_upsampling": false,
+		"aspect_ratio":      fluxConfig.AspectRatio,
+		"output_format":     fluxConfig.OutputFormat,
+		"safety_tolerance":  fluxConfig.SafetyTolerance,
+		"prompt_upsampling": fluxConfig.PromptUpsampling,
+		"num_outputs":       fluxConfig.NumOutputs,
+		"output_quality":    fluxConfig.OutputQuality,
 	}
 
-	if req.Seed != nil {
+	// Seed from config takes precedence over request seed
+	if fluxConfig.Seed != nil {
+		input["seed"] = *fluxConfig.Seed
+	} else if req.Seed != nil {
 		input["seed"] = *req.Seed
 	}
 

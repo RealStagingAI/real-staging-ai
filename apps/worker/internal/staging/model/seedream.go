@@ -28,12 +28,25 @@ func (b *SeedreamInputBuilder) BuildInput(
 		return nil, err
 	}
 
+	// Use provided config or fall back to defaults
+	config := req.Config
+	if config == nil {
+		config = (&SeedreamConfig{}).GetDefaults()
+	}
+
+	// Type assert to SeedreamConfig
+	seedreamConfig, ok := config.(*SeedreamConfig)
+	if !ok {
+		return nil, fmt.Errorf("invalid config type for Seedream model")
+	}
+
+	// Build input from config
 	input := replicate.PredictionInput{
-		"prompt":         req.Prompt,
-		"size":           "big",    // Options: "small", "regular", "big"
-		"aspect_ratio":   "custom", // Use custom to preserve input image dimensions
-		"enhance_prompt": true,     // Enable prompt enhancement for better quality
-		"max_images":     1,        // Single image output
+		"prompt":              req.Prompt,
+		"aspect_ratio":        seedreamConfig.AspectRatio,
+		"num_inference_steps": seedreamConfig.NumInferenceSteps,
+		"guidance_scale":      seedreamConfig.GuidanceScale,
+		"output_quality":      seedreamConfig.OutputQuality,
 	}
 
 	// Add input image if provided
@@ -41,8 +54,10 @@ func (b *SeedreamInputBuilder) BuildInput(
 		input["image_input"] = []string{req.ImageDataURL}
 	}
 
-	// Add seed if provided
-	if req.Seed != nil {
+	// Seed from config takes precedence over request seed
+	if seedreamConfig.Seed != nil {
+		input["seed"] = *seedreamConfig.Seed
+	} else if req.Seed != nil {
 		input["seed"] = *req.Seed
 	}
 

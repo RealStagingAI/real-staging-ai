@@ -43,8 +43,8 @@ func TestFluxKontextInputBuilder_BuildInput(t *testing.T) {
 			t.Errorf("expected output_format to be 'png', got %v", input["output_format"])
 		}
 
-		if input["safety_tolerance"] != 2 {
-			t.Errorf("expected safety_tolerance to be 2, got %v", input["safety_tolerance"])
+		if input["safety_tolerance"] != 4 {
+			t.Errorf("expected safety_tolerance to be 4, got %v", input["safety_tolerance"])
 		}
 
 		if input["prompt_upsampling"] != false {

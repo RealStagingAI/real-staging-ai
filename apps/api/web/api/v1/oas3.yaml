@@ -1123,6 +1123,110 @@ paths:
                   value:
                     error: "internal_server_error"
                     message: "Failed to update profile"
+  /api/v1/admin/models:
+    get:
+      summary: List all available AI models
+      description: |
+        Get a list of all available AI models with their metadata and current configuration status.
+        Requires admin privileges.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ModelInfo"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/admin/models/active:
+    get:
+      summary: Get the currently active model
+      description: |
+        Retrieve the ID and configuration of the currently active AI model.
+        Requires admin privileges.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Currently active model
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model_id:
+                    type: string
+                    example: "qwen/qwen-image-edit"
+                  name:
+                    type: string
+                    example: "Qwen Image Edit"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    put:
+      summary: Update the active model
+      description: |
+        Set which AI model should be used for new staging jobs.
+        Requires admin privileges.
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - value
+              properties:
+                value:
+                  type: string
+                  description: Model ID to set as active
+                  example: "black-forest-labs/flux-kontext-pro"
+      responses:
+        "200":
+          description: Active model updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Active model updated successfully"
+                  model_id:
+                    type: string
+                    example: "black-forest-labs/flux-kontext-pro"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 components:
   securitySchemes:
     bearerAuth:
@@ -1195,6 +1299,15 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/Error"
+    ForbiddenError:
+      description: Access to the requested resource is forbidden (insufficient permissions)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: forbidden
+            message: "Admin access required"
     ValidationError:
       description: The request validation failed
       content:
@@ -1239,6 +1352,30 @@ components:
         message:
           type: string
           example: must not be empty
+    ModelInfo:
+      type: object
+      description: Information about an available AI model
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the model
+          example: "black-forest-labs/flux-kontext-pro"
+        name:
+          type: string
+          description: Human-readable name of the model
+          example: "Flux Kontext Pro"
+        description:
+          type: string
+          description: Description of the model's capabilities
+          example: "State-of-the-art text-based image editing with high-quality outputs"
+        version:
+          type: string
+          description: Model version
+          example: "latest"
+        is_active:
+          type: boolean
+          description: Whether this model is currently active
+          example: false
     Project:
       type: object
       properties:

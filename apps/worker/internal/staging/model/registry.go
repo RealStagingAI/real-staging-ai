@@ -24,7 +24,7 @@ type ModelInputRequest struct {
 	ImageDataURL string
 	Prompt       string
 	Seed         *int64
-	// Future: additional parameters for other models
+	Config       ModelConfig // Optional: model-specific configuration (uses defaults if nil)
 }
 
 // ModelInputBuilder defines the interface for building model-specific input parameters.
@@ -40,11 +40,12 @@ type ModelInputBuilder interface {
 
 // ModelMetadata contains information about a registered model.
 type ModelMetadata struct {
-	ID           ModelID
-	Name         string
-	Description  string
-	Version      string
-	InputBuilder ModelInputBuilder
+	ID            ModelID
+	Name          string
+	Description   string
+	Version       string
+	InputBuilder  ModelInputBuilder
+	DefaultConfig ModelConfig // Default configuration for this model
 }
 
 // ModelRegistry manages the available AI models and their configurations.
@@ -60,46 +61,51 @@ func NewModelRegistry() *ModelRegistry {
 
 	// Register Qwen Image Edit model
 	registry.Register(&ModelMetadata{
-		ID:           ModelQwenImageEdit,
-		Name:         "Qwen Image Edit",
-		Description:  "Fast image editing model optimized for virtual staging",
-		Version:      "latest",
-		InputBuilder: NewQwenInputBuilder(),
+		ID:            ModelQwenImageEdit,
+		Name:          "Qwen Image Edit",
+		Description:   "Fast image editing model optimized for virtual staging",
+		Version:       "latest",
+		InputBuilder:  NewQwenInputBuilder(),
+		DefaultConfig: (&QwenConfig{}).GetDefaults(),
 	})
 
 	// Register Flux Kontext Max model
 	registry.Register(&ModelMetadata{
-		ID:           ModelFluxKontextMax,
-		Name:         "Flux Kontext Max",
-		Description:  "High-quality image generation and editing with advanced context understanding",
-		Version:      "latest",
-		InputBuilder: NewFluxKontextInputBuilder(),
+		ID:            ModelFluxKontextMax,
+		Name:          "Flux Kontext Max",
+		Description:   "High-quality image generation and editing with advanced context understanding",
+		Version:       "latest",
+		InputBuilder:  NewFluxKontextInputBuilder(),
+		DefaultConfig: (&FluxKontextConfig{}).GetDefaults(),
 	})
 
 	// Register Flux Kontext Pro model
 	registry.Register(&ModelMetadata{
-		ID:           ModelFluxKontextPro,
-		Name:         "Flux Kontext Pro",
-		Description:  "State-of-the-art text-based image editing with high-quality outputs and excellent prompt following",
-		Version:      "latest",
-		InputBuilder: NewFluxKontextInputBuilder(),
+		ID:            ModelFluxKontextPro,
+		Name:          "Flux Kontext Pro",
+		Description:   "State-of-the-art text-based image editing with high-quality outputs and excellent prompt following",
+		Version:       "latest",
+		InputBuilder:  NewFluxKontextInputBuilder(),
+		DefaultConfig: (&FluxKontextConfig{}).GetDefaults(),
 	})
 
 	// Register Seedream models
 	registry.Register(&ModelMetadata{
-		ID:           ModelSeedream3,
-		Name:         "Seedream 3",
-		Description:  "Unified text-to-image generation and precise editing",
-		Version:      "latest",
-		InputBuilder: NewSeedreamInputBuilder(),
+		ID:            ModelSeedream3,
+		Name:          "Seedream 3",
+		Description:   "Unified text-to-image generation and precise editing",
+		Version:       "latest",
+		InputBuilder:  NewSeedreamInputBuilder(),
+		DefaultConfig: (&SeedreamConfig{}).GetDefaults(),
 	})
 
 	registry.Register(&ModelMetadata{
-		ID:           ModelSeedream4,
-		Name:         "Seedream 4",
-		Description:  "Unified text-to-image generation and precise editing at up to 4K resolution",
-		Version:      "latest",
-		InputBuilder: NewSeedreamInputBuilder(),
+		ID:            ModelSeedream4,
+		Name:          "Seedream 4",
+		Description:   "Unified text-to-image generation and precise editing at up to 4K resolution",
+		Version:       "latest",
+		InputBuilder:  NewSeedreamInputBuilder(),
+		DefaultConfig: (&SeedreamConfig{}).GetDefaults(),
 	})
 
 	return registry
