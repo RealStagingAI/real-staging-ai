@@ -243,10 +243,15 @@ export default function ImagesPage() {
     if (!previewImageId) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
+      // Allow Cmd/Ctrl+L for browser address bar
+      if (e.key === 'l' && (e.metaKey || e.ctrlKey)) {
+        return;
+      }
+      
+      if (e.key === 'ArrowLeft' || e.key === 'h') {
         e.preventDefault();
         goToPreviousImage();
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === 'ArrowRight' || e.key === 'l') {
         e.preventDefault();
         goToNextImage();
       } else if (e.key === 'Escape') {
@@ -740,6 +745,11 @@ export default function ImagesPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if typing in an input field
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Allow Cmd/Ctrl+L for browser address bar
+      if (e.key === 'l' && (e.metaKey || e.ctrlKey)) {
         return;
       }
 
