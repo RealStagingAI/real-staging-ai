@@ -5,6 +5,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: realstaging
     ports: ["5432:5432"]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -85,4 +87,5 @@ services:
       - ./apps/docs:/docs
 
 volumes:
+  postgres-data:
   minio-data:
