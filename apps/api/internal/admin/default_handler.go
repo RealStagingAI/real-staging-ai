@@ -3,6 +3,7 @@ package admin
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/labstack/echo/v4"
@@ -185,7 +186,10 @@ func (h *DefaultHandler) UpdateSetting(c echo.Context) error {
 // GetModelConfig handles GET /admin/models/:id/config - Gets the configuration for a model.
 func (h *DefaultHandler) GetModelConfig(c echo.Context) error {
 	ctx := c.Request().Context()
-	modelID := c.Param("id")
+	modelID, err := url.PathUnescape(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model ID")
+	}
 
 	config, err := h.settingsService.GetModelConfig(ctx, modelID)
 	if err != nil {
@@ -199,7 +203,10 @@ func (h *DefaultHandler) GetModelConfig(c echo.Context) error {
 // UpdateModelConfig handles PUT /admin/models/:id/config - Updates the configuration for a model.
 func (h *DefaultHandler) UpdateModelConfig(c echo.Context) error {
 	ctx := c.Request().Context()
-	modelID := c.Param("id")
+	modelID, err := url.PathUnescape(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model ID")
+	}
 
 	var req map[string]interface{}
 	if err := c.Bind(&req); err != nil {
@@ -232,7 +239,10 @@ func (h *DefaultHandler) UpdateModelConfig(c echo.Context) error {
 // GetModelConfigSchema handles GET /admin/models/:id/config/schema - Gets the schema for a model's configuration.
 func (h *DefaultHandler) GetModelConfigSchema(c echo.Context) error {
 	ctx := c.Request().Context()
-	modelID := c.Param("id")
+	modelID, err := url.PathUnescape(c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid model ID")
+	}
 
 	schema, err := h.settingsService.GetModelConfigSchema(ctx, modelID)
 	if err != nil {
