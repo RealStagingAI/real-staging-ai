@@ -14,6 +14,7 @@ type ModelID string
 const (
 	ModelQwenImageEdit  ModelID = "qwen/qwen-image-edit"
 	ModelFluxKontextMax ModelID = "black-forest-labs/flux-kontext-max"
+	ModelFluxKontextPro ModelID = "black-forest-labs/flux-kontext-pro"
 	ModelSeedream3      ModelID = "bytedance/seedream-3"
 	ModelSeedream4      ModelID = "bytedance/seedream-4"
 )
@@ -71,6 +72,15 @@ func NewModelRegistry() *ModelRegistry {
 		ID:           ModelFluxKontextMax,
 		Name:         "Flux Kontext Max",
 		Description:  "High-quality image generation and editing with advanced context understanding",
+		Version:      "latest",
+		InputBuilder: NewFluxKontextInputBuilder(),
+	})
+
+	// Register Flux Kontext Pro model
+	registry.Register(&ModelMetadata{
+		ID:           ModelFluxKontextPro,
+		Name:         "Flux Kontext Pro",
+		Description:  "State-of-the-art text-based image editing with high-quality outputs and excellent prompt following",
 		Version:      "latest",
 		InputBuilder: NewFluxKontextInputBuilder(),
 	})

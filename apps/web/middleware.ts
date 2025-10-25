@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
   const response = await auth0.middleware(request);
   
   // Protected routes that require authentication
-  const userProtectedPaths = ['/upload', '/images'];
+  const userProtectedPaths = ['/upload', '/images', '/profile', '/billing'];
   const adminProtectedPaths = ['/admin'];
   const pathname = request.nextUrl.pathname;
   
@@ -32,8 +32,9 @@ export async function middleware(request: NextRequest) {
     // If no session, handle based on route type
     if (!session) {
       if (isAdminProtectedPath) {
-        // For admin routes, return 404 to hide existence from unauthorized users
-        return new NextResponse(null, { status: 404, statusText: 'Not Found' });
+        // For admin routes, rewrite to 404 page to hide existence from unauthorized users
+        const notFoundUrl = new URL('/not-found', request.url);
+        return NextResponse.rewrite(notFoundUrl, { status: 404 });
       } else {
         // For user routes, redirect to login with returnTo
         const loginUrl = new URL('/auth/login', request.url);

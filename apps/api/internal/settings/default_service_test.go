@@ -168,13 +168,14 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		if len(models) != 4 {
-			t.Fatalf("expected 4 models, got %d", len(models))
+		if len(models) != 5 {
+			t.Fatalf("expected 5 models, got %d", len(models))
 		}
 
 		// Check all models
 		qwenFound := false
-		fluxFound := false
+		fluxMaxFound := false
+		fluxProFound := false
 		seedream3Found := false
 		seedream4Found := false
 		for _, model := range models {
@@ -185,9 +186,15 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 				}
 			}
 			if model.ID == "black-forest-labs/flux-kontext-max" {
-				fluxFound = true
+				fluxMaxFound = true
 				if model.IsActive {
-					t.Error("expected Flux model to not be active")
+					t.Error("expected Flux Kontext Max model to not be active")
+				}
+			}
+			if model.ID == "black-forest-labs/flux-kontext-pro" {
+				fluxProFound = true
+				if model.IsActive {
+					t.Error("expected Flux Kontext Pro model to not be active")
 				}
 			}
 			if model.ID == "bytedance/seedream-3" {
@@ -207,8 +214,11 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 		if !qwenFound {
 			t.Error("expected Qwen model in list")
 		}
-		if !fluxFound {
-			t.Error("expected Flux model in list")
+		if !fluxMaxFound {
+			t.Error("expected Flux Kontext Max model in list")
+		}
+		if !fluxProFound {
+			t.Error("expected Flux Kontext Pro model in list")
 		}
 		if !seedream3Found {
 			t.Error("expected Seedream-3 model in list")

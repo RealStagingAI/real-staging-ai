@@ -73,6 +73,14 @@ func (s *DefaultService) ListAvailableModels(ctx context.Context) ([]ModelInfo, 
 			IsActive: activeModelID == "black-forest-labs/flux-kontext-max",
 		},
 		{
+			ID:   "black-forest-labs/flux-kontext-pro",
+			Name: "Flux Kontext Pro",
+			Description: "State-of-the-art text-based image editing with high-quality outputs and excellent prompt following. " +
+				"Professional-grade editing capabilities.",
+			Version:  "v1",
+			IsActive: activeModelID == "black-forest-labs/flux-kontext-pro",
+		},
+		{
 			ID:   "bytedance/seedream-3",
 			Name: "Seedream 3",
 			Description: "Unified text-to-image generation and precise editing. " +
