@@ -145,7 +145,7 @@ services:
       - key: AUTH0_CLIENT_SECRET
         sync: false  # Set in Render dashboard
       - key: AUTH0_AUDIENCE
-        value: https://api.real-staging.ai
+        value: https://real-staging.ai
       - key: AUTH0_SCOPE
         value: openid profile email offline_access
       # API Configuration
