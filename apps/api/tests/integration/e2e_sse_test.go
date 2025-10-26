@@ -33,8 +33,13 @@ import (
 
 func startAsynqWorker(t *testing.T, db storage.Database, emitError bool) (stop func()) {
 	t.Helper()
-	addr := os.Getenv("REDIS_ADDR")
-	require.NotEmpty(t, addr, "REDIS_ADDR must be set for integration test")
+	host := os.Getenv("REDIS_HOST")
+	require.NotEmpty(t, host, "REDIS_HOST must be set for integration test")
+	port := os.Getenv("REDIS_PORT")
+	if port == "" {
+		port = "6379"
+	}
+	addr := host + ":" + port
 
 	// Asynq server processing default queue
 	srv := asynq.NewServer(asynq.RedisClientOpt{Addr: addr}, asynq.Config{Concurrency: 1, Queues: map[string]int{"default": 1}})
@@ -97,8 +102,8 @@ func newAPITestServer(t *testing.T, db *storage.DefaultDatabase) (*httptest.Serv
 }
 
 func TestE2E_SSE_ProcessingReady(t *testing.T) {
-	if os.Getenv("REDIS_ADDR") == "" {
-		t.Skip("REDIS_ADDR not set; integration infra must start redis-test")
+	if os.Getenv("REDIS_HOST") == "" {
+		t.Skip("REDIS_HOST not set; integration infra must start redis-test")
 	}
 	// DB setup
 	db := SetupTestDatabase(t)
@@ -168,8 +173,8 @@ func TestE2E_SSE_ProcessingReady(t *testing.T) {
 }
 
 func TestE2E_SSE_ProcessingError(t *testing.T) {
-	if os.Getenv("REDIS_ADDR") == "" {
-		t.Skip("REDIS_ADDR not set; integration infra must start redis-test")
+	if os.Getenv("REDIS_HOST") == "" {
+		t.Skip("REDIS_HOST not set; integration infra must start redis-test")
 	}
 	// DB setup
 	db := SetupTestDatabase(t)

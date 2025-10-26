@@ -38,8 +38,8 @@ func TestE2E_Presign_Upload_CreateImage_ReadyViaSSE(t *testing.T) {
 	if os.Getenv("RUN_E2E_UPLOAD_READY") != "1" {
 		t.Skip("set RUN_E2E_UPLOAD_READY=1 to run this test")
 	}
-	if os.Getenv("REDIS_ADDR") == "" {
-		t.Skip("REDIS_ADDR not set; integration infra must start redis-test")
+	if os.Getenv("REDIS_HOST") == "" {
+		t.Skip("REDIS_HOST not set; integration infra must start redis-test")
 	}
 	// Test env for S3 service (uses LocalStack at http://localhost:4566)
 	t.Setenv("APP_ENV", "test")

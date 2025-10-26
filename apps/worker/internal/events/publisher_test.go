@@ -23,16 +23,17 @@ func TestNewDefaultPublisher_MissingEnv(t *testing.T) {
 
 func TestRedisPublisher_PublishJobUpdate_SendsStatusOnly(t *testing.T) {
 	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	require.NoError(t, err)
 
 	// Start in-memory Redis
 	mr := miniredis.RunT(t)
 	defer mr.Close()
 
-	// Configure env for publisher
+	// Set Redis env vars to point to miniredis
 	t.Setenv("REDIS_HOST", "localhost")
 	t.Setenv("REDIS_PORT", mr.Port())
+
+	cfg, err := config.Load()
+	require.NoError(t, err)
 
 	// Build publisher from env
 	pub, err := NewDefaultPublisher(cfg)
@@ -88,14 +89,18 @@ func TestRedisPublisher_PublishJobUpdate_SendsStatusOnly(t *testing.T) {
 
 func TestRedisPublisher_PublishJobUpdate_DifferentImageChannel(t *testing.T) {
 	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	require.NoError(t, err)
 
+	// Start in-memory Redis
 	mr := miniredis.RunT(t)
 	defer mr.Close()
 
+	// Set Redis env vars to point to miniredis
 	t.Setenv("REDIS_HOST", "localhost")
 	t.Setenv("REDIS_PORT", mr.Port())
+
+	cfg, err := config.Load()
+	require.NoError(t, err)
+
 	pub, err := NewDefaultPublisher(cfg)
 	require.NoError(t, err)
 

@@ -43,8 +43,8 @@ func setupTestDB(t *testing.T) *storage.DefaultDatabase {
 
 func TestEndToEnd_ImageLifecycle_SSE_Error(t *testing.T) {
 	t.Setenv("APP_ENV", "test")
-	if os.Getenv("REDIS_ADDR") == "" {
-		t.Skip("REDIS_ADDR not set; integration infra must start redis-test")
+	if os.Getenv("REDIS_HOST") == "" {
+		t.Skip("REDIS_HOST not set; integration infra must start redis-test")
 	}
 
 	db := setupTestDB(t)
@@ -218,8 +218,8 @@ type createImageReq struct {
 func TestEndToEnd_ImageLifecycle_SSE(t *testing.T) {
 	// Ensure env is set for LocalStack S3 and Redis-backed queue
 	t.Setenv("APP_ENV", "test")
-	if os.Getenv("REDIS_ADDR") == "" {
-		t.Skip("REDIS_ADDR not set; integration infra must start redis-test")
+	if os.Getenv("REDIS_HOST") == "" {
+		t.Skip("REDIS_HOST not set; integration infra must start redis-test")
 	}
 
 	// Setup DB and seed
