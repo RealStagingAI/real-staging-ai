@@ -102,7 +102,7 @@ func main() {
 		pub = p
 		log.Info(ctx, "Events publisher enabled")
 	} else {
-		log.Info(ctx, "Events publisher disabled (no REDIS_ADDR)")
+		log.Info(ctx, "Events publisher disabled (no REDIS_HOST)")
 		pub = &events.NoopPublisher{}
 	}
 
@@ -112,7 +112,7 @@ func main() {
 	// Initialize the queue client (Redis/asynq in production)
 	var queueClient queue.QueueClient
 	// Log queue-related configuration for clarity
-	redisAddr := cfg.Redis.Addr
+	redisAddr := cfg.Redis.Addr()
 	queueName := cfg.Job.QueueName
 	concurrency := cfg.Job.WorkerConcurrency
 	log.Info(ctx, "Queue configuration", "redis_addr", redisAddr, "queue", queueName, "concurrency", concurrency)

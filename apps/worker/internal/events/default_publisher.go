@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"os"
 	"time"
 
 	redis "github.com/redis/go-redis/v9"
@@ -26,19 +25,17 @@ type Options struct {
 	MaxDelay    time.Duration
 }
 
-// NewDefaultPublisher returns a Redis-backed publisher if REDIS_ADDR is set.
+// NewDefaultPublisher returns a Redis-backed publisher if Redis is configured.
 func NewDefaultPublisher(cfg *config.Config) (Publisher, error) {
 	if cfg == nil {
 		return nil, errors.New("config is nil")
 	}
 
-	// Pull from config if env is not available
-	addr := os.Getenv("REDIS_ADDR")
-	if addr == "" && cfg.Redis.Addr != "" {
-		addr = cfg.Redis.Addr
-	}
+	// Get address from config
+	addr := cfg.Redis.Addr()
 	if addr == "" {
-		return nil, errors.New("redis address is not set. Please set REDIS_ADDR or configure Redis in config file")
+		return nil, errors.New(
+			"redis address not set. Set REDIS_HOST and REDIS_PORT in config or environment")
 	}
 	rdb := redis.NewClient(&redis.Options{Addr: addr})
 	return NewDefaultPublisherWithClient(rdb, Options{}), nil

@@ -13,7 +13,8 @@ db:
   pgsslmode: disable
 
 redis:
-  addr: localhost:6379
+  host: localhost
+  port: "6379"
 
 s3:
   access_key: test

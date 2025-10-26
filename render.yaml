@@ -18,11 +18,16 @@ services:
         fromDatabase:
           name: realstaging-db
           property: connectionString
-      - key: REDIS_ADDR
+      - key: REDIS_HOST
         fromService:
           name: realstaging-redis
           type: redis
           property: host
+      - key: REDIS_PORT
+        fromService:
+          name: realstaging-redis
+          type: redis
+          property: port
       # Auth0 Configuration
       - key: AUTH0_DOMAIN
         sync: false  # Set in Render dashboard
@@ -69,11 +74,16 @@ services:
         fromDatabase:
           name: realstaging-db
           property: connectionString
-      - key: REDIS_ADDR
+      - key: REDIS_HOST
         fromService:
           name: realstaging-redis
           type: redis
           property: host
+      - key: REDIS_PORT
+        fromService:
+          name: realstaging-redis
+          type: redis
+          property: port
       # Backblaze B2 Configuration
       - key: S3_ENDPOINT
         value: https://s3.us-west-004.backblazeb2.com  # Update to your B2 region

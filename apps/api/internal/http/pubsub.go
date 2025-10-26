@@ -13,12 +13,17 @@ type PubSub interface {
 	Subscribe(ctx context.Context, channel string) (<-chan []byte, func() error, error)
 }
 
-// NewDefaultPubSubFromEnv creates a Redis-backed PubSub if REDIS_ADDR is set.
+// NewDefaultPubSubFromEnv creates a Redis-backed PubSub if REDIS_HOST and REDIS_PORT are set.
 func NewDefaultPubSubFromEnv() (PubSub, error) {
-	addr := os.Getenv("REDIS_ADDR")
-	if addr == "" {
-		return nil, errors.New("REDIS_ADDR not set")
+	host := os.Getenv("REDIS_HOST")
+	if host == "" {
+		return nil, errors.New("REDIS_HOST not set")
 	}
+	port := os.Getenv("REDIS_PORT")
+	if port == "" {
+		port = "6379"
+	}
+	addr := host + ":" + port
 	rdb := redis.NewClient(&redis.Options{Addr: addr})
 	return &redisPubSub{rdb: rdb}, nil
 }

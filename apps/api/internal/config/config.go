@@ -61,7 +61,16 @@ type OTEL struct {
 }
 
 type Redis struct {
-	Addr string `yaml:"addr" env:"REDIS_ADDR"`
+	Host string `yaml:"host" env:"REDIS_HOST"`
+	Port string `yaml:"port" env:"REDIS_PORT" env-default:"6379"`
+}
+
+// Addr returns the Redis address in host:port format
+func (r Redis) Addr() string {
+	if r.Host == "" {
+		return ""
+	}
+	return r.Host + ":" + r.Port
 }
 
 type S3 struct {

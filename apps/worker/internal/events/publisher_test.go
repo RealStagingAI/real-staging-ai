@@ -14,8 +14,8 @@ import (
 )
 
 func TestNewDefaultPublisher_MissingEnv(t *testing.T) {
-	// Ensure REDIS_ADDR is unset
-	t.Setenv("REDIS_ADDR", "")
+	// Ensure REDIS_HOST is unset
+	t.Setenv("REDIS_HOST", "")
 
 	_, err := NewDefaultPublisher(&config.Config{})
 	require.Error(t, err, "expected error when REDIS_ADDR is not set")
@@ -31,7 +31,8 @@ func TestRedisPublisher_PublishJobUpdate_SendsStatusOnly(t *testing.T) {
 	defer mr.Close()
 
 	// Configure env for publisher
-	t.Setenv("REDIS_ADDR", mr.Addr())
+	t.Setenv("REDIS_HOST", "localhost")
+	t.Setenv("REDIS_PORT", mr.Port())
 
 	// Build publisher from env
 	pub, err := NewDefaultPublisher(cfg)
@@ -93,7 +94,8 @@ func TestRedisPublisher_PublishJobUpdate_DifferentImageChannel(t *testing.T) {
 	mr := miniredis.RunT(t)
 	defer mr.Close()
 
-	t.Setenv("REDIS_ADDR", mr.Addr())
+	t.Setenv("REDIS_HOST", "localhost")
+	t.Setenv("REDIS_PORT", mr.Port())
 	pub, err := NewDefaultPublisher(cfg)
 	require.NoError(t, err)
 

@@ -26,12 +26,17 @@ type DefaultSSE struct {
 	subscribeTimeout time.Duration
 }
 
-// NewDefaultSSEFromEnv constructs a DefaultSSE using REDIS_ADDR from the environment.
+// NewDefaultSSEFromEnv constructs a DefaultSSE using REDIS_HOST and REDIS_PORT from the environment.
 func NewDefaultSSEFromEnv(cfg Config) (*DefaultSSE, error) {
-	addr := os.Getenv("REDIS_ADDR")
-	if addr == "" {
-		return nil, errors.New("REDIS_ADDR not set")
+	host := os.Getenv("REDIS_HOST")
+	if host == "" {
+		return nil, errors.New("REDIS_HOST not set")
 	}
+	port := os.Getenv("REDIS_PORT")
+	if port == "" {
+		port = "6379"
+	}
+	addr := host + ":" + port
 	rdb := redis.NewClient(&redis.Options{Addr: addr})
 	return NewDefaultSSE(rdb, cfg), nil
 }

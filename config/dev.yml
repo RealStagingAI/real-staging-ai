@@ -15,7 +15,8 @@ otel:
   exporter_otlp_endpoint: http://otel:4318
 
 redis:
-  addr: redis:6379
+  host: redis
+  port: "6379"
 
 s3:
   bucket_name: real-staging

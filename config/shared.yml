@@ -27,7 +27,8 @@ otel:
   exporter_otlp_endpoint: http://localhost:4318
 
 redis:
-  addr: localhost:6379
+  host: localhost
+  port: "6379"
 
 replicate:
   # API token should be set via environment variable: REPLICATE_API_TOKEN

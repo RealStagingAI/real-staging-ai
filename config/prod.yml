@@ -31,7 +31,8 @@ otel:
   exporter_otlp_endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
 
 redis:
-  addr: ${REDIS_ADDR}
+  host: ${REDIS_HOST}
+  port: ${REDIS_PORT}
 
 replicate:
   # Model selection is now handled in code via staging.ModelID enum

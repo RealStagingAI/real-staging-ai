@@ -68,21 +68,19 @@ type AsynqEnqueuer struct {
 }
 
 // NewAsynqEnqueuerFromEnv creates an enqueuer using environment variables.
-// - REDIS_ADDR: required (e.g., "localhost:6379")
+// - REDIS_HOST: required (e.g., "localhost")
+// - REDIS_PORT: optional (defaults to "6379")
 // - JOB_QUEUE_NAME: optional (defaults to "default")
 func NewAsynqEnqueuerFromEnv(cfg *config.Config) (*AsynqEnqueuer, error) {
 	if cfg == nil {
 		return nil, errors.New("config is nil")
 	}
 
-	addr := os.Getenv("REDIS_ADDR")
-	if addr == "" {
-		addr = cfg.Redis.Addr
-	}
+	addr := cfg.Redis.Addr()
 	if addr == "" {
 		return nil, errors.New(
 			"redis address is not configured. " +
-				"Please set REDIS_ADDR environment variable or configure in config file")
+				"Please set REDIS_HOST and REDIS_PORT environment variables or configure in config file")
 	}
 
 	q := os.Getenv("JOB_QUEUE_NAME")

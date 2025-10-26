@@ -28,10 +28,11 @@ func waitForHandler(t *testing.T, timeout time.Duration, cond func() bool) {
 }
 
 func TestDefaultHandler_Events_ConnectedAndUpdate(t *testing.T) {
-	// Start in-memory Redis and set REDIS_ADDR for DefaultSSE
+	// Start in-memory Redis and set REDIS_HOST for DefaultSSE
 	mr := miniredis.RunT(t)
 	defer mr.Close()
-	t.Setenv("REDIS_ADDR", mr.Addr())
+	t.Setenv("REDIS_HOST", "localhost")
+	t.Setenv("REDIS_PORT", mr.Port())
 
 	// Build handler from env (uses DefaultSSE)
 	h, err := NewDefaultHandlerFromEnv(Config{HeartbeatInterval: 50 * time.Millisecond})
@@ -117,10 +118,11 @@ func TestDefaultHandler_Events_NoPubSubConfigured(t *testing.T) {
 }
 
 func TestDefaultHandler_Events_MultiUpdates(t *testing.T) {
-	// Start in-memory Redis and set REDIS_ADDR
+	// Start in-memory Redis and set REDIS_HOST
 	mr := miniredis.RunT(t)
 	defer mr.Close()
-	t.Setenv("REDIS_ADDR", mr.Addr())
+	t.Setenv("REDIS_HOST", "localhost")
+	t.Setenv("REDIS_PORT", mr.Port())
 
 	// Build handler from env (uses DefaultSSE)
 	h, err := NewDefaultHandlerFromEnv(Config{HeartbeatInterval: 50 * time.Millisecond})

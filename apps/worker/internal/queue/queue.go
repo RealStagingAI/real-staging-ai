@@ -72,16 +72,14 @@ type AsynqQueueClient struct {
 }
 
 // NewAsynqQueueClient initializes an Asynq-backed queue client.
-// Required env: REDIS_ADDR
-// Optional env: JOB_QUEUE_NAME (default: "default"), WORKER_CONCURRENCY (default: 5)
+// Required env: REDIS_HOST
+// Optional env: REDIS_PORT (default: "6379"), JOB_QUEUE_NAME (default: "default"), WORKER_CONCURRENCY (default: 5)
 func NewAsynqQueueClient(cfg *config.Config) (*AsynqQueueClient, error) {
-	// check if REDIS_ADDR is set or cfg.Redis.Addr
-	addr := os.Getenv("REDIS_ADDR")
+	// Get address from config
+	addr := cfg.Redis.Addr()
 	if addr == "" {
-		addr = cfg.Redis.Addr
-	}
-	if addr == "" {
-		return nil, errors.New("unable to determine redis address. REDIS_ADDR env var is not set and cfg.Redis.Addr is empty")
+		return nil, errors.New(
+			"redis address not set. Set REDIS_HOST and REDIS_PORT in config or environment")
 	}
 
 	queueName := os.Getenv("JOB_QUEUE_NAME")
