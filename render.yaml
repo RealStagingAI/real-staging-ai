@@ -22,12 +22,12 @@ services:
         fromService:
           name: realstaging-redis
           type: redis
-          property: connectionString
+          property: host
       # Auth0 Configuration
       - key: AUTH0_DOMAIN
         sync: false  # Set in Render dashboard
       - key: AUTH0_AUDIENCE
-        sync: false  # Set in Render dashboard
+        value: https://real-staging.ai
       # Backblaze B2 Configuration
       - key: S3_ENDPOINT
         value: https://s3.us-west-004.backblazeb2.com  # Update to your B2 region
@@ -73,7 +73,7 @@ services:
         fromService:
           name: realstaging-redis
           type: redis
-          property: connectionString
+          property: host
       # Backblaze B2 Configuration
       - key: S3_ENDPOINT
         value: https://s3.us-west-004.backblazeb2.com  # Update to your B2 region
