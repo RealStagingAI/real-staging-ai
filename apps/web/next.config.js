@@ -43,13 +43,11 @@ const nextConfig = {
   },
   async rewrites() {
     // Use environment variable for API URL, fallback to localhost for dev
-    // API_URL can be either a full URL or just a hostname (from Render's fromService.property: host)
+    // API_URL can be either a full URL or just a hostname (from Render's fromService.property: hostport)
     const apiHost = process.env.API_URL || 'http://localhost:8080';
     const apiUrl = apiHost.startsWith('http')
       ? apiHost
-      : apiHost.includes('localhost')
-        ? `http://${apiHost}`
-        : `https://${apiHost}`;
+      : `http://${apiHost}`;  // Internal Render services use HTTP, not HTTPS
     
     return [
       {
