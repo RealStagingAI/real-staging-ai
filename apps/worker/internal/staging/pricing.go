@@ -6,7 +6,7 @@ import "github.com/real-staging-ai/worker/internal/staging/model"
 // Prices are based on Replicate's pricing as of 2025-01.
 // See: https://replicate.com/pricing
 type ModelPricing struct {
-	ModelID      model.ModelID
+	ModelID      model.ID
 	CostPerImage float64 // USD per image
 }
 
@@ -23,7 +23,7 @@ var modelPricingTable = []ModelPricing{
 
 // GetModelCost returns the cost per image for a given model.
 // If the model is not found, returns 0.
-func GetModelCost(modelID model.ModelID) float64 {
+func GetModelCost(modelID model.ID) float64 {
 	for _, pricing := range modelPricingTable {
 		if pricing.ModelID == modelID {
 			return pricing.CostPerImage

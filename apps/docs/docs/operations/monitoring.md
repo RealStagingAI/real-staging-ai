@@ -42,6 +42,7 @@ processors:
     send_batch_size: 1024
 
 exporters:
+  debug: {}
   prometheus:
     endpoint: "0.0.0.0:8889"
   jaeger:
@@ -56,7 +57,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [jaeger]
+      exporters: [debug]  # Use debug exporter for development, jaeger for production
     metrics:
       receivers: [otlp]
       processors: [batch]
@@ -66,6 +67,25 @@ service:
       processors: [batch]
       exporters: [loki]
 ```
+
+**Important:** The OTLP receiver must listen on `0.0.0.0` (all interfaces) to accept connections from other Docker containers. The default `127.0.0.1` will only accept localhost connections within the collector container itself.
+
+**Environment Variables:**
+
+Services must set `OTEL_EXPORTER_OTLP_ENDPOINT` to point to the collector:
+
+```yaml
+# docker-compose.yml
+services:
+  api:
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4318
+  worker:
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4318
+```
+
+The telemetry initialization code automatically parses full URLs and extracts the host:port for the OpenTelemetry SDK.
 
 ## Distributed Tracing
 

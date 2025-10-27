@@ -148,7 +148,7 @@ func TestNewDefaultService(t *testing.T) {
 		cfg := &ServiceConfig{
 			BucketName:     "test-bucket",
 			ReplicateToken: "test-token",
-			ModelID:        model.ModelID("unsupported/model"),
+			ModelID:        model.ID("unsupported/model"),
 			S3Endpoint:     "http://localhost:9000",
 			S3Region:       "us-west-1",
 			S3AccessKey:    "test-key",
@@ -226,7 +226,7 @@ func TestDefaultService_CallReplicateAPI_ModelRegistry(t *testing.T) {
 		}
 
 		// Test with an invalid model ID - should fail with model not found
-		invalidModelID := model.ModelID("invalid/model")
+		invalidModelID := model.ID("invalid/model")
 
 		// Try to call the API - should fail with model not found
 		_, err = service.callReplicateAPI(ctx, invalidModelID, "data:image/jpeg;base64,test", "test prompt", nil)

@@ -16,31 +16,43 @@ const (
 	configKeyFluxKontextPro = "flux_kontext_pro"
 	configKeySeedream3      = "seedream_3"
 	configKeySeedream4      = "seedream_4"
+	configKeyGPTImage1      = "gpt_image_1"
 )
 
-// ConfigRepository handles model configuration persistence.
-type ConfigRepository interface {
-	// GetModelConfig retrieves the configuration for a specific model
-	GetModelConfig(ctx context.Context, modelID model.ModelID) (model.ModelConfig, error)
-
-	// UpdateModelConfig updates the configuration for a specific model
-	UpdateModelConfig(ctx context.Context, modelID model.ModelID, config model.ModelConfig, userID string) error
-}
-
-// DefaultConfigRepository implements ConfigRepository using PostgreSQL.
-type DefaultConfigRepository struct {
+// DefaultRepository provides access to settings stored in the database.
+type DefaultRepository struct {
 	db *sql.DB
 }
 
-// NewConfigRepository creates a new DefaultConfigRepository.
-func NewConfigRepository(db *sql.DB) *DefaultConfigRepository {
-	return &DefaultConfigRepository{db: db}
+// NewDefaultRepository creates a new settings repository.
+func NewDefaultRepository(db *sql.DB) *DefaultRepository {
+	return &DefaultRepository{db: db}
+}
+
+// GetActiveModel retrieves the active model ID from settings.
+// Returns the default model if not found.
+func (r *DefaultRepository) GetActiveModel(ctx context.Context) (model.ID, error) {
+	var value string
+	query := `SELECT value FROM settings WHERE key = $1`
+
+	err := r.db.QueryRowContext(ctx, query, "active_model").Scan(&value)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// Return default model if setting doesn't exist
+			return model.ModelFluxKontextMax, nil
+		}
+		return "", fmt.Errorf("failed to query active model: %w", err)
+	}
+
+	// Validate the model ID exists in registry
+	modelID := model.ID(value)
+	return modelID, nil
 }
 
 // GetModelConfig retrieves the configuration for a specific model.
-func (r *DefaultConfigRepository) GetModelConfig(
-	ctx context.Context, modelID model.ModelID,
-) (model.ModelConfig, error) {
+func (r *DefaultRepository) GetModelConfig(
+	ctx context.Context, modelID model.ID,
+) (model.Config, error) {
 	key := fmt.Sprintf("model_config_%s", getConfigKey(modelID))
 
 	query := `SELECT model_settings FROM settings WHERE key = $1`
@@ -62,8 +74,8 @@ func (r *DefaultConfigRepository) GetModelConfig(
 }
 
 // UpdateModelConfig updates the configuration for a specific model.
-func (r *DefaultConfigRepository) UpdateModelConfig(
-	ctx context.Context, modelID model.ModelID, config model.ModelConfig, userID string,
+func (r *DefaultRepository) UpdateModelConfig(
+	ctx context.Context, modelID model.ID, config model.Config, userID string,
 ) error {
 	// Validate config before storing
 	if err := config.Validate(); err != nil {
@@ -100,7 +112,7 @@ func (r *DefaultConfigRepository) UpdateModelConfig(
 }
 
 // getConfigKey converts a ModelID to its configuration key suffix.
-func getConfigKey(modelID model.ModelID) string {
+func getConfigKey(modelID model.ID) string {
 	switch modelID {
 	case model.ModelQwenImageEdit:
 		return configKeyQwen
@@ -112,6 +124,8 @@ func getConfigKey(modelID model.ModelID) string {
 		return configKeySeedream3
 	case model.ModelSeedream4:
 		return configKeySeedream4
+	case model.ModelGPTImage1:
+		return configKeyGPTImage1
 	default:
 		return string(modelID)
 	}

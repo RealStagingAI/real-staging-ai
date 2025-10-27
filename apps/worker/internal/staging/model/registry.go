@@ -7,16 +7,17 @@ import (
 	"github.com/replicate/replicate-go"
 )
 
-// ModelID represents a unique identifier for a supported AI model.
-type ModelID string
+// ID represents a unique identifier for a supported AI model.
+type ID string
 
 // Supported models
 const (
-	ModelQwenImageEdit  ModelID = "qwen/qwen-image-edit"
-	ModelFluxKontextMax ModelID = "black-forest-labs/flux-kontext-max"
-	ModelFluxKontextPro ModelID = "black-forest-labs/flux-kontext-pro"
-	ModelSeedream3      ModelID = "bytedance/seedream-3"
-	ModelSeedream4      ModelID = "bytedance/seedream-4"
+	ModelQwenImageEdit  ID = "qwen/qwen-image-edit"
+	ModelFluxKontextMax ID = "black-forest-labs/flux-kontext-max"
+	ModelFluxKontextPro ID = "black-forest-labs/flux-kontext-pro"
+	ModelSeedream3      ID = "bytedance/seedream-3"
+	ModelSeedream4      ID = "bytedance/seedream-4"
+	ModelGPTImage1      ID = "openai/gpt-image-1"
 )
 
 // ModelInputRequest contains the parameters needed to build model input.
@@ -24,7 +25,7 @@ type ModelInputRequest struct {
 	ImageDataURL string
 	Prompt       string
 	Seed         *int64
-	Config       ModelConfig // Optional: model-specific configuration (uses defaults if nil)
+	Config       Config // Optional: model-specific configuration (uses defaults if nil)
 }
 
 // ModelInputBuilder defines the interface for building model-specific input parameters.
@@ -40,23 +41,23 @@ type ModelInputBuilder interface {
 
 // ModelMetadata contains information about a registered model.
 type ModelMetadata struct {
-	ID            ModelID
+	ID            ID
 	Name          string
 	Description   string
 	Version       string
 	InputBuilder  ModelInputBuilder
-	DefaultConfig ModelConfig // Default configuration for this model
+	DefaultConfig Config // Default configuration for this model
 }
 
 // ModelRegistry manages the available AI models and their configurations.
 type ModelRegistry struct {
-	models map[ModelID]*ModelMetadata
+	models map[ID]*ModelMetadata
 }
 
 // NewModelRegistry creates a new registry with all supported models.
 func NewModelRegistry() *ModelRegistry {
 	registry := &ModelRegistry{
-		models: make(map[ModelID]*ModelMetadata),
+		models: make(map[ID]*ModelMetadata),
 	}
 
 	// Register Qwen Image Edit model
@@ -108,6 +109,16 @@ func NewModelRegistry() *ModelRegistry {
 		DefaultConfig: (&SeedreamConfig{}).GetDefaults(),
 	})
 
+	// Register GPT Image 1 model
+	registry.Register(&ModelMetadata{
+		ID:            ModelGPTImage1,
+		Name:          "GPT Image 1",
+		Description:   "OpenAI's GPT Image 1 model providing multimodal image generation",
+		Version:       "5ac56c15446a60fa63b3823de926ada90f5971c2cf9b1dd07659126cfda434e6",
+		InputBuilder:  NewGPTImageInputBuilder(),
+		DefaultConfig: (&GPTImageConfig{}).GetDefaults(),
+	})
+
 	return registry
 }
 
@@ -117,7 +128,7 @@ func (r *ModelRegistry) Register(metadata *ModelMetadata) {
 }
 
 // Get retrieves a model's metadata by ID.
-func (r *ModelRegistry) Get(id ModelID) (*ModelMetadata, error) {
+func (r *ModelRegistry) Get(id ID) (*ModelMetadata, error) {
 	model, exists := r.models[id]
 	if !exists {
 		return nil, fmt.Errorf("model not found: %s", id)
@@ -135,7 +146,7 @@ func (r *ModelRegistry) List() []*ModelMetadata {
 }
 
 // Exists checks if a model is registered.
-func (r *ModelRegistry) Exists(id ModelID) bool {
+func (r *ModelRegistry) Exists(id ID) bool {
 	_, exists := r.models[id]
 	return exists
 }

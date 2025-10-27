@@ -38,8 +38,8 @@ func TestNewModelRegistry(t *testing.T) {
 		registry := NewModelRegistry()
 
 		models := registry.List()
-		if len(models) != 5 {
-			t.Errorf("expected 5 models to be registered, got %d", len(models))
+		if len(models) != 6 {
+			t.Errorf("expected 6 models to be registered, got %d", len(models))
 		}
 	})
 }
@@ -47,11 +47,11 @@ func TestNewModelRegistry(t *testing.T) {
 func TestModelRegistry_Register(t *testing.T) {
 	t.Run("success: registers a new model", func(t *testing.T) {
 		registry := &ModelRegistry{
-			models: make(map[ModelID]*ModelMetadata),
+			models: make(map[ID]*ModelMetadata),
 		}
 
 		metadata := &ModelMetadata{
-			ID:           ModelID("test/model"),
+			ID:           ID("test/model"),
 			Name:         "Test Model",
 			Description:  "A test model",
 			Version:      "v1",
@@ -60,24 +60,24 @@ func TestModelRegistry_Register(t *testing.T) {
 
 		registry.Register(metadata)
 
-		if !registry.Exists(ModelID("test/model")) {
+		if !registry.Exists(ID("test/model")) {
 			t.Error("expected model to be registered")
 		}
 	})
 
 	t.Run("success: overwrites existing model", func(t *testing.T) {
 		registry := &ModelRegistry{
-			models: make(map[ModelID]*ModelMetadata),
+			models: make(map[ID]*ModelMetadata),
 		}
 
 		metadata1 := &ModelMetadata{
-			ID:          ModelID("test/model"),
+			ID:          ID("test/model"),
 			Name:        "Test Model v1",
 			Description: "Version 1",
 		}
 
 		metadata2 := &ModelMetadata{
-			ID:          ModelID("test/model"),
+			ID:          ID("test/model"),
 			Name:        "Test Model v2",
 			Description: "Version 2",
 		}
@@ -85,7 +85,7 @@ func TestModelRegistry_Register(t *testing.T) {
 		registry.Register(metadata1)
 		registry.Register(metadata2)
 
-		model, err := registry.Get(ModelID("test/model"))
+		model, err := registry.Get(ID("test/model"))
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -202,10 +202,31 @@ func TestModelRegistry_Get(t *testing.T) {
 		}
 	})
 
+	t.Run("success: retrieves GPT Image 1 model", func(t *testing.T) {
+		registry := NewModelRegistry()
+
+		model, err := registry.Get(ModelGPTImage1)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if model.ID != ModelGPTImage1 {
+			t.Errorf("expected model ID to be %s, got %s", ModelGPTImage1, model.ID)
+		}
+
+		if model.Name != "GPT Image 1" {
+			t.Errorf("expected model name to be 'GPT Image 1', got %s", model.Name)
+		}
+
+		if model.InputBuilder == nil {
+			t.Error("expected model to have an input builder")
+		}
+	})
+
 	t.Run("fail: model not found", func(t *testing.T) {
 		registry := NewModelRegistry()
 
-		_, err := registry.Get(ModelID("nonexistent/model"))
+		_, err := registry.Get(ID("nonexistent/model"))
 		if err == nil {
 			t.Fatal("expected error for nonexistent model")
 		}
@@ -223,8 +244,8 @@ func TestModelRegistry_List(t *testing.T) {
 
 		models := registry.List()
 
-		if len(models) != 5 {
-			t.Errorf("expected 5 models to be registered, got %d", len(models))
+		if len(models) != 6 {
+			t.Errorf("expected 6 models to be registered, got %d", len(models))
 		}
 
 		// Verify all models are in the list
@@ -233,6 +254,7 @@ func TestModelRegistry_List(t *testing.T) {
 		foundFluxPro := false
 		foundSeedream3 := false
 		foundSeedream4 := false
+		foundGPTImage1 := false
 		for _, model := range models {
 			if model.ID == ModelQwenImageEdit {
 				foundQwen = true
@@ -248,6 +270,9 @@ func TestModelRegistry_List(t *testing.T) {
 			}
 			if model.ID == ModelSeedream4 {
 				foundSeedream4 = true
+			}
+			if model.ID == ModelGPTImage1 {
+				foundGPTImage1 = true
 			}
 		}
 
@@ -266,11 +291,14 @@ func TestModelRegistry_List(t *testing.T) {
 		if !foundSeedream4 {
 			t.Error("expected Seedream-4 model to be in the list")
 		}
+		if !foundGPTImage1 {
+			t.Error("expected GPT Image 1 model to be in the list")
+		}
 	})
 
 	t.Run("success: returns empty list for empty registry", func(t *testing.T) {
 		registry := &ModelRegistry{
-			models: make(map[ModelID]*ModelMetadata),
+			models: make(map[ID]*ModelMetadata),
 		}
 
 		models := registry.List()
@@ -325,7 +353,7 @@ func TestModelRegistry_Exists(t *testing.T) {
 	t.Run("success: returns false for nonexistent model", func(t *testing.T) {
 		registry := NewModelRegistry()
 
-		if registry.Exists(ModelID("nonexistent/model")) {
+		if registry.Exists(ID("nonexistent/model")) {
 			t.Error("expected nonexistent model to not exist")
 		}
 	})

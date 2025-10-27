@@ -3,10 +3,11 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
-// ModelConfig defines the interface for model-specific configuration.
-type ModelConfig interface {
+// Config defines the interface for model-specific configuration.
+type Config interface {
 	// ToMap converts the config to a map for Replicate API
 	ToMap() map[string]interface{}
 
@@ -14,24 +15,32 @@ type ModelConfig interface {
 	Validate() error
 
 	// GetDefaults returns a new instance with default values
-	GetDefaults() ModelConfig
+	GetDefaults() Config
 }
 
 // ConfigField defines metadata for a configuration field (used for UI generation).
 type ConfigField struct {
 	Name        string      `json:"name"`
-	Type        string      `json:"type"` // "string", "int", "float", "bool"
+	Type        string      `json:"type"` // "string", "int", "float", "bool", "array"
+	Title       string      `json:"title,omitempty"`
 	Default     interface{} `json:"default"`
 	Description string      `json:"description"`
 	Options     []string    `json:"options,omitempty"` // For dropdown fields
 	Min         *float64    `json:"min,omitempty"`     // For numeric fields
 	Max         *float64    `json:"max,omitempty"`     // For numeric fields
 	Required    bool        `json:"required"`
+	XOrder      *int        `json:"x_order,omitempty"`
+	Nullable    bool        `json:"nullable,omitempty"`
+	Format      string      `json:"format,omitempty"`
+	WriteOnly   bool        `json:"write_only,omitempty"`
+	Secret      bool        `json:"x_cog_secret,omitempty"`
+	ItemsType   string      `json:"items_type,omitempty"`
+	ItemsFormat string      `json:"items_format,omitempty"`
 }
 
 // ConfigSchema describes the configuration structure for UI generation.
 type ConfigSchema struct {
-	ModelID     ModelID       `json:"model_id"`
+	ModelID     ID            `json:"model_id"`
 	DisplayName string        `json:"display_name"`
 	Fields      []ConfigField `json:"fields"`
 }
@@ -79,12 +88,135 @@ func (c *QwenConfig) Validate() error {
 }
 
 // GetDefaults returns QwenConfig with default values.
-func (c *QwenConfig) GetDefaults() ModelConfig {
+func (c *QwenConfig) GetDefaults() Config {
 	return &QwenConfig{
 		GoFast:        true,
 		AspectRatio:   "match_input_image",
 		OutputFormat:  "webp",
 		OutputQuality: 80,
+	}
+}
+
+func getGPTImageSchema() *ConfigSchema {
+	return &ConfigSchema{
+		ModelID:     ModelGPTImage1,
+		DisplayName: "GPT Image 1",
+		Fields: []ConfigField{
+			{
+				Name:        "openai_api_key",
+				Type:        "string",
+				Title:       "Openai Api Key",
+				Default:     "",
+				Description: "Your OpenAI API key",
+				Required:    true,
+				Format:      "password",
+				WriteOnly:   true,
+				Secret:      true,
+				XOrder:      intPtr(0),
+			},
+			{
+				Name:        "prompt",
+				Type:        "string",
+				Title:       "Prompt",
+				Default:     "",
+				Description: "A text description of the desired image",
+				Required:    true,
+				XOrder:      intPtr(1),
+			},
+			{
+				Name:        "aspect_ratio",
+				Type:        "string",
+				Title:       "aspect_ratio",
+				Default:     "1:1",
+				Description: "The aspect ratio of the generated image",
+				Options:     []string{"1:1", "3:2", "2:3"},
+				XOrder:      intPtr(2),
+			},
+			{
+				Name:        "input_fidelity",
+				Type:        "string",
+				Title:       "input_fidelity",
+				Default:     "low",
+				Description: "Control how much effort the model will exert to match the style and features of input images",
+				Options:     []string{"low", "high"},
+				XOrder:      intPtr(3),
+			},
+			{
+				Name:        "input_images",
+				Type:        "array",
+				Title:       "Input Images",
+				Description: "A list of images to use as input for the generation",
+				ItemsType:   "string",
+				ItemsFormat: "uri",
+				Nullable:    true,
+				XOrder:      intPtr(4),
+			},
+			{
+				Name:        "number_of_images",
+				Type:        "int",
+				Title:       "Number Of Images",
+				Default:     1,
+				Description: "Number of images to generate (1-10)",
+				Min:         ptr(1.0),
+				Max:         ptr(10.0),
+				XOrder:      intPtr(5),
+			},
+			{
+				Name:        "quality",
+				Type:        "string",
+				Title:       "quality",
+				Default:     "auto",
+				Description: "The quality of the generated image",
+				Options:     []string{"low", "medium", "high", "auto"},
+				XOrder:      intPtr(6),
+			},
+			{
+				Name:        "background",
+				Type:        "string",
+				Title:       "background",
+				Default:     "auto",
+				Description: "Set whether the background is transparent or opaque or choose automatically",
+				Options:     []string{"auto", "transparent", "opaque"},
+				XOrder:      intPtr(7),
+			},
+			{
+				Name:        "output_compression",
+				Type:        "int",
+				Title:       "Output Compression",
+				Default:     90,
+				Description: "Compression level (0-100%)",
+				Min:         ptr(0.0),
+				Max:         ptr(100.0),
+				XOrder:      intPtr(8),
+			},
+			{
+				Name:        "output_format",
+				Type:        "string",
+				Title:       "output_format",
+				Default:     "webp",
+				Description: "Output format",
+				Options:     []string{"png", "jpeg", "webp"},
+				XOrder:      intPtr(9),
+			},
+			{
+				Name:        "moderation",
+				Type:        "string",
+				Title:       "moderation",
+				Default:     "auto",
+				Description: "Content moderation level",
+				Options:     []string{"auto", "low"},
+				XOrder:      intPtr(10),
+			},
+			{
+				Name:  "user_id",
+				Type:  "string",
+				Title: "User Id",
+				Description: "An optional unique identifier representing your end-user. " +
+					"This helps OpenAI monitor and detect abuse.",
+				Nullable: true,
+				XOrder:   intPtr(11),
+			},
+		},
 	}
 }
 
@@ -143,7 +275,7 @@ func (c *FluxKontextConfig) Validate() error {
 }
 
 // GetDefaults returns FluxKontextConfig with default values.
-func (c *FluxKontextConfig) GetDefaults() ModelConfig {
+func (c *FluxKontextConfig) GetDefaults() Config {
 	return &FluxKontextConfig{
 		AspectRatio:      "match_input_image",
 		OutputFormat:     "png",
@@ -200,7 +332,7 @@ func (c *SeedreamConfig) Validate() error {
 }
 
 // GetDefaults returns SeedreamConfig with default values.
-func (c *SeedreamConfig) GetDefaults() ModelConfig {
+func (c *SeedreamConfig) GetDefaults() Config {
 	return &SeedreamConfig{
 		AspectRatio:       "1:1",
 		NumInferenceSteps: 50,
@@ -209,9 +341,110 @@ func (c *SeedreamConfig) GetDefaults() ModelConfig {
 	}
 }
 
+// GPTImageConfig contains all GPT Image 1 model parameters.
+type GPTImageConfig struct {
+	OpenAIAPIKey      string  `json:"openai_api_key"`
+	Prompt            string  `json:"prompt"`
+	AspectRatio       string  `json:"aspect_ratio"`
+	InputFidelity     string  `json:"input_fidelity"`
+	NumberOfImages    int     `json:"number_of_images"`
+	Quality           string  `json:"quality"`
+	Background        string  `json:"background"`
+	OutputCompression int     `json:"output_compression"`
+	OutputFormat      string  `json:"output_format"`
+	Moderation        string  `json:"moderation"`
+	UserID            *string `json:"user_id"`
+}
+
+// ToMap converts GPTImageConfig to a map for Replicate API.
+func (c *GPTImageConfig) ToMap() map[string]interface{} {
+	result := map[string]interface{}{
+		"openai_api_key":     c.OpenAIAPIKey,
+		"prompt":             c.Prompt,
+		"aspect_ratio":       c.AspectRatio,
+		"input_fidelity":     c.InputFidelity,
+		"number_of_images":   c.NumberOfImages,
+		"quality":            c.Quality,
+		"background":         c.Background,
+		"output_compression": c.OutputCompression,
+		"output_format":      c.OutputFormat,
+		"moderation":         c.Moderation,
+	}
+
+	if c.UserID != nil && *c.UserID != "" {
+		result["user_id"] = *c.UserID
+	}
+
+	return result
+}
+
+// Validate checks if GPTImageConfig is valid.
+func (c *GPTImageConfig) Validate() error {
+	if strings.TrimSpace(c.OpenAIAPIKey) == "" {
+		return fmt.Errorf("openai_api_key is required")
+	}
+
+	validQuality := []string{"low", "medium", "high", "auto"}
+	if !contains(validQuality, c.Quality) {
+		return fmt.Errorf("invalid quality: %s", c.Quality)
+	}
+
+	validAspectRatios := []string{"1:1", "3:2", "2:3"}
+	if !contains(validAspectRatios, c.AspectRatio) {
+		return fmt.Errorf("invalid aspect_ratio: %s", c.AspectRatio)
+	}
+
+	validInputFidelity := []string{"low", "high"}
+	if !contains(validInputFidelity, c.InputFidelity) {
+		return fmt.Errorf("invalid input_fidelity: %s", c.InputFidelity)
+	}
+
+	if c.NumberOfImages < 1 || c.NumberOfImages > 10 {
+		return fmt.Errorf("number_of_images must be between 1 and 10, got %d", c.NumberOfImages)
+	}
+
+	validBackground := []string{"auto", "transparent", "opaque"}
+	if !contains(validBackground, c.Background) {
+		return fmt.Errorf("invalid background: %s", c.Background)
+	}
+
+	validOutputFormats := []string{"png", "jpeg", "webp"}
+	if !contains(validOutputFormats, c.OutputFormat) {
+		return fmt.Errorf("invalid output_format: %s", c.OutputFormat)
+	}
+
+	if c.OutputCompression < 0 || c.OutputCompression > 100 {
+		return fmt.Errorf("output_compression must be between 0 and 100, got %d", c.OutputCompression)
+	}
+
+	validModeration := []string{"auto", "low"}
+	if !contains(validModeration, c.Moderation) {
+		return fmt.Errorf("invalid moderation: %s", c.Moderation)
+	}
+
+	return nil
+}
+
+// GetDefaults returns GPTImageConfig with default values.
+func (c *GPTImageConfig) GetDefaults() Config {
+	return &GPTImageConfig{
+		OpenAIAPIKey:      "",
+		Prompt:            "",
+		Quality:           "auto",
+		AspectRatio:       "1:1",
+		InputFidelity:     "low",
+		NumberOfImages:    1,
+		Background:        "auto",
+		OutputFormat:      "webp",
+		OutputCompression: 90,
+		Moderation:        "auto",
+		UserID:            nil,
+	}
+}
+
 // ParseModelConfig parses JSON into the appropriate ModelConfig type.
-func ParseModelConfig(modelID ModelID, data []byte) (ModelConfig, error) {
-	var config ModelConfig
+func ParseModelConfig(modelID ID, data []byte) (Config, error) {
+	var config Config
 
 	switch modelID {
 	case ModelQwenImageEdit:
@@ -220,6 +453,8 @@ func ParseModelConfig(modelID ModelID, data []byte) (ModelConfig, error) {
 		config = &FluxKontextConfig{}
 	case ModelSeedream3, ModelSeedream4:
 		config = &SeedreamConfig{}
+	case ModelGPTImage1:
+		config = &GPTImageConfig{}
 	default:
 		return nil, fmt.Errorf("unknown model ID: %s", modelID)
 	}
@@ -236,7 +471,7 @@ func ParseModelConfig(modelID ModelID, data []byte) (ModelConfig, error) {
 }
 
 // GetConfigSchema returns the schema for a given model configuration.
-func GetConfigSchema(modelID ModelID) (*ConfigSchema, error) {
+func GetConfigSchema(modelID ID) (*ConfigSchema, error) {
 	switch modelID {
 	case ModelQwenImageEdit:
 		return getQwenSchema(), nil
@@ -244,6 +479,8 @@ func GetConfigSchema(modelID ModelID) (*ConfigSchema, error) {
 		return getFluxKontextSchema(modelID), nil
 	case ModelSeedream3, ModelSeedream4:
 		return getSeedreamSchema(modelID), nil
+	case ModelGPTImage1:
+		return getGPTImageSchema(), nil
 	default:
 		return nil, fmt.Errorf("unknown model ID: %s", modelID)
 	}
@@ -290,7 +527,7 @@ func getQwenSchema() *ConfigSchema {
 	}
 }
 
-func getFluxKontextSchema(modelID ModelID) *ConfigSchema {
+func getFluxKontextSchema(modelID ID) *ConfigSchema {
 	displayName := "Flux Kontext Max"
 	if modelID == ModelFluxKontextPro {
 		displayName = "Flux Kontext Pro"
@@ -354,7 +591,7 @@ func getFluxKontextSchema(modelID ModelID) *ConfigSchema {
 	}
 }
 
-func getSeedreamSchema(modelID ModelID) *ConfigSchema {
+func getSeedreamSchema(modelID ID) *ConfigSchema {
 	displayName := "Seedream 3"
 	if modelID == ModelSeedream4 {
 		displayName = "Seedream 4"
@@ -416,4 +653,8 @@ func contains(slice []string, item string) bool {
 
 func ptr(f float64) *float64 {
 	return &f
+}
+
+func intPtr(i int) *int {
+	return &i
 }

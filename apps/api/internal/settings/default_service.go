@@ -97,6 +97,15 @@ func (s *DefaultService) ListAvailableModels(ctx context.Context) ([]ModelInfo, 
 			Version:  "v1",
 			IsActive: activeModelID == "bytedance/seedream-4",
 		},
+		{
+			ID:   "openai/gpt-image-1",
+			Name: "GPT Image 1",
+			Description: "A multimodal image generation model that creates high-quality images. " +
+				"You need to bring your own verified OpenAI key to use this model. " +
+				"Your OpenAI account will be charged for usage.",
+			Version:  "v1",
+			IsActive: activeModelID == "openai/gpt-image-1",
+		},
 	}
 
 	return models, nil
@@ -178,8 +187,105 @@ func (s *DefaultService) GetModelConfigSchema(ctx context.Context, modelID strin
 		return getFluxKontextSchema(modelID), nil
 	case "bytedance/seedream-3", "bytedance/seedream-4":
 		return getSeedreamSchema(modelID), nil
+	case "openai/gpt-image-1":
+		return getGPTImageSchema(), nil
 	default:
 		return nil, fmt.Errorf("unknown model ID: %s", modelID)
+	}
+}
+
+func getGPTImageSchema() *ModelConfigSchema {
+	return &ModelConfigSchema{
+		ModelID:     "openai/gpt-image-1",
+		DisplayName: "OpenAI GPT Image 1",
+		Fields: []ModelConfigField{
+			{
+				Name:        "openai_api_key",
+				Type:        "string",
+				Default:     "",
+				Description: "Your OpenAI API key",
+				Required:    true,
+			},
+			{
+				Name:        "prompt",
+				Type:        "string",
+				Default:     "",
+				Description: "A text description of the desired image",
+				Required:    true,
+			},
+			{
+				Name:        "quality",
+				Type:        "string",
+				Default:     "auto",
+				Description: "The quality of the generated image",
+				Options:     []string{"low", "medium", "high", "auto"},
+				Required:    true,
+			},
+			{
+				Name:    "user_id",
+				Type:    "string",
+				Default: "",
+				Description: "An optional unique identifier representing your end-user. " +
+					"This helps OpenAI monitor and detect abuse.",
+			},
+			{
+				Name:        "background",
+				Type:        "string",
+				Default:     "auto",
+				Description: "Set whether the background is transparent or opaque or choose automatically",
+				Options:     []string{"auto", "transparent", "opaque"},
+				Required:    true,
+			},
+			{
+				Name:        "moderation",
+				Type:        "string",
+				Default:     "auto",
+				Description: "Content moderation level",
+				Options:     []string{"auto", "low"},
+				Required:    true,
+			},
+			{
+				Name:        "aspect_ratio",
+				Type:        "string",
+				Default:     "1:1",
+				Description: "The aspect ratio of the generated image",
+				Options:     []string{"1:1", "3:2", "2:3"},
+				Required:    true,
+			},
+			{
+				Name:        "number_of_images",
+				Type:        "int",
+				Default:     1,
+				Description: "Number of images to generate (1-10)",
+				Min:         ptr(1.0),
+				Max:         ptr(10.0),
+				Required:    true,
+			},
+			{
+				Name:        "output_compression",
+				Type:        "int",
+				Default:     90,
+				Description: "Compression level (0-100%)",
+				Min:         ptr(0.0),
+				Max:         ptr(100.0),
+			},
+			{
+				Name:        "output_format",
+				Type:        "string",
+				Default:     "webp",
+				Description: "Output image format",
+				Options:     []string{"png", "jpeg", "webp"},
+				Required:    true,
+			},
+			{
+				Name:        "input_fidelity",
+				Type:        "string",
+				Default:     "low",
+				Description: "Input image fidelity level",
+				Options:     []string{"low", "high"},
+				Required:    true,
+			},
+		},
 	}
 }
 

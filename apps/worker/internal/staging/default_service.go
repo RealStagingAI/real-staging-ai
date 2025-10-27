@@ -30,7 +30,7 @@ type DefaultService struct {
 	s3Client        *s3.Client
 	bucketName      string
 	replicateClient *replicate.Client
-	modelID         model.ModelID
+	modelID         model.ID
 	registry        *model.ModelRegistry
 	promptLib       *prompt.Library
 	configRepo      ConfigRepository // For loading model configurations
@@ -46,7 +46,7 @@ var awsConfigLoader = config.LoadDefaultConfig
 type ServiceConfig struct {
 	BucketName     string
 	ReplicateToken string
-	ModelID        model.ModelID
+	ModelID        model.ID
 	S3Endpoint     string
 	S3Region       string
 	S3AccessKey    string
@@ -181,7 +181,7 @@ func (s *DefaultService) StageImage(ctx context.Context, req *StagingRequest) (s
 	defer span.End()
 
 	// Validate model ID
-	modelID := model.ModelID(req.ModelID)
+	modelID := model.ID(req.ModelID)
 	if modelID == "" {
 		// Fall back to service default if not specified
 		modelID = s.modelID
@@ -317,7 +317,7 @@ func (s *DefaultService) UploadToS3(
 
 // callReplicateAPI calls the Replicate API to stage an image.
 func (s *DefaultService) callReplicateAPI(
-	ctx context.Context, modelID model.ModelID, imageDataURL, prompt string, seed *int64,
+	ctx context.Context, modelID model.ID, imageDataURL, prompt string, seed *int64,
 ) (string, error) {
 	tracer := otel.Tracer("real-staging-worker/staging")
 	ctx, span := tracer.Start(ctx, "staging.callReplicateAPI")
@@ -336,7 +336,7 @@ func (s *DefaultService) callReplicateAPI(
 	}
 
 	// Load model configuration from database (optional)
-	var modelConfig model.ModelConfig
+	var modelConfig model.Config
 	if s.configRepo != nil {
 		modelConfig, err = s.configRepo.GetModelConfig(ctx, modelID)
 		if err != nil {

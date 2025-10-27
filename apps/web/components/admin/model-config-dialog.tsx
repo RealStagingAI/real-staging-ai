@@ -81,11 +81,13 @@ export function ModelConfigDialog({
       // Set initial config values from current config or defaults
       const initialConfig: Record<string, unknown> = {};
       schemaData.fields.forEach((field) => {
-        if (configData?.config && field.name in configData.config) {
-          initialConfig[field.name] = configData.config[field.name];
-        } else {
-          initialConfig[field.name] = field.default;
-        }
+        const hasExistingValue =
+          configData?.config && Object.prototype.hasOwnProperty.call(configData.config, field.name);
+        const rawValue = hasExistingValue && configData?.config
+          ? configData.config[field.name]
+          : field.default;
+
+        initialConfig[field.name] = normalizeFieldValue(field, rawValue);
       });
       setConfig(initialConfig);
     } catch (err) {
@@ -151,11 +153,12 @@ export function ModelConfigDialog({
 
       case "string":
         if (field.options && field.options.length > 0) {
+          const stringValue = typeof value === "string" ? value : "";
           return (
             <div key={field.name} className="space-y-2">
               <Label htmlFor={field.name}>{formatFieldName(field.name)}</Label>
               <Select
-                value={value as string}
+                value={stringValue}
                 onValueChange={(newValue: string) => updateConfigValue(field.name, newValue)}
               >
                 <SelectTrigger id={field.name}>
@@ -173,13 +176,14 @@ export function ModelConfigDialog({
             </div>
           );
         }
+        const stringValue = typeof value === "string" ? value : "";
         return (
           <div key={field.name} className="space-y-2">
             <Label htmlFor={field.name}>{formatFieldName(field.name)}</Label>
             <Input
               id={field.name}
               type="text"
-              value={value as string}
+              value={stringValue}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfigValue(field.name, e.target.value)}
             />
             <p className="text-sm text-gray-500 dark:text-gray-400">{field.description}</p>
@@ -187,47 +191,59 @@ export function ModelConfigDialog({
         );
 
       case "int":
-        return (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>{formatFieldName(field.name)}</Label>
-            <Input
-              id={field.name}
-              type="number"
-              min={field.min}
-              max={field.max}
-              value={value as number}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfigValue(field.name, parseInt(e.target.value, 10))}
-            />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {field.description}
-              {field.min !== undefined && field.max !== undefined && (
-                <span className="ml-1">({field.min} - {field.max})</span>
-              )}
-            </p>
-          </div>
-        );
+        {
+          const numericValue =
+            typeof value === "number" && !Number.isNaN(value)
+              ? value
+              : "";
+          return (
+            <div key={field.name} className="space-y-2">
+              <Label htmlFor={field.name}>{formatFieldName(field.name)}</Label>
+              <Input
+                id={field.name}
+                type="number"
+                min={field.min}
+                max={field.max}
+                value={numericValue}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfigValue(field.name, parseInt(e.target.value, 10))}
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {field.description}
+                {field.min !== undefined && field.max !== undefined && (
+                  <span className="ml-1">({field.min} - {field.max})</span>
+                )}
+              </p>
+            </div>
+          );
+        }
 
       case "float":
-        return (
-          <div key={field.name} className="space-y-2">
-            <Label htmlFor={field.name}>{formatFieldName(field.name)}</Label>
-            <Input
-              id={field.name}
-              type="number"
-              step="0.1"
-              min={field.min}
-              max={field.max}
-              value={value as number}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfigValue(field.name, parseFloat(e.target.value))}
-            />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {field.description}
-              {field.min !== undefined && field.max !== undefined && (
-                <span className="ml-1">({field.min} - {field.max})</span>
-              )}
-            </p>
-          </div>
-        );
+        {
+          const numericValue =
+            typeof value === "number" && !Number.isNaN(value)
+              ? value
+              : "";
+          return (
+            <div key={field.name} className="space-y-2">
+              <Label htmlFor={field.name}>{formatFieldName(field.name)}</Label>
+              <Input
+                id={field.name}
+                type="number"
+                step="0.1"
+                min={field.min}
+                max={field.max}
+                value={numericValue}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateConfigValue(field.name, parseFloat(e.target.value))}
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {field.description}
+                {field.min !== undefined && field.max !== undefined && (
+                  <span className="ml-1">({field.min} - {field.max})</span>
+                )}
+              </p>
+            </div>
+          );
+        }
 
       default:
         return null;
@@ -291,4 +307,63 @@ function formatFieldName(name: string): string {
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function normalizeFieldValue(field: ModelConfigField, value: unknown): unknown {
+  switch (field.type) {
+    case "bool":
+      if (typeof value === "boolean") {
+        return value;
+      }
+      if (typeof value === "string") {
+        return value.toLowerCase() === "true";
+      }
+      if (typeof value === "number") {
+        return value !== 0;
+      }
+      return typeof field.default === "boolean" ? field.default : false;
+    case "int": {
+      if (typeof value === "number" && Number.isInteger(value)) {
+        return value;
+      }
+      if (typeof value === "string" && value.trim() !== "") {
+        const parsed = parseInt(value, 10);
+        if (!Number.isNaN(parsed)) {
+          return parsed;
+        }
+      }
+      if (typeof value === "number" && !Number.isNaN(value)) {
+        return Math.trunc(value);
+      }
+      if (typeof field.default === "number") {
+        return field.default;
+      }
+      return 0;
+    }
+    case "float": {
+      if (typeof value === "number" && !Number.isNaN(value)) {
+        return value;
+      }
+      if (typeof value === "string" && value.trim() !== "") {
+        const parsed = parseFloat(value);
+        if (!Number.isNaN(parsed)) {
+          return parsed;
+        }
+      }
+      if (typeof field.default === "number") {
+        return field.default;
+      }
+      return 0;
+    }
+    case "string":
+      if (typeof value === "string") {
+        return value;
+      }
+      if (value === undefined || value === null) {
+        return typeof field.default === "string" ? field.default : "";
+      }
+      return String(value);
+    default:
+      return value ?? field.default ?? null;
+  }
 }

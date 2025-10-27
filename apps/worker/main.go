@@ -65,7 +65,7 @@ func main() {
 	imgRepo := repository.NewImageRepository(db)
 
 	// Get active model from database settings
-	settingsRepo := settings.NewRepository(db)
+	settingsRepo := settings.NewDefaultRepository(db)
 	activeModel, err := settingsRepo.GetActiveModel(ctx)
 	if err != nil {
 		log.Error(ctx, fmt.Sprintf("Failed to get active model from settings: %v", err))
@@ -84,6 +84,7 @@ func main() {
 		S3SecretKey:    cfg.S3.SecretKey,
 		S3UsePathStyle: cfg.S3.UsePathStyle,
 		AppEnv:         cfg.App.Env,
+		ConfigRepo:     settingsRepo, // Add settings repository for model config loading
 	}
 	stagingService, err := staging.NewDefaultService(ctx, stagingCfg)
 	if err != nil {

@@ -37,6 +37,7 @@ services:
     environment:
       - APP_ENV=dev
       - CONFIG_DIR=/config
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4318
     volumes:
       - ./config:/config:ro
       - ./apps/api/secrets.yml:/app/secrets.yml:ro
@@ -55,6 +56,7 @@ services:
     environment:
       - APP_ENV=dev
       - CONFIG_DIR=/config
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel:4318
     volumes:
       - ./config:/config:ro
       - ./apps/worker/secrets.yml:/app/secrets.yml:ro

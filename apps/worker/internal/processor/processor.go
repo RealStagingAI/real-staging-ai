@@ -19,7 +19,7 @@ import (
 
 // SettingsRepository defines interface for getting settings.
 type SettingsRepository interface {
-	GetActiveModel(ctx context.Context) (model.ModelID, error)
+	GetActiveModel(ctx context.Context) (model.ID, error)
 }
 
 // ImageProcessor handles image processing jobs.

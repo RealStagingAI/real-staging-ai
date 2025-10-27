@@ -3,7 +3,9 @@ package telemetry
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
+	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -21,8 +23,17 @@ func InitTracing(ctx context.Context, serviceName string) (func(context.Context)
 		endpoint = "http://localhost:4318"
 	}
 
+	// Parse the endpoint to extract host:port
+	// The otlptracehttp.WithEndpoint() expects just host:port, not full URL
+	hostPort := endpoint
+	if strings.HasPrefix(endpoint, "http://") || strings.HasPrefix(endpoint, "https://") {
+		if parsedURL, err := url.Parse(endpoint); err == nil {
+			hostPort = parsedURL.Host
+		}
+	}
+
 	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint(endpoint),
+		otlptracehttp.WithEndpoint(hostPort),
 		otlptracehttp.WithInsecure(),
 	)
 	if err != nil {

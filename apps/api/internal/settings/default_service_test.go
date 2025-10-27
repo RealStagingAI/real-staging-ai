@@ -168,8 +168,8 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		if len(models) != 5 {
-			t.Fatalf("expected 5 models, got %d", len(models))
+		if len(models) != 6 {
+			t.Fatalf("expected 6 models, got %d", len(models))
 		}
 
 		// Check all models
@@ -178,6 +178,7 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 		fluxProFound := false
 		seedream3Found := false
 		seedream4Found := false
+		gptImage1Found := false
 		for _, model := range models {
 			if model.ID == "qwen/qwen-image-edit" {
 				qwenFound = true
@@ -209,6 +210,12 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 					t.Error("expected Seedream-4 model to not be active")
 				}
 			}
+			if model.ID == "openai/gpt-image-1" {
+				gptImage1Found = true
+				if model.IsActive {
+					t.Error("expected GPT Image 1 model to not be active")
+				}
+			}
 		}
 
 		if !qwenFound {
@@ -225,6 +232,9 @@ func TestDefaultService_ListAvailableModels(t *testing.T) {
 		}
 		if !seedream4Found {
 			t.Error("expected Seedream-4 model in list")
+		}
+		if !gptImage1Found {
+			t.Error("expected GPT Image 1 model in list")
 		}
 	})
 }
