@@ -38,7 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="h-full" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="h-full">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <UserProvider>
           <div className="flex min-h-screen flex-col">
             {/* Gradient Header */}
