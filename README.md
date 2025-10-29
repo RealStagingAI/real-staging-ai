@@ -44,11 +44,9 @@ make up
 
 4. Open the web app at: http://localhost:3000
 
-5. Open the analytics dashboard at: http://localhost:3001 (Metabase)
+5. Open API docs at: http://localhost:8080/api/v1/docs/
 
-6. Open API docs at: http://localhost:8080/api/v1/docs/
-
-7. Basic health check:
+6. Basic health check:
 
 ```bash
 curl -s http://localhost:8080/health

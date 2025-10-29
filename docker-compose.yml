@@ -7,7 +7,6 @@ services:
     ports: ["5432:5432"]
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./infra/init-metabase-db.sql:/docker-entrypoint-initdb.d/02-metabase.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -88,34 +87,6 @@ services:
     ports: ["8000:8000"]
     volumes:
       - ./apps/docs:/docs
-  metabase:
-    build:
-      context: .
-      dockerfile: apps/analytics/Dockerfile
-    environment:
-      - MB_DB_TYPE=postgres
-      - MB_DB_HOST=postgres
-      - MB_DB_PORT=5432
-      - MB_DB_DBNAME=metabase
-      - MB_DB_USER=postgres
-      - MB_DB_PASS=postgres
-      # Allow iframe embedding for local dev
-      - MB_ENABLE_EMBEDDING=true
-      - MB_EMBEDDING_SECRET_KEY=${MB_EMBEDDING_SECRET_KEY}
-    ports: ["3001:3000"]
-    volumes:
-      - metabase-data:/metabase-data
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      start_period: 60s
-      retries: 3
-
 volumes:
   postgres-data:
   minio-data:
-  metabase-data:
