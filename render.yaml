@@ -67,7 +67,6 @@ services:
     region: oregon  # Same region as API for lower latency
     plan: starter
     numInstances: 1
-
     envVars:
       - key: APP_ENV
         value: production
@@ -168,15 +167,6 @@ services:
       # Optional: Public API base for client-side calls
       - key: NEXT_PUBLIC_API_BASE
         value: /api
-
-  # Technical Docs Static Site
-  - type: pserv
-    name: realstaging-docs
-    runtime: static
-    buildCommand: make docs-install && make docs-build
-    plan: starter
-    staticPublishPath: apps/docs/site
-
   # Redis Service
   - type: redis
     name: realstaging-redis
