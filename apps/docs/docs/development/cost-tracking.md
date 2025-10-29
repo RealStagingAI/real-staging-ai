@@ -329,10 +329,9 @@ Set up alerts for:
 
 ## Related Documentation
 
-- [Model Registry](./model_registry.md)
-- [Model Package Refactor](./MODEL_PACKAGE_REFACTOR.md)
-- [Admin Model Selection](./ADMIN_MODEL_SELECTION.md)
-- [Worker Service](./worker_service.md)
+- [Model Registry](../development/model-registry.md)
+- [Model Package Refactor](../implementation-notes/model-refactors.md)
+- [Worker Service](../architecture/worker-service.md)
 
 ## Changelog
 

@@ -285,6 +285,5 @@ A: Uploads that completed before closing will be processed. In-progress uploads 
 
 ## Related Documentation
 
-- [API Documentation](../apps/api/web/api/v1/oas3.yaml) - OpenAPI specification
-- [Upload Flow](./frontend/PHASE1_IMPLEMENTATION.md) - Original upload implementation
-- [Testing Guide](./guides/TDD_GUIDE.md) - Testing best practices
+- [API Documentation](https://real-staging.ai/api/v1/docs) - OpenAPI specification
+- [Testing Guide](../guides/testing.md) - Testing best practices

@@ -218,7 +218,6 @@ Based on the current phase completion, recommended priorities for Phase 3:
 
 ## References
 
-- [Storage Reconciliation Operations Guide](/docs/operations/reconciliation.md)
-- [Stripe Webhook Rotation Guide](/docs/security/STRIPE_WEBHOOK_ROTATION.md)
-- [Phase 1 Frontend Implementation](/docs/frontend/PHASE1_IMPLEMENTATION.md)
-- [Integration Test Suite](/apps/api/tests/integration/reconcile_test.go)
+- [Storage Reconciliation Operations Guide](../../operations/reconciliation.md)
+- [Stripe Webhook Rotation Guide](../../security/stripe-webhooks.md)
+- [Phase 1 Frontend Implementation](../../implementation-notes/index.md)

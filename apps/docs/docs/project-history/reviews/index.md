@@ -36,9 +36,9 @@ These documents serve as:
 !!! warning "Historical Documents"
     These are point-in-time snapshots. For current documentation, see:
     
-    - [Architecture](../../architecture/)
-    - [Implementation Notes](../../implementation-notes/)
-    - [Development Guides](../../development/)
+    - [Architecture](../../architecture/index.md)
+    - [Implementation Notes](../../implementation-notes/index.md)
+    - [Development Guides](../../development/index.md)
 
 ## Format
 
@@ -63,6 +63,6 @@ Reviews occurred throughout 2025 development cycle, capturing:
 ---
 
 **For Current Information:**
-- [Architecture](../../architecture/)
-- [Development](../../development/)
+- [Architecture](../../architecture/index.md)
+- [Development](../../development/index.md)
 - [Contributing](../../development/contributing.md)

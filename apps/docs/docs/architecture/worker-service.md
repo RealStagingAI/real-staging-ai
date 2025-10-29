@@ -10,7 +10,7 @@ The job queue is implemented using Redis Lists, which provide a simple and relia
 
 ## AI Model Registry
 
-The worker uses a model registry system to support multiple AI models for virtual staging. Each model has its own API contract and is registered with metadata and an input builder. Models are defined in the `apps/worker/internal/staging/model/` package. See [`docs/model_registry.md`](./model_registry.md) for detailed architecture documentation.
+The worker uses a model registry system to support multiple AI models for virtual staging. Each model has its own API contract and is registered with metadata and an input builder. Models are defined in the `apps/worker/internal/staging/model/` package. See [`docs/development/model-registry.md`](../development/model-registry.md) for detailed architecture documentation.
 
 Currently supported models:
 - **Qwen Image Edit** (`qwen/qwen-image-edit`) - Fast image editing optimized for staging

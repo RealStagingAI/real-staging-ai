@@ -75,9 +75,9 @@ apps/worker/internal/staging/
    - Updated model constant: `model.ModelQwenImageEdit`
 
 4. **Documentation** (6 files updated)
-   - `docs/model_registry.md` - Added Flux Kontext, updated structure
-   - `docs/worker_service.md` - Added Flux Kontext to supported models
-   - `docs/guides/ADDING_NEW_MODEL.md` - Updated file paths and examples
+   - `../development/model-registry.md` - Added Flux Kontext, updated structure
+   - `../architecture/worker-service.md` - Added Flux Kontext to supported models
+   - `../guides/adding-models.md` - Updated file paths and examples
 
 ## New Model: Flux Kontext Max
 
@@ -247,10 +247,10 @@ stagingCfg := &staging.ServiceConfig{
 
 ## Related Documentation
 
-- [Model Registry Architecture](./model_registry.md)
-- [Adding New Models Guide](./guides/ADDING_NEW_MODEL.md)
-- [Worker Service Documentation](./worker_service.md)
-- [Testing Guidelines](./guides/TESTING.md)
+- [Model Registry Architecture](../development/model-registry.md)
+- [Adding New Models Guide](../guides/adding-models.md)
+- [Worker Service Documentation](../architecture/worker-service.md)
+- [Testing Guidelines](../guides/testing.md)
 
 ## Rollback Plan
 

@@ -12,7 +12,7 @@ This section contains archived documentation about the project's evolution, incl
 
 High-level project milestones and future plans.
 
-### [Phase 1](phase1/)
+### [Phase 1](phase1/index.md)
 
 Initial implementation focusing on core functionality:
 - Authentication and user management
@@ -24,7 +24,7 @@ Initial implementation focusing on core functionality:
 
 [Browse Phase 1 docs →](phase1/index.md)
 
-### [Phase 2](phase2/)
+### [Phase 2](phase2/index.md)
 
 Production hardening and feature expansion:
 - Multi-upload support
@@ -34,7 +34,18 @@ Production hardening and feature expansion:
 
 [Browse Phase 2 docs →](phase2/index.md)
 
-### [Code Reviews](reviews/)
+### Phase Completion Summaries
+
+Brief wrap-ups of each phase with outcomes and links to relevant artifacts:
+
+- [Phase 1 Complete](phase1-complete.md)
+- [Phase 2 Complete](phase2-complete.md)
+- [Phase 3 Complete](phase3-complete.md)
+- [Phase 4 Complete](phase4-complete.md)
+
+---
+
+### [Code Reviews](reviews/index.md)
 
 Archived code review summaries and analysis from development sprints.
 
@@ -54,9 +65,9 @@ These historical documents serve several purposes:
 !!! warning "Historical Documents"
     Documents in this section may be outdated. They represent the project state at the time of writing. For current documentation, see:
     
-    - [Architecture](../architecture/)
-    - [Guides](../guides/)
-    - [API Reference](../api-reference/)
+- [Architecture](../architecture/index.md)
+- [Guides](../guides/index.md)
+- [API Reference](../api-reference/index.md)
 
 ## Timeline
 
@@ -69,6 +80,6 @@ These historical documents serve several purposes:
 ---
 
 **For Current Information:**
-- [Getting Started](../getting-started/)
-- [Architecture](../architecture/)
-- [API Reference](../api-reference/)
+- [Getting Started](../getting-started/index.md)
+- [Architecture](../architecture/index.md)
+- [API Reference](../api-reference/index.md)

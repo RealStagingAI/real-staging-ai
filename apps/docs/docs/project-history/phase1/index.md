@@ -16,34 +16,34 @@ Phase 1 established the foundation of Real Staging AI with core functionality ne
 
 ## Architecture Documents
 
-### [API Design](api.md)
+### [API Design](API.md)
 RESTful API design, OpenAPI specification, endpoint planning
 
-### [Architecture](architecture.md)
+### [Architecture](ARCHITECTURE.md)
 System architecture, service interactions, component design
 
-### [Authentication](auth.md)
+### [Authentication](AUTH.md)
 Auth0 integration, JWT validation, user management
 
-### [Queue Design](queue.md)
+### [Queue Design](QUEUE.md)
 Redis-based job queue with Asynq, retry logic, dead letter queue
 
-### [S3 Storage](s3.md)
+### [S3 Storage](S3.md)
 Presigned URL strategy, bucket structure, security
 
-### [Database Schema](schema.md)
+### [Database Schema](SCHEMA.md)
 PostgreSQL schema design, relationships, migrations
 
-### [Security](security.md)
+### [Security](SECURITY.md)
 Security considerations, threat model, mitigation strategies
 
-### [Observability](observability.md)
+### [Observability](OBSERVABILITY.md)
 OpenTelemetry integration, metrics, traces, logs
 
-### [Setup](setup.md)
+### [Setup](SETUP.md)
 Development environment setup, configuration management
 
-### [Stripe Integration](stripe.md)
+### [Stripe Integration](STRIPE.md)
 Payment processing, subscription management, webhooks
 
 ## Key Decisions
@@ -194,6 +194,6 @@ Phase 1 delivered a working product. Phase 2 focused on:
 ---
 
 **Related:**
-- [Current Architecture](../../architecture/)
+- [Current Architecture](../../architecture/index.md)
 - [Roadmap](../roadmap.md)
 - [Phase 2 Planning](../phase2/index.md)

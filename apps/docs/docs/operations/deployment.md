@@ -1333,8 +1333,8 @@ kubectl exec -it -n realstaging <pod-name> -- aws s3 ls s3://$S3_BUCKET_NAME
 
 If issues persist:
 
-1. Check [Troubleshooting Guide](troubleshooting.md) for detailed scenarios
-2. Review [Monitoring Guide](monitoring.md) for observability setup
+1. Check the **Troubleshooting** section of the [Guides](../guides/index.md) for detailed scenarios
+2. Review [Monitoring](monitoring.md) for observability setup
 3. Check application logs for error details
 4. Verify all configuration matches [Configuration Guide](../guides/configuration.md)
 
@@ -1363,6 +1363,5 @@ After deploying to production:
 
 - [Configuration Guide](../guides/configuration.md) - All environment variables
 - [Monitoring Guide](monitoring.md) - Observability and alerting
-- [Database Maintenance](database-maintenance.md) - Backup and restore procedures
-- [Troubleshooting Guide](troubleshooting.md) - Common issues and fixes
+- [Troubleshooting Guide](deployment.md#troubleshooting-deployments) - Common issues and fixes
 - [Stripe Billing Guide](../guides/stripe-billing.md) - Payment configuration

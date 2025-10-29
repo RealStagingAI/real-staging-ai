@@ -8,13 +8,13 @@ This guide walks through setting up Real Staging AI for local development.
 
 Ensure you have the following installed:
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| **Docker** | 20.10+ | Container runtime |
-| **Docker Compose** | 2.0+ | Multi-container orchestration |
-| **Go** | 1.22+ | Backend API and worker |
-| **Node.js** | 18+ | Frontend application |
-| **Make** | Any | Build automation |
+| Tool               | Version | Purpose                       |
+| ------------------ | ------- | ----------------------------- |
+| **Docker**         | 20.10+  | Container runtime             |
+| **Docker Compose** | 2.0+    | Multi-container orchestration |
+| **Go**             | 1.22+   | Backend API and worker        |
+| **Node.js**        | 18+     | Frontend application          |
+| **Make**           | Any     | Build automation              |
 
 ### External Services
 
@@ -45,7 +45,7 @@ export REPLICATE_API_TOKEN=r8_your_token_here
 ```
 
 !!! tip "Persistent Configuration"
-    Add the export to your `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish` to persist across sessions.
+Add the export to your `~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish` to persist across sessions.
 
 ## Step 3: Configure Auth0 (Optional for Basic Testing)
 
@@ -96,11 +96,13 @@ curl -s http://localhost:8080/health | jq
 ```
 
 Open the web app:
+
 ```
 http://localhost:3000
 ```
 
 Open the API docs:
+
 ```
 http://localhost:8080/api/v1/docs/
 ```
@@ -172,6 +174,7 @@ Edit with your credentials. **Never commit secrets files!**
 ### Docker Issues
 
 **Port conflicts:**
+
 ```bash
 # Check what's using a port
 lsof -i :8080
@@ -181,6 +184,7 @@ make down
 ```
 
 **Permission issues:**
+
 ```bash
 # Fix Docker permissions (Linux)
 sudo usermod -aG docker $USER
@@ -190,6 +194,7 @@ newgrp docker
 ### Database Issues
 
 **Connection refused:**
+
 ```bash
 # Check PostgreSQL is healthy
 docker compose ps postgres
@@ -199,6 +204,7 @@ docker compose logs postgres
 ```
 
 **Reset database:**
+
 ```bash
 make migrate-down-dev
 make migrate
@@ -207,6 +213,7 @@ make migrate
 ### Replicate Issues
 
 **Invalid token:**
+
 ```bash
 # Verify token is set
 echo $REPLICATE_API_TOKEN
@@ -229,7 +236,7 @@ curl -H "Authorization: Token $REPLICATE_API_TOKEN" \
 
 - [Create Your First Project](first-project.md)
 - [Learn about Configuration](../guides/configuration.md)
-- [Explore the Architecture](../architecture/)
+- [Explore the Architecture](../architecture/index.md)
 
 ## Development Tips
 

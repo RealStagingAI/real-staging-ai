@@ -4,7 +4,7 @@ This guide walks through the process of adding a new AI model to the Real Stagin
 
 ## Prerequisites
 
-- Understanding of the [Model Registry Architecture](../model_registry.md)
+- Understanding of the [Model Registry Architecture](../development/model-registry.md)
 - Access to the new model's API documentation
 - Go development environment set up
 

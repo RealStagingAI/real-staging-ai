@@ -57,7 +57,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]  # Use debug exporter for development, jaeger for production
+      exporters: [debug] # Use debug exporter for development, jaeger for production
     metrics:
       receivers: [otlp]
       processors: [batch]
@@ -1310,6 +1310,5 @@ Before going to production:
 **Related:**
 
 - [Deployment Guide](deployment.md)
-- [Troubleshooting Guide](troubleshooting.md)
-- [Database Maintenance](database-maintenance.md)
+- [Troubleshooting Guide](deployment.md#troubleshooting-deployments)
 - [Configuration](../guides/configuration.md)

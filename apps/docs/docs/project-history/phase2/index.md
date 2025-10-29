@@ -96,6 +96,6 @@ Phase 3 focused on:
 ---
 
 **Related:**
-- [Phase 1 Planning](../phase1/)
-- [Implementation Notes](../../implementation-notes/)
+- [Phase 1 Planning](../phase1/index.md)
+- [Implementation Notes](../../implementation-notes/index.md)
 - [Roadmap](../roadmap.md)

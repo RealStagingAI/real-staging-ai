@@ -199,10 +199,15 @@ nav:
   
   - Architecture:
     - architecture/index.md
+    - Model Settings Architecture: architecture/model-settings-architecture.md
     - API Service: architecture/api-service.md
     - Worker Service: architecture/worker-service.md
     - Database: architecture/database.md
     - Tech Stack: architecture/tech-stack.md
+  
+  - Features:
+    - features/index.md
+    - Billing and Usage: features/billing-and-usage.md
   
   - Guides:
     - guides/index.md
@@ -227,7 +232,6 @@ nav:
       - Database Migrations: operations/migrations.md
       - Storage Reconciliation: operations/reconciliation.md
       - Monitoring: operations/monitoring.md
-      - Visibility & Analytics: operations/visibility-analytics.md
   
   - API Reference:
     - api-reference/index.md
@@ -256,20 +260,28 @@ nav:
     - Roadmap: project-history/roadmap.md
     - Phase 1:
       - project-history/phase1/index.md
-      - API Design: project-history/phase1/api.md
-      - Architecture: project-history/phase1/architecture.md
-      - Authentication: project-history/phase1/auth.md
-      - Queue Design: project-history/phase1/queue.md
-      - S3 Storage: project-history/phase1/s3.md
-      - Database Schema: project-history/phase1/schema.md
-      - Security: project-history/phase1/security.md
-      - Observability: project-history/phase1/observability.md
-      - Setup: project-history/phase1/setup.md
-      - Stripe Integration: project-history/phase1/stripe.md
+      - API Design: project-history/phase1/API.md
+      - Architecture: project-history/phase1/ARCHITECTURE.md
+      - Authentication: project-history/phase1/AUTH.md
+      - Queue Design: project-history/phase1/QUEUE.md
+      - S3 Storage: project-history/phase1/S3.md
+      - Database Schema: project-history/phase1/SCHEMA.md
+      - Security: project-history/phase1/SECURITY.md
+      - Observability: project-history/phase1/OBSERVABILITY.md
+      - Setup: project-history/phase1/SETUP.md
+      - Stripe Integration: project-history/phase1/STRIPE.md
     - Phase 2:
       - project-history/phase2/index.md
     - Code Reviews:
       - project-history/reviews/index.md
+    - Phase Completion Summaries:
+      - Phase 1: project-history/phase1-complete.md
+      - Phase 2: project-history/phase2-complete.md
+      - Phase 3: project-history/phase3-complete.md
+      - Phase 4: project-history/phase4-complete.md
   
+  - Includes:
+    - Abbreviations: includes/abbreviations.md
+
   - Legal:
     - License: legal/license.md

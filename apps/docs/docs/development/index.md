@@ -139,7 +139,7 @@ Before submitting a PR:
 - [Contributing Guide](contributing.md) - Full contribution process
 - [Repository Guidelines](repository-guidelines.md) - Detailed coding standards
 - [Testing Guide](../guides/testing.md) - Comprehensive testing docs
-- [Architecture](../architecture/) - System design and components
+- [Architecture](../architecture/index.md) - System design and components
 
 ## Getting Help
 

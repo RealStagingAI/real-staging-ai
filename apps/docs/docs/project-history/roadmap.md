@@ -194,7 +194,7 @@ We follow [Semantic Versioning](https://semver.org/):
 - [ ] Full test coverage (>80%)
 - [ ] Production deployment proven
 - [x] API stability guaranteed
-- [ ] **Documentation complete (75% - see [planning docs](../../../planning/))**
+- [ ] **Documentation complete (75% - see ../../planning/README.md)**
   - [x] Architecture & API Reference
   - [x] Getting Started & Guides
   - [ ] Complete Deployment Guide (P0)
@@ -218,10 +218,10 @@ Your feedback shapes the roadmap! Please:
 ---
 
 **Historical Roadmap Documents:**
-- [Phase 1 Planning](phase1/)
-- [Phase 2 Planning](phase2/)
+- [Phase 1 Planning](phase1/index.md)
+- [Phase 2 Planning](phase2/index.md)
 
 **Current Documentation:**
-- [Getting Started](../getting-started/)
-- [Architecture](../architecture/)
+- [Getting Started](../getting-started/index.md)
+- [Architecture](../architecture/index.md)
 - [Contributing](../development/contributing.md)

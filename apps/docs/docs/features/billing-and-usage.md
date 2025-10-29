@@ -282,7 +282,7 @@ Monitor in Render or your observability platform:
 
 ## Related Documentation
 
-- [Stripe Integration](../integrations/stripe.md)
-- [API Reference](../../api/v1/oas3.yaml)
+- [Stripe Billing](../guides/stripe-billing.md)
+- [API Reference](../api-reference/openapi.md)
 - [Database Schema](../architecture/database.md)
 - [Production Checklist](../operations/production-checklist.md)

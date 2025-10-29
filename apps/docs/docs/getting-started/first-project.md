@@ -238,8 +238,8 @@ Using the web UI at http://localhost:3000:
 ## Next Steps
 
 - [Learn about Configuration](../guides/configuration.md)
-- [Explore the Architecture](../architecture/)
-- [Read the API Reference](../api-reference/)
+- [Explore the Architecture](../architecture/index.md)
+- [Read the API Reference](../api-reference/index.md)
 - [Set up Authentication](../guides/authentication.md)
 
 ## Troubleshooting

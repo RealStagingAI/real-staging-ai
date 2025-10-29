@@ -80,10 +80,10 @@ graph LR
 ## Quick Links
 
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
-  <a href="getting-started/" class="md-button md-button--primary" style="text-align: center;">Get Started →</a>
-  <a href="architecture/" class="md-button" style="text-align: center;">Architecture</a>
-  <a href="guides/" class="md-button" style="text-align: center;">Guides</a>
-  <a href="api-reference/" class="md-button" style="text-align: center;">API Reference</a>
+  <a href="getting-started/index.md" class="md-button md-button--primary" style="text-align: center;">Get Started →</a>
+  <a href="architecture/index.md" class="md-button" style="text-align: center;">Architecture</a>
+  <a href="guides/index.md" class="md-button" style="text-align: center;">Guides</a>
+  <a href="api-reference/index.md" class="md-button" style="text-align: center;">API Reference</a>
 </div>
 
 ## Monorepo Structure
@@ -108,11 +108,11 @@ real-staging-ai/
 
 ## Getting Help
 
-- Read the [Getting Started Guide](getting-started/)
-- Check the [Guides](guides/) for specific topics
-- Review [Architecture Documentation](architecture/) for system design
-- See [Contributing Guidelines](development/contributing/) to get involved
+- Read the [Getting Started Guide](getting-started/index.md)
+- Check the [Guides](guides/index.md) for specific topics
+- Review [Architecture Documentation](architecture/index.md) for system design
+- See [Contributing Guidelines](development/contributing.md) to get involved
 
 ---
 
-**Ready to dive in?** Start with the [Installation Guide](getting-started/installation/) to set up your development environment.
+**Ready to dive in?** Start with the [Installation Guide](getting-started/index.md#installation) to set up your development environment.

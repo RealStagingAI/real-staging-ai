@@ -405,7 +405,7 @@ export TOKEN=$(make token | jq -r .access_token)
 ```env
 # Production
 AUTH0_DOMAIN=prod-company.us.auth0.com
-AUTH0_AUDIENCE=https://api.real-staging.ai
+AUTH0_AUDIENCE=https://real-staging.ai
 AUTH0_CLIENT_ID=<production-client-id>
 AUTH0_CLIENT_SECRET=<production-secret>
 ```
@@ -473,5 +473,5 @@ func TestIntegration(t *testing.T) {
 **Related Documentation:**
 
 - [Configuration Guide](configuration.md)
-- [API Reference](../api-reference/)
-- [Security](../security/)
+- [API Reference](../api-reference/index.md)
+- [Security](../security/index.md)

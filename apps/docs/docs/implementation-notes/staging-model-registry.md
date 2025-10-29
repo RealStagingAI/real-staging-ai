@@ -33,11 +33,11 @@ The staging service has been refactored to support multiple AI models through a 
    - Tests for `DefaultService` model registry integration
    - Tests for config validation and error handling
 
-6. **`docs/model_registry.md`**
+6. **[Model Registry Architecture](../development/model-registry.md)**
    - Architecture documentation for the model registry system
    - Explains design decisions and usage patterns
 
-7. **`docs/guides/ADDING_NEW_MODEL.md`**
+7. **[Adding a New Model](../guides/adding-models.md)**
    - Step-by-step guide for adding new models
    - Includes code examples and best practices
 
@@ -63,7 +63,7 @@ The staging service has been refactored to support multiple AI models through a 
    - Removed `model_version: qwen/qwen-image-edit` configuration
    - Added comment explaining model selection is now in code
 
-5. **`docs/worker_service.md`**
+5. **[Worker Service Architecture](../architecture/worker-service.md)**
    - Added "AI Model Registry" section
    - Documented currently supported models
    - Referenced architecture documentation
@@ -110,7 +110,7 @@ These changes can be deployed without downtime:
 
 When adding a new model:
 
-1. Follow the guide: `docs/guides/ADDING_NEW_MODEL.md`
+1. Follow the guide: [Adding a New Model](../guides/adding-models.md)
 2. Define a new `ModelID` constant
 3. Implement `ModelInputBuilder` interface
 4. Register in `NewModelRegistry()`
@@ -192,13 +192,13 @@ No database changes were made, so rollback is safe.
 
 ## Related Documents
 
-- [Model Registry Architecture](./model_registry.md)
-- [Adding a New Model Guide](./guides/ADDING_NEW_MODEL.md)
-- [Worker Service Documentation](./worker_service.md)
-- [Repository Guidelines](../AGENTS.md)
+- [Model Registry Architecture](../development/model-registry.md)
+- [Adding a New Model Guide](../guides/adding-models.md)
+- [Worker Service Documentation](../architecture/worker-service.md)
+- [Repository Guidelines](https://github.com/RealStagingAI/real-staging-ai/blob/main/AGENTS.md)
 
 ## Questions or Issues?
 
-- Check the architecture doc: `docs/model_registry.md`
+- Check the architecture doc: [Model Registry Architecture](../development/model-registry.md)
 - Review the test files for usage examples
 - Create an issue in the repository

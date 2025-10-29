@@ -60,9 +60,9 @@ Details the migration to a centralized model registry system for managing multip
 
 **You can skip these if you:**
 
-- Just want to use the API (see [API Reference](../api-reference/))
-- Are getting started (see [Getting Started](../getting-started/))
-- Need operational guides (see [Operations](../operations/))
+- Just want to use the API (see [API Reference](../api-reference/index.md))
+- Are getting started (see [Getting Started](../getting-started/index.md))
+- Need operational guides (see [Operations](../operations/index.md))
 
 ## Document Structure
 
@@ -77,9 +77,9 @@ Each implementation note follows this structure:
 
 ## Related Documentation
 
-- [Architecture](../architecture/) - System design overview
-- [Development](../development/) - Contributing guidelines
-- [Guides](../guides/) - How-to guides for common tasks
+- [Architecture](../architecture/index.md) - System design overview
+- [Development](../development/index.md) - Contributing guidelines
+- [Guides](../guides/index.md) - How-to guides for common tasks
 
 ---
 

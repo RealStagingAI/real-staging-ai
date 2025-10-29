@@ -44,7 +44,7 @@ Each config includes:
 - `apps/worker/internal/staging/model/config.go` (467 lines)
 - `infra/migrations/0015_add_model_settings.up.sql`
 - `infra/migrations/0015_add_model_settings.down.sql`
-- `apps/docs/docs/development/model-settings-architecture.md`
+- `apps/docs/docs/architecture/model-settings-architecture.md`
 
 **Modified:**
 - `apps/worker/internal/staging/model/registry.go` - Added DefaultConfig to metadata

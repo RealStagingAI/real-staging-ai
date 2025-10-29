@@ -404,11 +404,11 @@ The easiest way to configure models is through the admin UI:
 The UI dynamically generates form fields based on the model's schema, so new models automatically get proper configuration interfaces.
 
 **For more details, see:**
-- [Model Settings Architecture](/development/model-settings-architecture.md)
-- [Phase 1 Complete](/development/phase1-complete.md)
-- [Phase 2 Complete](/development/phase2-complete.md)
-- [Phase 3 Complete](/development/phase3-complete.md)
-- [Phase 4 Complete](/development/phase4-complete.md)
+- [Model Settings Architecture](../architecture/model-settings-architecture.md)
+- [Phase 1 Complete](../project-history/phase1-complete.md)
+- [Phase 2 Complete](../project-history/phase2-complete.md)
+- [Phase 3 Complete](../project-history/phase3-complete.md)
+- [Phase 4 Complete](../project-history/phase4-complete.md)
 
 ## Settings Management
 

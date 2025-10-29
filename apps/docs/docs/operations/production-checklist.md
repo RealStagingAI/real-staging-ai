@@ -580,7 +580,7 @@ Deployment is successful when:
 
 If you encounter issues:
 
-1. Check the [Troubleshooting Guide](troubleshooting.md)
+1. Check the [Troubleshooting Guide](deployment.md#troubleshooting-deployments)
 2. Review service logs in Render dashboard
 3. Check [Render Status](https://status.render.com/)
 4. Check [Backblaze Status](https://status.backblaze.com/)
