@@ -10,6 +10,13 @@ import type { BackendProfile } from '@/lib/profile';
 export default function Page() {
   const { user, isLoading, error } = useUser();
   const [profileName, setProfileName] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  
+  // Set profileLoading to true immediately when we have a user but no profile yet
+  const shouldLoadProfile = user && !profileName && !profileLoading;
+  if (shouldLoadProfile) {
+    setProfileLoading(true);
+  }
 
   const displayName = (() => {
     if (profileName && profileName.trim().length > 0) return profileName;
@@ -35,11 +42,20 @@ export default function Page() {
       if (!user) return;
       try {
         const p = await apiFetch<BackendProfile>('/v1/user/profile');
-        if (!cancelled && p?.full_name) {
-          setProfileName(p.full_name);
+
+        if (!cancelled && p?.full_name && p.full_name.trim().length > 0) {
+          setProfileName(p.full_name.trim());
+          return;
+        }
+        if (!profileName && p?.id) {
+          setProfileName(displayName);
         }
       } catch {
         // ignore, fall back to Auth0 name heuristics
+      } finally {
+        if (!cancelled) {
+          setProfileLoading(false);
+        }
       }
     })();
     return () => {
@@ -47,7 +63,7 @@ export default function Page() {
     };
   }, [user]);
 
-  if (isLoading) {
+  if (isLoading || profileLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <div className="relative">
