@@ -106,8 +106,12 @@ export default function BillingPage() {
   };
 
   const getUsagePercentage = () => {
-    if (!usage) return 0;
-    return (usage.images_used / usage.monthly_limit) * 100;
+    const used = Number(usage?.images_used ?? 0);
+    const limit = Number(usage?.monthly_limit ?? 0);
+    if (!isFinite(used) || !isFinite(limit) || limit <= 0) return 0;
+    const pct = (used / limit) * 100;
+    if (!isFinite(pct) || isNaN(pct)) return 0;
+    return Math.max(0, Math.min(100, pct));
   };
 
   const getUsageColor = () => {
