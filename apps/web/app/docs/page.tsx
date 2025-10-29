@@ -213,44 +213,6 @@ export default function DocsPage() {
           </details>
         </div>
       </div>
-
-      {/* Developer Resources */}
-      <div className="border-t border-gray-200 dark:border-gray-800 pt-12">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-          Developer Resources
-        </h2>
-        
-        <div className="grid gap-6 sm:grid-cols-2">
-          <a
-            href="https://api.real-staging.ai/api/v1/docs/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border border-gray-200 dark:border-gray-800 rounded-lg p-6 bg-white dark:bg-slate-900 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              API Documentation →
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Complete REST API reference with authentication, endpoints, and examples.
-            </p>
-          </a>
-
-          <a
-            href="https://docs.real-staging.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border border-gray-200 dark:border-gray-800 rounded-lg p-6 bg-white dark:bg-slate-900 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Technical Documentation →
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">
-              Architecture guides, deployment instructions, and integration tutorials.
-            </p>
-          </a>
-        </div>
-      </div>
     </div>
   );
 }
