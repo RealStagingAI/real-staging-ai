@@ -238,6 +238,26 @@ export default function ImagesPage() {
     setPreviewImageId(null);
   }, []);
 
+  // Download image to local file system (hoisted before preview key handler)
+  const downloadImage = useCallback(async (imageId: string, kind: 'original' | 'staged') => {
+    try {
+      const params = new URLSearchParams({ kind, download: '1' });
+      const res = await apiFetch<{ url: string }>(`/v1/images/${imageId}/presign?${params.toString()}`);
+      if (res?.url) {
+        const link = document.createElement('a');
+        link.href = res.url;
+        link.download = '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err: unknown) {
+      console.error('Failed to download image:', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setStatusMessage(`Download failed: ${message}`);
+    }
+  }, []);
+
   // Keyboard navigation for preview
   useEffect(() => {
     if (!previewImageId) return;
@@ -260,12 +280,20 @@ export default function ImagesPage() {
       } else if (e.key === ' ' || e.key === 't' || e.key === 'T') {
         e.preventDefault();
         togglePreviewMode();
+      } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        // Download the currently displayed image in preview
+        const currentImage = previewImages[currentPreviewIndex];
+        if (currentImage) {
+          const kind: 'original' | 'staged' = (previewMode === 'staged' && currentImage.staged_url) ? 'staged' : 'original';
+          downloadImage(currentImage.id, kind);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [previewImageId, goToPreviousImage, goToNextImage, closePreview, togglePreviewMode]);
+  }, [previewImageId, goToPreviousImage, goToNextImage, closePreview, togglePreviewMode, downloadImage, previewMode, previewImages, currentPreviewIndex]);
 
   // Get presigned S3 URL for viewing (with caching)
   async function getPresignedUrl(imageId: string, kind: 'original' | 'staged'): Promise<string | null> {
@@ -380,29 +408,6 @@ export default function ImagesPage() {
     }
   }, [imageUrls]);
 
-  // Download image to local file system
-  async function downloadImage(imageId: string, kind: 'original' | 'staged') {
-    try {
-      // Get presigned URL with download parameter
-      const params = new URLSearchParams({ kind, download: '1' });
-      const res = await apiFetch<{ url: string }>(`/v1/images/${imageId}/presign?${params.toString()}`);
-      
-      if (res?.url) {
-        // Create a temporary anchor element to trigger download
-        const link = document.createElement('a');
-        link.href = res.url;
-        link.download = ''; // Let browser determine filename from Content-Disposition header
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (err: unknown) {
-      console.error('Failed to download image:', err);
-      const message = err instanceof Error ? err.message : String(err);
-      setStatusMessage(`Download failed: ${message}`);
-    }
-  }
-
   const downloadSelected = useCallback(async () => {
     const count = selectedImageIds.size;
     
@@ -490,7 +495,7 @@ export default function ImagesPage() {
       setStatusMessage(`Download failed: ${message}`);
       setTimeout(() => setStatusMessage(''), 5000);
     }
-  }, [selectedImageIds, images, downloadType, selectedProject]);
+  }, [selectedImageIds, images, downloadType, selectedProject, downloadImage]);
 
   async function loadProjects() {
     setLoadingProjects(true);
@@ -854,7 +859,7 @@ export default function ImagesPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [images, focusedImageId, selectedImageIds, viewMode, showKeyboardHelp, downloadType, toggleImageSelection, deleteImage, deleteSelected, downloadSelected, getGridColumns]);
+  }, [images, focusedImageId, selectedImageIds, viewMode, showKeyboardHelp, downloadType, toggleImageSelection, deleteImage, deleteSelected, downloadSelected, getGridColumns, downloadImage]);
 
   // Set initial focus when images load
   useEffect(() => {
@@ -1756,15 +1761,20 @@ export default function ImagesPage() {
                 </button>
               )}
 
-              {/* Image Details */}
-              <div className="px-3 py-2 sm:px-4 sm:py-3 bg-black/60 backdrop-blur-sm rounded-lg">
-                <p className="text-white text-xs sm:text-sm">
-                  {currentImage.room_type || 'Untitled'}
-                </p>
-                <p className="text-white/60 text-xs mt-0.5 sm:mt-1">
-                  {formatRelativeTime(currentImage.updated_at)}
-                </p>
-              </div>
+              {/* Download current image */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const kind: 'original' | 'staged' = (previewMode === 'staged' && currentImage.staged_url) ? 'staged' : 'original';
+                  downloadImage(currentImage.id, kind);
+                }}
+                className="px-4 py-2.5 sm:px-6 sm:py-3 bg-white/10 hover:bg-white/20 active:bg-white/30 backdrop-blur-sm rounded-lg transition-colors flex items-center justify-center gap-2 touch-manipulation"
+                title="Download (D)"
+                aria-label="Download current image"
+              >
+                <Download className="h-4 w-4 text-white" />
+                <span className="text-white text-sm sm:text-base font-medium">Download</span>
+              </button>
             </div>
           </div>
         );
