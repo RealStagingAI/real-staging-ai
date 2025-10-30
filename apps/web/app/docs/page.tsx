@@ -1,4 +1,4 @@
-import { BookOpen, Upload, Wand2, CreditCard, HelpCircle } from 'lucide-react';
+import { Upload, Wand2, CreditCard, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata = {
