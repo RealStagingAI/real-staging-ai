@@ -1,7 +1,7 @@
 'use client';
 
 import { useUser } from '@auth0/nextjs-auth0';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Sparkles, Upload, ImageIcon, Zap, Shield, Clock, ArrowRight, AlertCircle } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
@@ -18,8 +18,7 @@ export default function Page() {
     setProfileLoading(true);
   }
 
-  const displayName = (() => {
-    if (profileName && profileName.trim().length > 0) return profileName;
+  const fallbackDisplayName = useMemo(() => {
     if (user?.name && !user.name.includes('@')) return user.name;
     if (user?.given_name) return user.family_name ? `${user.given_name} ${user.family_name}` : user.given_name;
     if (user?.nickname) return user.nickname;
@@ -34,21 +33,35 @@ export default function Page() {
       return pretty || local;
     }
     return 'there';
-  })();
+  }, [user]);
+
+  const displayName = profileName && profileName.trim().length > 0 ? profileName : fallbackDisplayName;
 
   useEffect(() => {
+    if (!user) {
+      setProfileLoading(false);
+      return;
+    }
+
+    if (profileName) {
+      return;
+    }
+
     let cancelled = false;
+
     (async () => {
-      if (!user) return;
       try {
         const p = await apiFetch<BackendProfile>('/v1/user/profile');
 
-        if (!cancelled && p?.full_name && p.full_name.trim().length > 0) {
+        if (cancelled) return;
+
+        if (p?.full_name && p.full_name.trim().length > 0) {
           setProfileName(p.full_name.trim());
           return;
         }
-        if (!profileName && p?.id) {
-          setProfileName(displayName);
+
+        if (p?.id) {
+          setProfileName(fallbackDisplayName);
         }
       } catch {
         // ignore, fall back to Auth0 name heuristics
@@ -58,10 +71,11 @@ export default function Page() {
         }
       }
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, profileName, fallbackDisplayName]);
 
   if (isLoading || profileLoading) {
     return (
