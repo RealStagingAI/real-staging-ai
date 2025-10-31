@@ -80,9 +80,9 @@ export default function BillingPage() {
     try {
       // Get the price ID based on plan code
       const priceIds: Record<string, string> = {
-        free: process.env.NEXT_PUBLIC_STRIPE_PRICE_FREE || 'price_1SK67rLpUWppqPSl2XfvuIlh',
-        pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || 'price_1SJmy5LpUWppqPSlNElnvowM',
-        business: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS || 'price_1SJmyqLpUWppqPSlGhxfz2oQ',
+        free: process.env.NEXT_PUBLIC_STRIPE_PRICE_FREE || '',
+        pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || '',
+        business: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS || '',
       };
 
       const response = await apiFetch<{ url: string }>('/v1/billing/create-checkout', {
@@ -241,7 +241,7 @@ export default function BillingPage() {
                   Current Plan
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {usage?.plan_code ? `${usage.plan_code.toUpperCase()} Plan` : 'Loading...'}
+                  {usage?.plan_code ? `${usage.plan_code.toUpperCase()} Plan` : 'No Plan'}
                   {subscription && ` • ${subscription.status === 'trialing' ? 'Trial' : 'Active'}`}
                 </p>
                 {subscription && subscription.current_period_start && subscription.current_period_end && (
@@ -263,7 +263,7 @@ export default function BillingPage() {
               </div>
             </div>
 
-            {subscription && (
+            {subscription && usage?.plan_code == 'business' && (
               <button
                 onClick={handleManageSubscription}
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors touch-manipulation w-full sm:w-auto"
@@ -322,18 +322,24 @@ export default function BillingPage() {
         <div className="card">
           <div className="card-body">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">
-              {usage.plan_code === 'free' ? 'Choose a Plan' : 'Upgrade Your Plan'}
+              {(usage.plan_code === 'free' || usage.plan_code === '') ? 'Choose a Plan' : 'Upgrade Your Plan'}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Free Plan */}
-              {usage.plan_code === 'free' && !subscription && (
+              {(usage.plan_code === 'free' || usage.plan_code === '') && !subscription && (
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h3>
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    No credit card required
+                  </p>
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$0<span className="text-base sm:text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                   <ul className="mt-4 space-y-2">
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
-                      10 images per month
+                      100 images per month (Limited Time)
                     </li>
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
@@ -348,12 +354,12 @@ export default function BillingPage() {
                     onClick={() => handleUpgrade('free')}
                     className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-gray-600 text-white text-sm sm:text-base rounded-lg hover:bg-gray-700 transition-colors touch-manipulation"
                   >
-                    Continue with Free
+                  {usage.plan_code === 'free' ? 'Continue with Free' : 'Subscribe to Free'}
                   </button>
                 </div>
               )}
               {/* Pro Plan - only show to free users */}
-              {usage.plan_code === 'free' && (
+              {(usage.plan_code === 'free' || usage.plan_code === '') && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6 hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Pro</h3>
                 <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$29<span className="text-base sm:text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
@@ -372,7 +378,7 @@ export default function BillingPage() {
                   </li>
                 </ul>
                 <button
-                  onClick={() => handleUpgrade('pro')}
+                  onClick={usage.plan_code === '' ? () => handleUpgrade('pro') : handleManageSubscription}
                   className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
                 >
                   {subscription ? 'Upgrade to Pro' : 'Subscribe to Pro'}
@@ -402,7 +408,7 @@ export default function BillingPage() {
                   </li>
                 </ul>
                 <button
-                  onClick={() => handleUpgrade('business')}
+                  onClick={usage.plan_code === '' ? () => handleUpgrade('business') : handleManageSubscription}
                   className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-purple-600 text-white text-sm sm:text-base rounded-lg hover:bg-purple-700 transition-colors touch-manipulation"
                 >
                   {subscription ? 'Upgrade to Business' : 'Subscribe to Business'}

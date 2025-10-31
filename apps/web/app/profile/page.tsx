@@ -17,7 +17,6 @@ import {
   Bell,
   Palette,
   Home,
-  Receipt
 } from 'lucide-react';
 import { apiFetch } from '@/lib/api';
 import { toFormData, buildUpdatePayload } from '@/lib/profile';
@@ -258,7 +257,7 @@ function ProfilePageContent() {
     }
   };
 
-  const handleManageBilling = async () => {
+  const handleManageSubscription = async () => {
     try {
       const data = await apiFetch<{ url: string }>('/v1/billing/portal', {
         method: 'POST',
@@ -475,11 +474,16 @@ function ProfilePageContent() {
             <h2 className="text-xl font-semibold">Payment & Billing</h2>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <button
+            onClick={() => handleManageSubscription()}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
             Manage your subscription and payment methods
+          </button>
           </p>
         </div>
         <div className="card-body space-y-6">
-          {usage && (
+          {usage && usage.plan_code !== '' && (
             <div className="space-y-4">
               {/* Current Plan Display */}
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -497,6 +501,8 @@ function ProfilePageContent() {
                     </p>
                   )}
                 </div>
+
+                {/* Manage Subscription Button (for paid plans) */}
                 <div className="text-right">
                   {usage.plan_code === 'free' && (
                     <div className="text-3xl font-bold text-blue-900 dark:text-blue-300">$0<span className="text-lg text-blue-600 dark:text-blue-500">/mo</span></div>
@@ -509,17 +515,6 @@ function ProfilePageContent() {
                   )}
                 </div>
               </div>
-
-              {/* Manage Subscription Button (for paid plans) */}
-              {subscription && usage.plan_code !== 'free' && (
-                <button
-                  onClick={handleManageBilling}
-                  className="w-full btn btn-outline flex items-center justify-center gap-2"
-                >
-                  <Receipt className="h-4 w-4" />
-                  Manage Subscription & Payment Methods
-                </button>
-              )}
 
               {/* Upgrade Options */}
               {usage.plan_code !== 'business' && (
@@ -553,7 +548,7 @@ function ProfilePageContent() {
                           </li>
                         </ul>
                         <button
-                          onClick={() => handleSubscribe('pro')}
+                          onClick={() => handleManageSubscription()}
                           className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                         >
                           Upgrade to Pro
@@ -587,7 +582,7 @@ function ProfilePageContent() {
                         </li>
                       </ul>
                       <button
-                        onClick={() => handleSubscribe('business')}
+                        onClick={() => handleManageSubscription()}
                         className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
                       >
                         Upgrade to Business
@@ -612,7 +607,7 @@ function ProfilePageContent() {
           )}
 
           {/* No usage data available - show all plans */}
-          {!usage && !subscription && (
+          {(!usage || usage.plan_code === '') && !subscription && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Choose a Plan
@@ -622,11 +617,17 @@ function ProfilePageContent() {
                 {/* Free Plan */}
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h4>
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
+                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    No credit card required
+                  </p>
                   <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$0<span className="text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                   <ul className="mt-4 space-y-2">
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
-                      10 images per month
+                      100 images per month (Limited Time)
                     </li>
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-gray-600" />
@@ -641,7 +642,7 @@ function ProfilePageContent() {
                     onClick={() => handleSubscribe('free')}
                     className="w-full mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
                   >
-                    Continue with Free
+                    {usage?.plan_code === 'free' ? 'Continue with Free' : 'Subscribe to Free'}
                   </button>
                 </div>
 
