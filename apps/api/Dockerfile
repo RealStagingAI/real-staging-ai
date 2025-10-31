@@ -15,7 +15,6 @@ COPY apps/api/ ./
 # -o /api-server: specify the output file name
 # ./cmd/api: specify the main package to build
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /api-server ./cmd/api
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /reconcile ./cmd/reconcile
 
 # ---- Runner ----
 FROM alpine:latest
@@ -36,7 +35,6 @@ WORKDIR /app
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /api-server /app/api-server
-COPY --from=builder /reconcile /app/reconcile
 
 # Copy migration files (context is root, so infra/ is accessible)
 COPY infra/migrations /app/migrations

@@ -16,7 +16,6 @@ import (
 	"github.com/real-staging-ai/api/internal/image"
 	"github.com/real-staging-ai/api/internal/logging"
 	"github.com/real-staging-ai/api/internal/project"
-	"github.com/real-staging-ai/api/internal/reconcile"
 	"github.com/real-staging-ai/api/internal/settings"
 	"github.com/real-staging-ai/api/internal/sse"
 	"github.com/real-staging-ai/api/internal/storage"
@@ -166,11 +165,6 @@ func NewServer(
 
 	// Admin routes (feature-flagged)
 	admin := protected.Group("/admin")
-	reconcileSvc := reconcile.NewDefaultService(s.db, s.s3Service)
-	reconcileHandler := reconcile.NewDefaultHandler(reconcileSvc)
-	admin.POST("/reconcile/images", reconcileHandler.ReconcileImages)
-	admin.POST("/reconcile/cleanup-queued", reconcileHandler.CleanupStuckQueuedImages)
-
 	// Admin settings routes
 	settingsRepo := settings.NewDefaultRepository(s.db.Pool())
 	settingsService := settings.NewDefaultService(settingsRepo)
@@ -288,11 +282,6 @@ func NewTestServer(
 
 	// Admin routes (public in test server, feature-flagged)
 	admin := api.Group("/admin")
-	reconcileSvc := reconcile.NewDefaultService(s.db, s.s3Service)
-	reconcileHandler := reconcile.NewDefaultHandler(reconcileSvc)
-	admin.POST("/reconcile/images", reconcileHandler.ReconcileImages)
-	admin.POST("/reconcile/cleanup-queued", reconcileHandler.CleanupStuckQueuedImages)
-
 	// Admin settings routes (test server)
 	settingsRepo := settings.NewDefaultRepository(s.db.Pool())
 	settingsService := settings.NewDefaultService(settingsRepo)
