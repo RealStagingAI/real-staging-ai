@@ -531,7 +531,7 @@ function ProfilePageContent() {
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Show Pro if on Free */}
-                    {usage.plan_code === 'free' && (
+                    {(usage.plan_code === 'free' || usage.plan_code === '') && (
                       <div className="border border-blue-200 dark:border-blue-700 rounded-lg p-5 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div>
@@ -554,7 +554,7 @@ function ProfilePageContent() {
                           </li>
                         </ul>
                         <button
-                          onClick={() => handleManageSubscription()}
+                          onClick={() => handleSubscribe('pro')}
                           className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                         >
                           Upgrade to Pro
@@ -588,7 +588,7 @@ function ProfilePageContent() {
                         </li>
                       </ul>
                       <button
-                        onClick={() => handleManageSubscription()}
+                        onClick={() => handleSubscribe('business')}
                         className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
                       >
                         Upgrade to Business

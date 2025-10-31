@@ -370,7 +370,7 @@ export default function BillingPage() {
                   </li>
                 </ul>
                 <button
-                  onClick={usage.plan_code === '' ? () => handleUpgrade('pro') : handleManageSubscription}
+                  onClick={() => handleUpgrade('pro')}
                   className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
                 >
                   {subscription ? 'Upgrade to Pro' : 'Subscribe to Pro'}
@@ -400,7 +400,7 @@ export default function BillingPage() {
                   </li>
                 </ul>
                 <button
-                  onClick={usage.plan_code === '' ? () => handleUpgrade('business') : handleManageSubscription}
+                  onClick={() => handleUpgrade('business')}
                   className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-purple-600 text-white text-sm sm:text-base rounded-lg hover:bg-purple-700 transition-colors touch-manipulation"
                 >
                   {subscription ? 'Upgrade to Business' : 'Subscribe to Business'}

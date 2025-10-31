@@ -354,6 +354,11 @@ func (h *DefaultHandler) CreateCheckoutSession(c echo.Context) error {
 		CancelURL:  stripe.String(baseURL + "/profile?checkout=canceled"),
 	}
 
+	// For free plans, don't require payment method collection
+	if req.PriceID == os.Getenv("STRIPE_PRICE_FREE") || req.PriceID == "price_1SK67rLpUWppqPSl2XfvuIlh" {
+		params.PaymentMethodCollection = stripe.String("off")
+	}
+
 	sess, err := checkoutsession.New(params)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{
