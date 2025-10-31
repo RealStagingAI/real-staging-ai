@@ -153,7 +153,8 @@ type Setting struct {
 	// Timestamp of last update
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 	// User who last updated the setting
-	UpdatedBy pgtype.UUID `json:"updated_by"`
+	UpdatedBy     pgtype.UUID `json:"updated_by"`
+	ModelSettings []byte      `json:"model_settings"`
 }
 
 type Subscription struct {

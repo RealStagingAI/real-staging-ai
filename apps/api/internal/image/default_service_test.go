@@ -16,12 +16,23 @@ import (
 	"github.com/real-staging-ai/api/internal/storage/queries"
 )
 
-func TestNewDefaultService(t *testing.T) {
+// setupTestConfig sets up test configuration with required environment variables
+func setupTestConfig(t *testing.T) *config.Config {
 	t.Setenv("APP_ENV", "test")
+	// Set required plan environment variables for tests
+	t.Setenv("STRIPE_PRICE_FREE", "price_test_free")
+	t.Setenv("STRIPE_PRICE_PRO", "price_test_pro")
+	t.Setenv("STRIPE_PRICE_BUSINESS", "price_test_business")
+
 	cfg, err := config.Load()
 	if err != nil {
 		t.Fatal(err)
 	}
+	return cfg
+}
+
+func TestNewDefaultService(t *testing.T) {
+	cfg := setupTestConfig(t)
 	t.Run("success: create new default service", func(t *testing.T) {
 		imageRepo := &RepositoryMock{}
 		jobRepo := &job.RepositoryMock{}
@@ -31,11 +42,7 @@ func TestNewDefaultService(t *testing.T) {
 }
 
 func TestDefaultService_CreateImage(t *testing.T) {
-	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatal(err)
-	}
+	cfg := setupTestConfig(t)
 
 	projectID := uuid.New()
 	imageID := uuid.New()
@@ -178,11 +185,7 @@ func TestDefaultService_CreateImage(t *testing.T) {
 }
 
 func TestDefaultService_GetImageByID(t *testing.T) {
-	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatal(err)
-	}
+	cfg := setupTestConfig(t)
 
 	imageID := uuid.New()
 
@@ -296,11 +299,7 @@ func TestDefaultService_GetImageByID(t *testing.T) {
 }
 
 func TestDefaultService_GetImagesByProjectID(t *testing.T) {
-	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatal(err)
-	}
+	cfg := setupTestConfig(t)
 
 	projectID := uuid.New()
 
@@ -365,11 +364,7 @@ func TestDefaultService_GetImagesByProjectID(t *testing.T) {
 }
 
 func TestDefaultService_UpdateImageStatus(t *testing.T) {
-	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatal(err)
-	}
+	cfg := setupTestConfig(t)
 
 	imageID := uuid.New()
 
@@ -434,11 +429,7 @@ func TestDefaultService_UpdateImageStatus(t *testing.T) {
 }
 
 func TestDefaultService_UpdateImageWithStagedURL(t *testing.T) {
-	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatal(err)
-	}
+	cfg := setupTestConfig(t)
 
 	imageID := uuid.New()
 
@@ -514,11 +505,7 @@ func TestDefaultService_UpdateImageWithStagedURL(t *testing.T) {
 }
 
 func TestDefaultService_UpdateImageWithError(t *testing.T) {
-	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatal(err)
-	}
+	cfg := setupTestConfig(t)
 
 	imageID := uuid.New()
 
@@ -590,11 +577,7 @@ func TestDefaultService_UpdateImageWithError(t *testing.T) {
 }
 
 func TestDefaultService_DeleteImage(t *testing.T) {
-	t.Setenv("APP_ENV", "test")
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatal(err)
-	}
+	cfg := setupTestConfig(t)
 
 	imageID := uuid.New()
 

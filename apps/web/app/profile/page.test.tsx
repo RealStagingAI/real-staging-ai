@@ -158,6 +158,15 @@ describe('ProfilePage', () => {
   })
 
   it('success: clicking Subscribe triggers create-checkout call and redirects', async () => {
+    // Mock environment variables for price IDs
+    const originalEnv = process.env
+    process.env = {
+      ...originalEnv,
+      NEXT_PUBLIC_STRIPE_PRICE_FREE: 'price_free_test',
+      NEXT_PUBLIC_STRIPE_PRICE_PRO: 'price_pro_test', 
+      NEXT_PUBLIC_STRIPE_PRICE_BUSINESS: 'price_business_test',
+    }
+
     // Arrange: profile then no subscriptions -> shows Subscribe button
     apiFetchMock
       .mockResolvedValueOnce({ id: 'id', role: 'user', created_at: '', updated_at: '' })
@@ -199,8 +208,9 @@ describe('ProfilePage', () => {
     expect(call).toBeTruthy()
     expect(call?.[1]?.method).toBe('POST')
 
-    // Restore location
+    // Restore location and env
     Object.defineProperty(window, 'location', { value: originalLocation, configurable: true })
+    process.env = originalEnv
   })
 
   it('success: renders Pro plan with active subscription', async () => {

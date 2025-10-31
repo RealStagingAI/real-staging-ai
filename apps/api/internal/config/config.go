@@ -19,6 +19,7 @@ type Config struct {
 	Job     Job     `yaml:"job"`
 	Logging Logging `yaml:"logging"`
 	OTEL    OTEL    `yaml:"otel"`
+	Plans   Plans   `yaml:"plans"`
 	Redis   Redis   `yaml:"redis"`
 	S3      S3      `yaml:"s3"`
 	Stripe  Stripe  `yaml:"stripe"`
@@ -58,6 +59,77 @@ type Logging struct {
 
 type OTEL struct {
 	ExporterOTLPEndpoint string `yaml:"exporter_otlp_endpoint" env:"OTEL_EXPORTER_OTLP_ENDPOINT"`
+}
+
+type Plans struct {
+	FreePriceID     string `yaml:"free_price_id" env:"STRIPE_PRICE_FREE"`
+	ProPriceID      string `yaml:"pro_price_id" env:"STRIPE_PRICE_PRO"`
+	BusinessPriceID string `yaml:"business_price_id" env:"STRIPE_PRICE_BUSINESS"`
+}
+
+// GetPriceIDByCode returns the price ID for a given plan code
+func (p *Plans) GetPriceIDByCode(code string) (string, error) {
+	switch code {
+	case "free":
+		if p.FreePriceID == "" {
+			return "", fmt.Errorf("free plan price ID not configured")
+		}
+		return p.FreePriceID, nil
+	case "pro":
+		if p.ProPriceID == "" {
+			return "", fmt.Errorf("pro plan price ID not configured")
+		}
+		return p.ProPriceID, nil
+	case "business":
+		if p.BusinessPriceID == "" {
+			return "", fmt.Errorf("business plan price ID not configured")
+		}
+		return p.BusinessPriceID, nil
+	default:
+		return "", fmt.Errorf("unknown plan code: %s", code)
+	}
+}
+
+// GetAllPlans returns all plan configurations
+func (p *Plans) GetAllPlans() []PlanDefinition {
+	return []PlanDefinition{
+		{
+			Code:         "free",
+			PriceID:      p.FreePriceID,
+			MonthlyLimit: 100, // Updated free tier limit
+		},
+		{
+			Code:         "pro",
+			PriceID:      p.ProPriceID,
+			MonthlyLimit: 100,
+		},
+		{
+			Code:         "business",
+			PriceID:      p.BusinessPriceID,
+			MonthlyLimit: 500,
+		},
+	}
+}
+
+// Validate checks that all required price IDs are set
+func (p *Plans) Validate() error {
+	if p.FreePriceID == "" {
+		return fmt.Errorf("STRIPE_PRICE_FREE environment variable is required")
+	}
+	if p.ProPriceID == "" {
+		return fmt.Errorf("STRIPE_PRICE_PRO environment variable is required")
+	}
+	if p.BusinessPriceID == "" {
+		return fmt.Errorf("STRIPE_PRICE_BUSINESS environment variable is required")
+	}
+	return nil
+}
+
+// PlanDefinition represents a plan definition for seeding/syncing
+type PlanDefinition struct {
+	Code         string
+	PriceID      string
+	MonthlyLimit int32
 }
 
 type Redis struct {
@@ -141,6 +213,11 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to read environment variables: %w", err)
 	}
 
+	// Validate plans configuration
+	if err := cfg.Plans.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid plans configuration: %w", err)
+	}
+
 	return cfg, nil
 }
 
@@ -155,4 +232,9 @@ func (c *Config) DatabaseURL() string {
 	hostPort := net.JoinHostPort(c.DB.Host, strconv.Itoa(c.DB.Port))
 	return fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=%s",
 		c.DB.User, c.DB.Password, hostPort, c.DB.Database, c.DB.SSLMode)
+}
+
+// PlansConfig returns the plans configuration for external services
+func (c *Config) PlansConfig() *Plans {
+	return &c.Plans
 }

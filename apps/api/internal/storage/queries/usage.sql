@@ -37,3 +37,22 @@ LIMIT 1;
 SELECT *
 FROM plans
 ORDER BY monthly_limit ASC;
+
+-- name: CreatePlan :one
+-- Create a new plan
+INSERT INTO plans (id, code, price_id, monthly_limit)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: UpdatePlan :one
+-- Update an existing plan
+UPDATE plans 
+SET price_id = $2, monthly_limit = $3
+WHERE code = $1
+RETURNING *;
+
+-- name: ListAllActiveSubscriptions :many
+-- List all active subscriptions (for validation)
+SELECT *
+FROM subscriptions
+WHERE status IN ('active', 'trialing');

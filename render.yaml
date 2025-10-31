@@ -51,6 +51,13 @@ services:
         sync: false  # Set in Render dashboard
       - key: STRIPE_WEBHOOK_SECRET
         sync: false  # Set in Render dashboard
+      # Stripe Price IDs (for API plan lookup)
+      - key: STRIPE_PRICE_FREE
+        value: price_1SK67rLpUWppqPSl2XfvuIlh
+      - key: STRIPE_PRICE_PRO
+        value: price_1SJmy5LpUWppqPSlNElnvowM
+      - key: STRIPE_PRICE_BUSINESS
+        value: price_1SJmyqLpUWppqPSlGhxfz2oQ
       # Replicate AI Configuration
       - key: REPLICATE_API_TOKEN
         sync: false  # Set in Render dashboard
@@ -167,6 +174,13 @@ services:
       # Optional: Public API base for client-side calls
       - key: NEXT_PUBLIC_API_BASE
         value: /api
+      # Stripe Price IDs (for frontend upgrade buttons)
+      - key: NEXT_PUBLIC_STRIPE_PRICE_FREE
+        value: price_1SK67rLpUWppqPSl2XfvuIlh
+      - key: NEXT_PUBLIC_STRIPE_PRICE_PRO
+        value: price_1SJmy5LpUWppqPSlNElnvowM
+      - key: NEXT_PUBLIC_STRIPE_PRICE_BUSINESS
+        value: price_1SJmyqLpUWppqPSlGhxfz2oQ
   # Redis Service
   - type: redis
     name: realstaging-redis

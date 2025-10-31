@@ -21,6 +21,8 @@ type Querier interface {
 	CreateImage(ctx context.Context, arg CreateImageParams) (*CreateImageRow, error)
 	CreateJob(ctx context.Context, arg CreateJobParams) (*Job, error)
 	CreateOriginalImage(ctx context.Context, arg CreateOriginalImageParams) (*OriginalImage, error)
+	// Create a new plan
+	CreatePlan(ctx context.Context, arg CreatePlanParams) (*Plan, error)
 	CreateProcessedEvent(ctx context.Context, arg CreateProcessedEventParams) (*ProcessedEvent, error)
 	CreateProject(ctx context.Context, arg CreateProjectParams) (*CreateProjectRow, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (*CreateUserRow, error)
@@ -74,6 +76,8 @@ type Querier interface {
 	GetUserProfileByAuth0Sub(ctx context.Context, auth0Sub string) (*GetUserProfileByAuth0SubRow, error)
 	GetUserProfileByID(ctx context.Context, id pgtype.UUID) (*GetUserProfileByIDRow, error)
 	IncrementReferenceCount(ctx context.Context, id pgtype.UUID) error
+	// List all active subscriptions (for validation)
+	ListAllActiveSubscriptions(ctx context.Context) ([]*Subscription, error)
 	// List all available plans
 	ListAllPlans(ctx context.Context) ([]*Plan, error)
 	// List images for reconciliation - only non-deleted images
@@ -90,6 +94,8 @@ type Querier interface {
 	UpdateImageWithError(ctx context.Context, arg UpdateImageWithErrorParams) (*UpdateImageWithErrorRow, error)
 	UpdateImageWithStagedURL(ctx context.Context, arg UpdateImageWithStagedURLParams) (*UpdateImageWithStagedURLRow, error)
 	UpdateJobStatus(ctx context.Context, arg UpdateJobStatusParams) (*Job, error)
+	// Update an existing plan
+	UpdatePlan(ctx context.Context, arg UpdatePlanParams) (*Plan, error)
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) (*UpdateProjectRow, error)
 	UpdateProjectByUserID(ctx context.Context, arg UpdateProjectByUserIDParams) (*UpdateProjectByUserIDRow, error)
 	UpdateUserProfile(ctx context.Context, arg UpdateUserProfileParams) (*UpdateUserProfileRow, error)

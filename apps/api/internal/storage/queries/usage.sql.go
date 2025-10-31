@@ -36,6 +36,37 @@ func (q *Queries) CountImagesCreatedInPeriod(ctx context.Context, arg CountImage
 	return column_1, err
 }
 
+const CreatePlan = `-- name: CreatePlan :one
+INSERT INTO plans (id, code, price_id, monthly_limit)
+VALUES ($1, $2, $3, $4)
+RETURNING id, code, price_id, monthly_limit
+`
+
+type CreatePlanParams struct {
+	ID           pgtype.UUID `json:"id"`
+	Code         string      `json:"code"`
+	PriceID      string      `json:"price_id"`
+	MonthlyLimit int32       `json:"monthly_limit"`
+}
+
+// Create a new plan
+func (q *Queries) CreatePlan(ctx context.Context, arg CreatePlanParams) (*Plan, error) {
+	row := q.db.QueryRow(ctx, CreatePlan,
+		arg.ID,
+		arg.Code,
+		arg.PriceID,
+		arg.MonthlyLimit,
+	)
+	var i Plan
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.PriceID,
+		&i.MonthlyLimit,
+	)
+	return &i, err
+}
+
 const GetPlanByCode = `-- name: GetPlanByCode :one
 SELECT id, code, price_id, monthly_limit
 FROM plans
@@ -98,6 +129,46 @@ func (q *Queries) GetUserActivePlan(ctx context.Context, userID pgtype.UUID) (*P
 	return &i, err
 }
 
+const ListAllActiveSubscriptions = `-- name: ListAllActiveSubscriptions :many
+SELECT id, user_id, stripe_subscription_id, status, price_id, current_period_start, current_period_end, cancel_at, canceled_at, cancel_at_period_end, created_at, updated_at
+FROM subscriptions
+WHERE status IN ('active', 'trialing')
+`
+
+// List all active subscriptions (for validation)
+func (q *Queries) ListAllActiveSubscriptions(ctx context.Context) ([]*Subscription, error) {
+	rows, err := q.db.Query(ctx, ListAllActiveSubscriptions)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*Subscription{}
+	for rows.Next() {
+		var i Subscription
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.StripeSubscriptionID,
+			&i.Status,
+			&i.PriceID,
+			&i.CurrentPeriodStart,
+			&i.CurrentPeriodEnd,
+			&i.CancelAt,
+			&i.CanceledAt,
+			&i.CancelAtPeriodEnd,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, &i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const ListAllPlans = `-- name: ListAllPlans :many
 SELECT id, code, price_id, monthly_limit
 FROM plans
@@ -128,4 +199,30 @@ func (q *Queries) ListAllPlans(ctx context.Context) ([]*Plan, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const UpdatePlan = `-- name: UpdatePlan :one
+UPDATE plans 
+SET price_id = $2, monthly_limit = $3
+WHERE code = $1
+RETURNING id, code, price_id, monthly_limit
+`
+
+type UpdatePlanParams struct {
+	Code         string `json:"code"`
+	PriceID      string `json:"price_id"`
+	MonthlyLimit int32  `json:"monthly_limit"`
+}
+
+// Update an existing plan
+func (q *Queries) UpdatePlan(ctx context.Context, arg UpdatePlanParams) (*Plan, error) {
+	row := q.db.QueryRow(ctx, UpdatePlan, arg.Code, arg.PriceID, arg.MonthlyLimit)
+	var i Plan
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.PriceID,
+		&i.MonthlyLimit,
+	)
+	return &i, err
 }

@@ -15,6 +15,12 @@ import (
 func SetupTestDatabase(t *testing.T) *storage.DefaultDatabase {
 	t.Helper()
 
+	// Set required plan environment variables for integration tests
+	t.Setenv("APP_ENV", "test")
+	t.Setenv("STRIPE_PRICE_FREE", "price_test_free")
+	t.Setenv("STRIPE_PRICE_PRO", "price_test_pro")
+	t.Setenv("STRIPE_PRICE_BUSINESS", "price_test_business")
+
 	cfg, err := config.Load()
 	require.NoError(t, err, "failed to load config")
 
@@ -27,6 +33,12 @@ func SetupTestDatabase(t *testing.T) *storage.DefaultDatabase {
 // SetupTestS3Service creates an S3 service for integration tests using config.
 func SetupTestS3Service(t *testing.T, ctx context.Context) *storage.DefaultS3Service {
 	t.Helper()
+
+	// Set required plan environment variables for integration tests
+	t.Setenv("APP_ENV", "test")
+	t.Setenv("STRIPE_PRICE_FREE", "price_test_free")
+	t.Setenv("STRIPE_PRICE_PRO", "price_test_pro")
+	t.Setenv("STRIPE_PRICE_BUSINESS", "price_test_business")
 
 	cfg, err := config.Load()
 	require.NoError(t, err, "failed to load config")

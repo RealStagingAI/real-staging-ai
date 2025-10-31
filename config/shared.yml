@@ -26,6 +26,14 @@ logging:
 otel:
   exporter_otlp_endpoint: http://localhost:4318
 
+plans:
+  # Price IDs should be set via environment variables:
+  # STRIPE_PRICE_FREE, STRIPE_PRICE_PRO, STRIPE_PRICE_BUSINESS
+  # These are here for documentation only
+  free_price_id: ""
+  pro_price_id: ""
+  business_price_id: ""
+
 redis:
   host: localhost
   port: "6379"

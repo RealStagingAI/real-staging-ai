@@ -8,18 +8,23 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/real-staging-ai/api/internal/config"
 	"github.com/real-staging-ai/api/internal/storage"
 	"github.com/real-staging-ai/api/internal/storage/queries"
 )
 
 // DefaultUsageService implements UsageService using the database.
 type DefaultUsageService struct {
-	db storage.Database
+	db     storage.Database
+	config *config.Plans
 }
 
 // NewDefaultUsageService creates a new usage service.
-func NewDefaultUsageService(db storage.Database) UsageService {
-	return &DefaultUsageService{db: db}
+func NewDefaultUsageService(db storage.Database, plans *config.Plans) UsageService {
+	return &DefaultUsageService{
+		db:     db,
+		config: plans,
+	}
 }
 
 // GetUsage returns the current usage statistics for a user.
@@ -42,19 +47,48 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 		return nil, err
 	}
 
-	// If no active subscription, use free plan
+	// If no active subscription from DB, try to find plan by subscription price ID
+	// This handles the case where DB plans are out of sync with env vars
 	var plan *queries.Plan
 	hasSubscription := false
 	if activePlan != nil {
 		plan = activePlan
 		hasSubscription = true
 	} else {
-		// Get free plan
-		freePlan, err := q.GetPlanByCode(ctx, "free")
-		if err != nil {
-			return nil, err
+		// Try to get subscription price ID and find matching plan from config
+		subs, err := q.ListSubscriptionsByUserIDAndStatuses(ctx, queries.ListSubscriptionsByUserIDAndStatusesParams{
+			UserID:  userUUID,
+			Column2: []string{"active", "trialing"},
+		})
+		if err == nil && len(subs) > 0 {
+			// User has active subscription, find plan by price ID using config
+			subscriptionPriceID := subs[0].PriceID.String
+			for _, configPlan := range s.config.GetAllPlans() {
+				if configPlan.PriceID == subscriptionPriceID {
+					// Create a plan object from config
+					plan = &queries.Plan{
+						Code:         configPlan.Code,
+						PriceID:      configPlan.PriceID,
+						MonthlyLimit: configPlan.MonthlyLimit,
+					}
+					hasSubscription = true
+					break
+				}
+			}
 		}
-		plan = freePlan
+
+		// If still no plan found, use free plan from config
+		if plan == nil {
+			freePriceID, err := s.config.GetPriceIDByCode("free")
+			if err != nil {
+				return nil, errors.New("free plan price ID not configured")
+			}
+			plan = &queries.Plan{
+				Code:         "free",
+				PriceID:      freePriceID,
+				MonthlyLimit: 100, // Updated free tier limit
+			}
+		}
 	}
 
 	// Calculate billing period from subscription (both free and paid)
@@ -123,16 +157,34 @@ func (s *DefaultUsageService) GetPlanByCode(ctx context.Context, code string) (*
 		return nil, errors.New("code cannot be empty")
 	}
 
+	// First try to get from database
 	q := queries.New(s.db)
 	plan, err := q.GetPlanByCode(ctx, code)
+	if err == nil {
+		return &PlanInfo{
+			ID:           plan.ID.String(),
+			Code:         plan.Code,
+			PriceID:      plan.PriceID,
+			MonthlyLimit: plan.MonthlyLimit,
+		}, nil
+	}
+
+	// If not in database, get from config
+	_, err = s.config.GetPriceIDByCode(code)
 	if err != nil {
 		return nil, err
 	}
 
-	return &PlanInfo{
-		ID:           plan.ID.String(),
-		Code:         plan.Code,
-		PriceID:      plan.PriceID,
-		MonthlyLimit: plan.MonthlyLimit,
-	}, nil
+	for _, configPlan := range s.config.GetAllPlans() {
+		if configPlan.Code == code {
+			return &PlanInfo{
+				ID:           "config-" + code, // Temporary ID
+				Code:         configPlan.Code,
+				PriceID:      configPlan.PriceID,
+				MonthlyLimit: configPlan.MonthlyLimit,
+			}, nil
+		}
+	}
+
+	return nil, errors.New("plan not found")
 }

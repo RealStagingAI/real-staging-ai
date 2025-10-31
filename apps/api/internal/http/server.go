@@ -70,8 +70,8 @@ func NewServer(
 	// Initialize Auth0 config
 	authConfig := auth.NewAuth0Config(ctx, log, cfg.Auth0.Domain, cfg.Auth0.Audience)
 
-	// Initialize billing services
-	usageService := billing.NewDefaultUsageService(db)
+	// Initialize billing services (plans are now part of main config)
+	usageService := billing.NewDefaultUsageService(db, &cfg.Plans)
 	subscriptionChecker := billing.NewDefaultSubscriptionChecker(db)
 
 	// Initialize user repository for usage checks
@@ -207,7 +207,7 @@ func NewTestServer(
 	e.Use(middleware.CORS())
 
 	// Initialize billing services for test server
-	usageService := billing.NewDefaultUsageService(db)
+	usageService := billing.NewDefaultUsageService(db, &cfg.Plans)
 	userRepo := user.NewDefaultRepository(db)
 	subscriptionChecker := billing.NewDefaultSubscriptionChecker(db)
 

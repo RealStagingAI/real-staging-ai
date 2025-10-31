@@ -237,17 +237,23 @@ function ProfilePageContent() {
   }, [formData, fetchProfileAndSubscription]);
 
   const handleSubscribe = async (planCode: 'free' | 'pro' | 'business') => {
-    // Get the price ID based on plan code
-    const priceIds = {
-      free: process.env.NEXT_PUBLIC_STRIPE_PRICE_FREE || 'price_1SK67rLpUWppqPSl2XfvuIlh',
-      pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || 'price_1SJmy5LpUWppqPSlNElnvowM',
-      business: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS || 'price_1SJmyqLpUWppqPSlGhxfz2oQ',
-    };
+   // Get the price ID based on plan code
+      const priceIds: Record<string, string | undefined> = {
+        free: process.env.NEXT_PUBLIC_STRIPE_PRICE_FREE,
+        pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
+        business: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS,
+      };
+
+      const priceId = priceIds[planCode];
+      if (!priceId) {
+        setMessage({ type: 'error', text: `Price ID not configured for ${planCode} plan` });
+        return;
+      }
     
     try {
       const data = await apiFetch<{ url: string }>('/v1/billing/create-checkout', {
         method: 'POST',
-        body: JSON.stringify({ price_id: priceIds[planCode] }),
+        body: JSON.stringify({ price_id: priceId }),
       });
       if (data?.url) {
         window.location.href = data.url; // Redirect to Stripe Checkout

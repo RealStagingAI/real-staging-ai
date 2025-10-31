@@ -40,6 +40,9 @@ var _ Querier = &QuerierMock{}
 //			CreateOriginalImageFunc: func(ctx context.Context, arg CreateOriginalImageParams) (*OriginalImage, error) {
 //				panic("mock out the CreateOriginalImage method")
 //			},
+//			CreatePlanFunc: func(ctx context.Context, arg CreatePlanParams) (*Plan, error) {
+//				panic("mock out the CreatePlan method")
+//			},
 //			CreateProcessedEventFunc: func(ctx context.Context, arg CreateProcessedEventParams) (*ProcessedEvent, error) {
 //				panic("mock out the CreateProcessedEvent method")
 //			},
@@ -163,6 +166,9 @@ var _ Querier = &QuerierMock{}
 //			IncrementReferenceCountFunc: func(ctx context.Context, id pgtype.UUID) error {
 //				panic("mock out the IncrementReferenceCount method")
 //			},
+//			ListAllActiveSubscriptionsFunc: func(ctx context.Context) ([]*Subscription, error) {
+//				panic("mock out the ListAllActiveSubscriptions method")
+//			},
 //			ListAllPlansFunc: func(ctx context.Context) ([]*Plan, error) {
 //				panic("mock out the ListAllPlans method")
 //			},
@@ -201,6 +207,9 @@ var _ Querier = &QuerierMock{}
 //			},
 //			UpdateJobStatusFunc: func(ctx context.Context, arg UpdateJobStatusParams) (*Job, error) {
 //				panic("mock out the UpdateJobStatus method")
+//			},
+//			UpdatePlanFunc: func(ctx context.Context, arg UpdatePlanParams) (*Plan, error) {
+//				panic("mock out the UpdatePlan method")
 //			},
 //			UpdateProjectFunc: func(ctx context.Context, arg UpdateProjectParams) (*UpdateProjectRow, error) {
 //				panic("mock out the UpdateProject method")
@@ -253,6 +262,9 @@ type QuerierMock struct {
 
 	// CreateOriginalImageFunc mocks the CreateOriginalImage method.
 	CreateOriginalImageFunc func(ctx context.Context, arg CreateOriginalImageParams) (*OriginalImage, error)
+
+	// CreatePlanFunc mocks the CreatePlan method.
+	CreatePlanFunc func(ctx context.Context, arg CreatePlanParams) (*Plan, error)
 
 	// CreateProcessedEventFunc mocks the CreateProcessedEvent method.
 	CreateProcessedEventFunc func(ctx context.Context, arg CreateProcessedEventParams) (*ProcessedEvent, error)
@@ -377,6 +389,9 @@ type QuerierMock struct {
 	// IncrementReferenceCountFunc mocks the IncrementReferenceCount method.
 	IncrementReferenceCountFunc func(ctx context.Context, id pgtype.UUID) error
 
+	// ListAllActiveSubscriptionsFunc mocks the ListAllActiveSubscriptions method.
+	ListAllActiveSubscriptionsFunc func(ctx context.Context) ([]*Subscription, error)
+
 	// ListAllPlansFunc mocks the ListAllPlans method.
 	ListAllPlansFunc func(ctx context.Context) ([]*Plan, error)
 
@@ -415,6 +430,9 @@ type QuerierMock struct {
 
 	// UpdateJobStatusFunc mocks the UpdateJobStatus method.
 	UpdateJobStatusFunc func(ctx context.Context, arg UpdateJobStatusParams) (*Job, error)
+
+	// UpdatePlanFunc mocks the UpdatePlan method.
+	UpdatePlanFunc func(ctx context.Context, arg UpdatePlanParams) (*Plan, error)
 
 	// UpdateProjectFunc mocks the UpdateProject method.
 	UpdateProjectFunc func(ctx context.Context, arg UpdateProjectParams) (*UpdateProjectRow, error)
@@ -488,6 +506,13 @@ type QuerierMock struct {
 			Ctx context.Context
 			// Arg is the arg argument value.
 			Arg CreateOriginalImageParams
+		}
+		// CreatePlan holds details about calls to the CreatePlan method.
+		CreatePlan []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Arg is the arg argument value.
+			Arg CreatePlanParams
 		}
 		// CreateProcessedEvent holds details about calls to the CreateProcessedEvent method.
 		CreateProcessedEvent []struct {
@@ -772,6 +797,11 @@ type QuerierMock struct {
 			// ID is the id argument value.
 			ID pgtype.UUID
 		}
+		// ListAllActiveSubscriptions holds details about calls to the ListAllActiveSubscriptions method.
+		ListAllActiveSubscriptions []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+		}
 		// ListAllPlans holds details about calls to the ListAllPlans method.
 		ListAllPlans []struct {
 			// Ctx is the ctx argument value.
@@ -861,6 +891,13 @@ type QuerierMock struct {
 			// Arg is the arg argument value.
 			Arg UpdateJobStatusParams
 		}
+		// UpdatePlan holds details about calls to the UpdatePlan method.
+		UpdatePlan []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Arg is the arg argument value.
+			Arg UpdatePlanParams
+		}
 		// UpdateProject holds details about calls to the UpdateProject method.
 		UpdateProject []struct {
 			// Ctx is the ctx argument value.
@@ -925,6 +962,7 @@ type QuerierMock struct {
 	lockCreateImage                          sync.RWMutex
 	lockCreateJob                            sync.RWMutex
 	lockCreateOriginalImage                  sync.RWMutex
+	lockCreatePlan                           sync.RWMutex
 	lockCreateProcessedEvent                 sync.RWMutex
 	lockCreateProject                        sync.RWMutex
 	lockCreateUser                           sync.RWMutex
@@ -966,6 +1004,7 @@ type QuerierMock struct {
 	lockGetUserProfileByAuth0Sub             sync.RWMutex
 	lockGetUserProfileByID                   sync.RWMutex
 	lockIncrementReferenceCount              sync.RWMutex
+	lockListAllActiveSubscriptions           sync.RWMutex
 	lockListAllPlans                         sync.RWMutex
 	lockListImagesForReconcile               sync.RWMutex
 	lockListInvoicesByUserID                 sync.RWMutex
@@ -979,6 +1018,7 @@ type QuerierMock struct {
 	lockUpdateImageWithError                 sync.RWMutex
 	lockUpdateImageWithStagedURL             sync.RWMutex
 	lockUpdateJobStatus                      sync.RWMutex
+	lockUpdatePlan                           sync.RWMutex
 	lockUpdateProject                        sync.RWMutex
 	lockUpdateProjectByUserID                sync.RWMutex
 	lockUpdateUserProfile                    sync.RWMutex
@@ -1234,6 +1274,42 @@ func (mock *QuerierMock) CreateOriginalImageCalls() []struct {
 	mock.lockCreateOriginalImage.RLock()
 	calls = mock.calls.CreateOriginalImage
 	mock.lockCreateOriginalImage.RUnlock()
+	return calls
+}
+
+// CreatePlan calls CreatePlanFunc.
+func (mock *QuerierMock) CreatePlan(ctx context.Context, arg CreatePlanParams) (*Plan, error) {
+	if mock.CreatePlanFunc == nil {
+		panic("QuerierMock.CreatePlanFunc: method is nil but Querier.CreatePlan was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Arg CreatePlanParams
+	}{
+		Ctx: ctx,
+		Arg: arg,
+	}
+	mock.lockCreatePlan.Lock()
+	mock.calls.CreatePlan = append(mock.calls.CreatePlan, callInfo)
+	mock.lockCreatePlan.Unlock()
+	return mock.CreatePlanFunc(ctx, arg)
+}
+
+// CreatePlanCalls gets all the calls that were made to CreatePlan.
+// Check the length with:
+//
+//	len(mockedQuerier.CreatePlanCalls())
+func (mock *QuerierMock) CreatePlanCalls() []struct {
+	Ctx context.Context
+	Arg CreatePlanParams
+} {
+	var calls []struct {
+		Ctx context.Context
+		Arg CreatePlanParams
+	}
+	mock.lockCreatePlan.RLock()
+	calls = mock.calls.CreatePlan
+	mock.lockCreatePlan.RUnlock()
 	return calls
 }
 
@@ -2705,6 +2781,38 @@ func (mock *QuerierMock) IncrementReferenceCountCalls() []struct {
 	return calls
 }
 
+// ListAllActiveSubscriptions calls ListAllActiveSubscriptionsFunc.
+func (mock *QuerierMock) ListAllActiveSubscriptions(ctx context.Context) ([]*Subscription, error) {
+	if mock.ListAllActiveSubscriptionsFunc == nil {
+		panic("QuerierMock.ListAllActiveSubscriptionsFunc: method is nil but Querier.ListAllActiveSubscriptions was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockListAllActiveSubscriptions.Lock()
+	mock.calls.ListAllActiveSubscriptions = append(mock.calls.ListAllActiveSubscriptions, callInfo)
+	mock.lockListAllActiveSubscriptions.Unlock()
+	return mock.ListAllActiveSubscriptionsFunc(ctx)
+}
+
+// ListAllActiveSubscriptionsCalls gets all the calls that were made to ListAllActiveSubscriptions.
+// Check the length with:
+//
+//	len(mockedQuerier.ListAllActiveSubscriptionsCalls())
+func (mock *QuerierMock) ListAllActiveSubscriptionsCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockListAllActiveSubscriptions.RLock()
+	calls = mock.calls.ListAllActiveSubscriptions
+	mock.lockListAllActiveSubscriptions.RUnlock()
+	return calls
+}
+
 // ListAllPlans calls ListAllPlansFunc.
 func (mock *QuerierMock) ListAllPlans(ctx context.Context) ([]*Plan, error) {
 	if mock.ListAllPlansFunc == nil {
@@ -3166,6 +3274,42 @@ func (mock *QuerierMock) UpdateJobStatusCalls() []struct {
 	mock.lockUpdateJobStatus.RLock()
 	calls = mock.calls.UpdateJobStatus
 	mock.lockUpdateJobStatus.RUnlock()
+	return calls
+}
+
+// UpdatePlan calls UpdatePlanFunc.
+func (mock *QuerierMock) UpdatePlan(ctx context.Context, arg UpdatePlanParams) (*Plan, error) {
+	if mock.UpdatePlanFunc == nil {
+		panic("QuerierMock.UpdatePlanFunc: method is nil but Querier.UpdatePlan was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Arg UpdatePlanParams
+	}{
+		Ctx: ctx,
+		Arg: arg,
+	}
+	mock.lockUpdatePlan.Lock()
+	mock.calls.UpdatePlan = append(mock.calls.UpdatePlan, callInfo)
+	mock.lockUpdatePlan.Unlock()
+	return mock.UpdatePlanFunc(ctx, arg)
+}
+
+// UpdatePlanCalls gets all the calls that were made to UpdatePlan.
+// Check the length with:
+//
+//	len(mockedQuerier.UpdatePlanCalls())
+func (mock *QuerierMock) UpdatePlanCalls() []struct {
+	Ctx context.Context
+	Arg UpdatePlanParams
+} {
+	var calls []struct {
+		Ctx context.Context
+		Arg UpdatePlanParams
+	}
+	mock.lockUpdatePlan.RLock()
+	calls = mock.calls.UpdatePlan
+	mock.lockUpdatePlan.RUnlock()
 	return calls
 }
 

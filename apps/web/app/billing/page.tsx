@@ -33,13 +33,13 @@ export default function BillingPage() {
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
-        setError(null);
+        setMessage(null);
 
         const [usageData, subsData] = await Promise.all([
           apiFetch<UsageStats>('/v1/billing/usage'),
@@ -55,7 +55,7 @@ export default function BillingPage() {
         setSubscription(activeSub || null);
       } catch (err: unknown) {
         console.error('Failed to load billing data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load billing information');
+        setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to load billing information' });
       } finally {
         setLoading(false);
       }
@@ -72,28 +72,34 @@ export default function BillingPage() {
       window.location.href = response.url;
     } catch (err: unknown) {
       console.error('Failed to create portal session:', err);
-      setError('Failed to open billing portal');
+      setMessage({ type: 'error', text: 'Failed to open billing portal' });
     }
   };
 
   const handleUpgrade = async (planCode: string) => {
     try {
       // Get the price ID based on plan code
-      const priceIds: Record<string, string> = {
-        free: process.env.NEXT_PUBLIC_STRIPE_PRICE_FREE || '',
-        pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO || '',
-        business: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS || '',
+      const priceIds: Record<string, string | undefined> = {
+        free: process.env.NEXT_PUBLIC_STRIPE_PRICE_FREE,
+        pro: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
+        business: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUSINESS,
       };
+
+      const priceId = priceIds[planCode];
+      if (!priceId) {
+        setMessage({ type: 'error', text: `Price ID not configured for ${planCode} plan` });
+        return;
+      }
 
       const response = await apiFetch<{ url: string }>('/v1/billing/create-checkout', {
         method: 'POST',
-        body: JSON.stringify({ price_id: priceIds[planCode] }),
+        body: JSON.stringify({ price_id: priceId }),
       });
 
       window.location.href = response.url;
     } catch (err: unknown) {
       console.error('Failed to create checkout session:', err);
-      setError('Failed to start upgrade process');
+      setMessage({ type: 'error', text: 'Failed to start upgrade process' });
     }
   };
 
@@ -131,7 +137,7 @@ export default function BillingPage() {
     );
   }
 
-  if (error) {
+  if (message) {
     return (
       <div className="container max-w-7xl py-12">
         <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
@@ -139,7 +145,7 @@ export default function BillingPage() {
             <AlertCircle className="h-5 w-5 text-red-600" />
             <div>
               <h3 className="font-semibold text-red-900 dark:text-red-300">Error</h3>
-              <p className="text-sm text-red-700 dark:text-red-400 mt-1">{error}</p>
+              <p className="text-sm text-red-700 dark:text-red-400 mt-1">{message.text}</p>
             </div>
           </div>
         </div>

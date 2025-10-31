@@ -57,6 +57,10 @@ func TestGetEnvOrDefault(t *testing.T) {
 }
 
 func TestNewDefaultDatabase_EnvironmentVariables(t *testing.T) {
+	// Set required plan environment variables for all test cases
+	t.Setenv("STRIPE_PRICE_FREE", "price_test_free")
+	t.Setenv("STRIPE_PRICE_PRO", "price_test_pro")
+	t.Setenv("STRIPE_PRICE_BUSINESS", "price_test_business")
 	tests := []struct {
 		name        string
 		envVars     map[string]string
