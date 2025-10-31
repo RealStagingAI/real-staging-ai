@@ -258,14 +258,6 @@ export default function BillingPage() {
                     Billing period: {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
                   </p>
                 )}
-                {usage?.plan_code === 'free' && !subscription && (
-                  <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
-                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    No credit card required
-                  </p>
-                )}
               </div>
             </div>
 
@@ -335,12 +327,6 @@ export default function BillingPage() {
               {(usage.plan_code === 'free' || usage.plan_code === '') && !subscription && (
                 <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Free</h3>
-                  <p className="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center gap-1">
-                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    No credit card required
-                  </p>
                   <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mt-2">$0<span className="text-base sm:text-lg font-normal text-gray-600 dark:text-gray-400">/month</span></p>
                   <ul className="mt-4 space-y-2">
                     <li className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
