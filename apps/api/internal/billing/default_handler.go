@@ -13,8 +13,12 @@ import (
 	"github.com/stripe/stripe-go/v81/billingportal/session"
 	checkoutsession "github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/stripe/stripe-go/v81/customer"
+	"github.com/stripe/stripe-go/v81/paymentmethod"
+	"github.com/stripe/stripe-go/v81/setupintent"
+	"github.com/stripe/stripe-go/v81/subscription"
 
 	"github.com/real-staging-ai/api/internal/auth"
+	"github.com/real-staging-ai/api/internal/config"
 	"github.com/real-staging-ai/api/internal/storage"
 	stripeLib "github.com/real-staging-ai/api/internal/stripe"
 	"github.com/real-staging-ai/api/internal/user"
@@ -26,14 +30,21 @@ type DefaultHandler struct {
 	db              storage.Database
 	usageService    UsageService
 	stripeSecretKey string
+	config          *config.Config
 }
 
 // NewDefaultHandler constructs a DefaultHandler.
-func NewDefaultHandler(db storage.Database, usageService UsageService, stripeSecretKey string) *DefaultHandler {
+func NewDefaultHandler(
+	db storage.Database,
+	usageService UsageService,
+	stripeSecretKey string,
+	cfg *config.Config,
+) *DefaultHandler {
 	return &DefaultHandler{
 		db:              db,
 		usageService:    usageService,
 		stripeSecretKey: stripeSecretKey,
+		config:          cfg,
 	}
 }
 
@@ -355,7 +366,7 @@ func (h *DefaultHandler) CreateCheckoutSession(c echo.Context) error {
 	}
 
 	// For free plans, don't require payment method collection
-	if req.PriceID == os.Getenv("STRIPE_PRICE_FREE") || req.PriceID == "price_1SK67rLpUWppqPSl2XfvuIlh" {
+	if req.PriceID == h.config.Plans.FreePriceID {
 		params.PaymentMethodCollection = stripe.String("off")
 	}
 
@@ -477,4 +488,305 @@ func (h *DefaultHandler) GetMyUsage(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, usage)
+}
+
+// CreateSubscriptionWithElements creates a subscription and returns client secret for Elements confirmation
+// POST /api/v1/billing/create-subscription-elements
+func (h *DefaultHandler) CreateSubscriptionWithElements(c echo.Context) error {
+	var req struct {
+		PriceID string `json:"price_id" validate:"required"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "bad_request",
+			Message: "Invalid request body",
+		})
+	}
+
+	// Resolve current user
+	auth0Sub, err := auth.GetUserIDOrDefault(c)
+	if err != nil || auth0Sub == "" {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Unable to resolve current user",
+		})
+	}
+
+	// Get or create user
+	uRepo := user.NewDefaultRepository(h.db)
+	userRow, err := uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "Failed to resolve user",
+		})
+	}
+
+	// Set Stripe API key
+	stripe.Key = h.stripeSecretKey
+	if stripe.Key == "" {
+		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
+			Error:   "service_unavailable",
+			Message: "Stripe not configured",
+		})
+	}
+
+	// Create or get Stripe customer
+	var customerID string
+	if userRow.StripeCustomerID.Valid && userRow.StripeCustomerID.String != "" {
+		customerID = userRow.StripeCustomerID.String
+	} else {
+		customerParams := &stripe.CustomerParams{
+			Metadata: map[string]string{
+				"user_id":   userRow.ID.String(),
+				"auth0_sub": auth0Sub,
+			},
+		}
+		cust, err := customer.New(customerParams)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "internal_server_error",
+				Message: fmt.Sprintf("Failed to create Stripe customer: %v", err),
+			})
+		}
+		customerID = cust.ID
+
+		// Update user with Stripe customer ID
+		if _, err := uRepo.UpdateStripeCustomerID(c.Request().Context(), userRow.ID.String(), customerID); err != nil {
+			fmt.Printf("Warning: failed to update user with Stripe customer ID: %v\n", err)
+		}
+	}
+
+	// Create subscription with incomplete payment
+	subscriptionParams := &stripe.SubscriptionParams{
+		Customer: stripe.String(customerID),
+		Items: []*stripe.SubscriptionItemsParams{
+			{
+				Price: stripe.String(req.PriceID),
+			},
+		},
+		PaymentBehavior: stripe.String("default_incomplete"),
+		PaymentSettings: &stripe.SubscriptionPaymentSettingsParams{
+			SaveDefaultPaymentMethod: stripe.String("on_subscription"),
+		},
+		Expand: []*string{
+			stripe.String("latest_invoice.payment_intent"),
+		},
+	}
+
+	// For free plans, don't require payment method
+	if req.PriceID == h.config.Plans.FreePriceID {
+		subscriptionParams.PaymentBehavior = stripe.String("allow_incomplete")
+	}
+
+	subscription, err := subscription.New(subscriptionParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: fmt.Sprintf("Failed to create subscription: %v", err),
+		})
+	}
+
+	// Extract client secret from the latest invoice
+	var clientSecret string
+	if subscription.LatestInvoice != nil && subscription.LatestInvoice.PaymentIntent != nil {
+		clientSecret = subscription.LatestInvoice.PaymentIntent.ClientSecret
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"subscriptionId": subscription.ID,
+		"clientSecret":   clientSecret,
+	})
+}
+
+// GetPaymentMethods returns the customer's saved payment methods
+// GET /api/v1/billing/payment-methods
+func (h *DefaultHandler) GetPaymentMethods(c echo.Context) error {
+	// Resolve current user
+	auth0Sub, err := auth.GetUserIDOrDefault(c)
+	if err != nil || auth0Sub == "" {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Unable to resolve current user",
+		})
+	}
+
+	// Get user
+	uRepo := user.NewDefaultRepository(h.db)
+	existingUser, err := uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "Failed to resolve user",
+		})
+	}
+
+	if !existingUser.StripeCustomerID.Valid || existingUser.StripeCustomerID.String == "" {
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"paymentMethods": []interface{}{},
+		})
+	}
+
+	// Set Stripe API key
+	stripe.Key = h.stripeSecretKey
+	if stripe.Key == "" {
+		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
+			Error:   "service_unavailable",
+			Message: "Stripe not configured",
+		})
+	}
+
+	// List payment methods
+	params := &stripe.PaymentMethodListParams{
+		Customer: stripe.String(existingUser.StripeCustomerID.String),
+		Type:     stripe.String("card"),
+	}
+
+	iterator := paymentmethod.List(params)
+	var paymentMethods []interface{}
+
+	for iterator.Next() {
+		pm := iterator.PaymentMethod()
+		paymentMethods = append(paymentMethods, map[string]interface{}{
+			"id":   pm.ID,
+			"type": pm.Type,
+			"card": map[string]interface{}{
+				"brand":    pm.Card.Brand,
+				"last4":    pm.Card.Last4,
+				"expMonth": pm.Card.ExpMonth,
+				"expYear":  pm.Card.ExpYear,
+			},
+			"isDefault": pm.Metadata["is_default"] == "true",
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"paymentMethods": paymentMethods,
+	})
+}
+
+// UpgradeSubscription creates a subscription upgrade session
+// POST /api/v1/billing/upgrade-subscription
+func (h *DefaultHandler) UpgradeSubscription(c echo.Context) error {
+	var req struct {
+		PriceID string `json:"price_id" validate:"required"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "bad_request",
+			Message: "Invalid request body",
+		})
+	}
+
+	// Resolve current user
+	auth0Sub, err := auth.GetUserIDOrDefault(c)
+	if err != nil || auth0Sub == "" {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Unable to resolve current user",
+		})
+	}
+
+	// Get user
+	uRepo := user.NewDefaultRepository(h.db)
+	existingUser, err := uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "Failed to resolve user",
+		})
+	}
+
+	// Set Stripe API key
+	stripe.Key = h.stripeSecretKey
+	if stripe.Key == "" {
+		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
+			Error:   "service_unavailable",
+			Message: "Stripe not configured",
+		})
+	}
+
+	// Create a SetupIntent for payment method collection
+	setupIntentParams := &stripe.SetupIntentParams{
+		Customer:           stripe.String(existingUser.StripeCustomerID.String),
+		Usage:              stripe.String("off_session"),
+		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
+	}
+
+	setupIntent, err := setupintent.New(setupIntentParams)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: fmt.Sprintf("Failed to create setup intent: %v", err),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"clientSecret": setupIntent.ClientSecret,
+		"priceId":      req.PriceID,
+	})
+}
+
+// CancelSubscription cancels the user's subscription
+// POST /api/v1/billing/cancel-subscription
+func (h *DefaultHandler) CancelSubscription(c echo.Context) error {
+	// Resolve current user
+	auth0Sub, err := auth.GetUserIDOrDefault(c)
+	if err != nil || auth0Sub == "" {
+		return c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "unauthorized",
+			Message: "Unable to resolve current user",
+		})
+	}
+
+	// Get user
+	uRepo := user.NewDefaultRepository(h.db)
+	existingUser, err := uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "Failed to resolve user",
+		})
+	}
+
+	// Get active subscription
+	subRepo := stripeLib.NewSubscriptionsRepository(h.db)
+	subs, err := subRepo.ListByUserID(c.Request().Context(), existingUser.ID.String(), 10, 0)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: "Failed to get subscriptions",
+		})
+	}
+
+	if len(subs) == 0 {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "bad_request",
+			Message: "No active subscription found",
+		})
+	}
+
+	// Set Stripe API key
+	stripe.Key = h.stripeSecretKey
+	if stripe.Key == "" {
+		return c.JSON(http.StatusServiceUnavailable, ErrorResponse{
+			Error:   "service_unavailable",
+			Message: "Stripe not configured",
+		})
+	}
+
+	// Cancel subscription at period end using Update API
+	_, err = subscription.Update(subs[0].StripeSubscriptionID, &stripe.SubscriptionParams{
+		CancelAtPeriodEnd: stripe.Bool(true),
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: fmt.Sprintf("Failed to cancel subscription: %v", err),
+		})
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "Subscription canceled successfully",
+	})
 }

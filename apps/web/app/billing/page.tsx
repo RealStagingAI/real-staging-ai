@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { Clock, CreditCard, Loader2, Package, TrendingUp, AlertCircle } from 'lucide-react';
+import { PaymentElementForm } from '@/components/stripe/PaymentElementForm';
 
 interface UsageStats {
   images_used: number;
@@ -34,6 +35,13 @@ export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  // Stripe Elements state
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
+  const [manageLoading, setManageLoading] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -66,6 +74,7 @@ export default function BillingPage() {
 
   const handleManageSubscription = async () => {
     try {
+      setManageLoading(true);
       const response = await apiFetch<{ url: string }>('/v1/billing/portal', {
         method: 'POST',
       });
@@ -73,11 +82,15 @@ export default function BillingPage() {
     } catch (err: unknown) {
       console.error('Failed to create portal session:', err);
       setMessage({ type: 'error', text: 'Failed to open billing portal' });
+    } finally {
+      setManageLoading(false);
     }
   };
 
   const handleUpgrade = async (planCode: string) => {
     try {
+      setUpgradeLoading(planCode);
+      
       // Get the price ID based on plan code
       const priceIds: Record<string, string | undefined> = {
         free: process.env.NEXT_PUBLIC_STRIPE_PRICE_FREE,
@@ -91,15 +104,66 @@ export default function BillingPage() {
         return;
       }
 
-      const response = await apiFetch<{ url: string }>('/v1/billing/create-checkout', {
+      // Create subscription with Elements (returns client secret)
+      const response = await apiFetch<{ 
+        subscriptionId: string;
+        clientSecret: string;
+      }>('/v1/billing/create-subscription-elements', {
         method: 'POST',
         body: JSON.stringify({ price_id: priceId }),
       });
 
-      window.location.href = response.url;
+      if (!response.clientSecret) {
+        console.error('No clientSecret in response:', response);
+        setMessage({ type: 'error', text: 'Invalid response from server: missing client secret' });
+        return;
+      }
+
+      // Show payment form
+      setClientSecret(response.clientSecret);
+      setSelectedPlan(planCode);
+      setShowPaymentForm(true);
     } catch (err: unknown) {
-      console.error('Failed to create checkout session:', err);
-      setMessage({ type: 'error', text: 'Failed to start upgrade process' });
+      console.error('Failed to create subscription:', err);
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to create subscription' });
+    } finally {
+      setUpgradeLoading(null);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    setMessage({ type: 'success', text: 'Payment successful! Your subscription is now active.' });
+    setShowPaymentForm(false);
+    setClientSecret('');
+    setSelectedPlan(null);
+    
+    // Reload billing data
+    try {
+      const [usageData, subsData] = await Promise.all([
+        apiFetch<UsageStats>('/v1/billing/usage'),
+        apiFetch<SubscriptionResponse>('/v1/billing/subscriptions'),
+      ]);
+      setUsage(usageData);
+      
+      // Find active subscription
+      const activeSub = subsData.items?.find(
+        (sub: Subscription) => sub.status === 'active' || sub.status === 'trialing'
+      );
+      setSubscription(activeSub || null);
+    } catch (err: unknown) {
+      console.error('Failed to reload billing data:', err);
+    }
+  };
+
+  const handlePaymentError = (error: Error) => {
+    // Check if it's an ad blocker issue
+    if (error.message.includes('Failed to load') || error.message.includes('ERR_BLOCKED_BY_CLIENT')) {
+      setMessage({ 
+        type: 'error', 
+        text: 'Payment services are blocked. Please disable ad blockers for this site and try again.' 
+      });
+    } else {
+      setMessage({ type: 'error', text: error.message || 'Payment failed' });
     }
   };
 
@@ -272,10 +336,20 @@ export default function BillingPage() {
             {subscription && usage?.plan_code == 'business' && (
               <button
                 onClick={handleManageSubscription}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors touch-manipulation w-full sm:w-auto"
+                disabled={manageLoading}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:bg-gray-600 dark:disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors touch-manipulation w-full sm:w-auto"
               >
-                <CreditCard className="h-4 w-4" />
-                <span className="text-sm sm:text-base">Manage Subscription</span>
+                {manageLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm sm:text-base">Opening...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-4 w-4" />
+                    <span className="text-sm sm:text-base">Manage Subscription</span>
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -385,9 +459,17 @@ export default function BillingPage() {
                 </ul>
                 <button
                   onClick={() => handleUpgrade('pro')}
-                  className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
+                  disabled={upgradeLoading === 'pro'}
+                  className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
                 >
-                  {subscription ? 'Upgrade to Pro' : 'Subscribe to Pro'}
+                  {upgradeLoading === 'pro' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    subscription ? 'Upgrade to Pro' : 'Subscribe to Pro'
+                  )}
                 </button>
               </div>
               )}
@@ -415,11 +497,50 @@ export default function BillingPage() {
                 </ul>
                 <button
                   onClick={() => handleUpgrade('business')}
-                  className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-purple-600 text-white text-sm sm:text-base rounded-lg hover:bg-purple-700 transition-colors touch-manipulation"
+                  disabled={upgradeLoading === 'business'}
+                  className="w-full mt-4 sm:mt-6 px-4 py-2.5 sm:py-2 bg-purple-600 text-white text-sm sm:text-base rounded-lg hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed transition-colors touch-manipulation flex items-center justify-center gap-2"
                 >
-                  {subscription ? 'Upgrade to Business' : 'Subscribe to Business'}
+                  {upgradeLoading === 'business' ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    subscription ? 'Upgrade to Business' : 'Subscribe to Business'
+                  )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stripe Elements Payment Form Modal */}
+      {showPaymentForm && clientSecret && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Complete Your {selectedPlan ? selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1) : ''} Subscription
+            </h3>
+            
+            <PaymentElementForm
+              clientSecret={clientSecret}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+              buttonText={`Complete ${selectedPlan ? selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1) : ''} Subscription`}
+            />
+            
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowPaymentForm(false);
+                  setClientSecret('');
+                  setSelectedPlan(null);
+                }}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

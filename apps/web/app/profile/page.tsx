@@ -21,6 +21,7 @@ import {
 import { apiFetch } from '@/lib/api';
 import { toFormData, buildUpdatePayload } from '@/lib/profile';
 import type { BackendProfile } from '@/lib/profile';
+import { PaymentElementForm } from '@/components/stripe/PaymentElementForm';
 
 interface SubscriptionAPI {
   id: string;
@@ -65,6 +66,13 @@ function ProfilePageContent() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [pollingSubscription, setPollingSubscription] = useState(false);
+  
+  // Stripe Elements state
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
+  const [manageLoading, setManageLoading] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -251,20 +259,61 @@ function ProfilePageContent() {
       }
     
     try {
-      const data = await apiFetch<{ url: string }>('/v1/billing/create-checkout', {
+      setUpgradeLoading(planCode);
+      
+      // Create subscription with Elements (returns client secret)
+      const data = await apiFetch<{ 
+        subscriptionId: string;
+        clientSecret: string;
+      }>('/v1/billing/create-subscription-elements', {
         method: 'POST',
         body: JSON.stringify({ price_id: priceId }),
       });
-      if (data?.url) {
-        window.location.href = data.url; // Redirect to Stripe Checkout
+      
+      if (data?.clientSecret) {
+        // Show payment form
+        setClientSecret(data.clientSecret);
+        setSelectedPlan(planCode);
+        setShowPaymentForm(true);
+      } else {
+        console.error('No clientSecret in response:', data);
+        setMessage({ type: 'error', text: 'Invalid response from server: missing client secret' });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to start checkout. Please try again.' });
+      setMessage({ type: 'error', text: 'Failed to create subscription. Please try again.' });
+    } finally {
+      setUpgradeLoading(null);
+    }
+  };
+
+  const handlePaymentSuccess = async () => {
+    setMessage({ type: 'success', text: 'Payment successful! Your subscription is now active.' });
+    setShowPaymentForm(false);
+    setClientSecret('');
+    setSelectedPlan(null);
+    
+    // Start polling for subscription activation
+    setPollingSubscription(true);
+    pollSubscriptionWithRetry();
+  };
+
+  const handlePaymentError = (error: Error) => {
+    console.error('Payment error:', error);
+    
+    // Check if it's an ad blocker issue
+    if (error.message.includes('Failed to load') || error.message.includes('ERR_BLOCKED_BY_CLIENT')) {
+      setMessage({ 
+        type: 'error', 
+        text: 'Payment services are blocked. Please disable ad blockers for this site and try again.' 
+      });
+    } else {
+      setMessage({ type: 'error', text: error.message || 'Payment failed' });
     }
   };
 
   const handleManageSubscription = async () => {
     try {
+      setManageLoading(true);
       const data = await apiFetch<{ url: string }>('/v1/billing/portal', {
         method: 'POST',
       });
@@ -273,6 +322,8 @@ function ProfilePageContent() {
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to open billing portal. Please try again.' });
+    } finally {
+      setManageLoading(false);
     }
   };
 
@@ -482,9 +533,17 @@ function ProfilePageContent() {
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           <button
             onClick={() => handleManageSubscription()}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            disabled={manageLoading}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
           >
-            Manage your subscription and payment methods
+            {manageLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Opening...
+              </>
+            ) : (
+              'Manage your subscription and payment methods'
+            )}
           </button>
           </p>
         </div>
@@ -555,9 +614,17 @@ function ProfilePageContent() {
                         </ul>
                         <button
                           onClick={() => handleSubscribe('pro')}
-                          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                          disabled={upgradeLoading === 'pro'}
+                          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
                         >
-                          Upgrade to Pro
+                          {upgradeLoading === 'pro' ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            'Upgrade to Pro'
+                          )}
                         </button>
                       </div>
                     )}
@@ -589,9 +656,17 @@ function ProfilePageContent() {
                       </ul>
                       <button
                         onClick={() => handleSubscribe('business')}
-                        className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+                        disabled={upgradeLoading === 'business'}
+                        className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
                       >
-                        Upgrade to Business
+                        {upgradeLoading === 'business' ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          'Upgrade to Business'
+                        )}
                       </button>
                     </div>
                   </div>
@@ -646,9 +721,17 @@ function ProfilePageContent() {
                   </ul>
                   <button
                     onClick={() => handleSubscribe('free')}
-                    className="w-full mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    disabled={upgradeLoading === 'free'}
+                    className="w-full mt-6 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
-                    {usage?.plan_code === 'free' ? 'Continue with Free' : 'Subscribe to Free'}
+                    {upgradeLoading === 'free' ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      usage?.plan_code === 'free' ? 'Continue with Free' : 'Subscribe to Free'
+                    )}
                   </button>
                 </div>
 
@@ -672,9 +755,17 @@ function ProfilePageContent() {
                   </ul>
                   <button
                     onClick={() => handleSubscribe('pro')}
-                    className="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={upgradeLoading === 'pro'}
+                    className="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
-                    Subscribe to Pro
+                    {upgradeLoading === 'pro' ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Subscribe to Pro'
+                    )}
                   </button>
                 </div>
 
@@ -701,9 +792,17 @@ function ProfilePageContent() {
                   </ul>
                   <button
                     onClick={() => handleSubscribe('business')}
-                    className="w-full mt-6 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    disabled={upgradeLoading === 'business'}
+                    className="w-full mt-6 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
-                    Subscribe to Business
+                    {upgradeLoading === 'business' ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Subscribe to Business'
+                    )}
                   </button>
                 </div>
               </div>
@@ -853,6 +952,37 @@ function ProfilePageContent() {
           </div>
         </div>
       </div>
+
+      {/* Stripe Elements Payment Form Modal */}
+      {showPaymentForm && clientSecret && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              Complete Your {selectedPlan ? selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1) : ''} Subscription
+            </h3>
+            
+            <PaymentElementForm
+              clientSecret={clientSecret}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+              buttonText={`Complete ${selectedPlan ? selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1) : ''} Subscription`}
+            />
+            
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowPaymentForm(false);
+                  setClientSecret('');
+                  setSelectedPlan(null);
+                }}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

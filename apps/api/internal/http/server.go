@@ -150,12 +150,18 @@ func NewServer(
 	})
 
 	// Billing routes
-	bh := billing.NewDefaultHandler(s.db, usageService, cfg.Stripe.SecretKey)
+	bh := billing.NewDefaultHandler(s.db, usageService, cfg.Stripe.SecretKey, cfg)
 	protected.GET("/billing/subscriptions", bh.GetMySubscriptions)
 	protected.GET("/billing/invoices", bh.GetMyInvoices)
 	protected.GET("/billing/usage", bh.GetMyUsage)
 	protected.POST("/billing/create-checkout", bh.CreateCheckoutSession)
 	protected.POST("/billing/portal", bh.CreatePortalSession)
+
+	// Elements-based billing routes
+	protected.POST("/billing/create-subscription-elements", bh.CreateSubscriptionWithElements)
+	protected.GET("/billing/payment-methods", bh.GetPaymentMethods)
+	protected.POST("/billing/upgrade-subscription", bh.UpgradeSubscription)
+	protected.POST("/billing/cancel-subscription", bh.CancelSubscription)
 
 	// User profile routes
 	profileService := user.NewDefaultProfileService(userRepo)
@@ -267,12 +273,18 @@ func NewTestServer(
 	})
 
 	// Billing routes (public in test server)
-	bh := billing.NewDefaultHandler(s.db, usageService, cfg.Stripe.SecretKey)
+	bh := billing.NewDefaultHandler(s.db, usageService, cfg.Stripe.SecretKey, cfg)
 	api.GET("/billing/subscriptions", withTestUser(bh.GetMySubscriptions))
 	api.GET("/billing/invoices", withTestUser(bh.GetMyInvoices))
 	api.GET("/billing/usage", withTestUser(bh.GetMyUsage))
 	api.POST("/billing/create-checkout", withTestUser(bh.CreateCheckoutSession))
 	api.POST("/billing/portal", withTestUser(bh.CreatePortalSession))
+
+	// Elements-based billing routes (test server)
+	api.POST("/billing/create-subscription-elements", withTestUser(bh.CreateSubscriptionWithElements))
+	api.GET("/billing/payment-methods", withTestUser(bh.GetPaymentMethods))
+	api.POST("/billing/upgrade-subscription", withTestUser(bh.UpgradeSubscription))
+	api.POST("/billing/cancel-subscription", withTestUser(bh.CancelSubscription))
 
 	// User profile routes (test server)
 	profileService := user.NewDefaultProfileService(userRepo)

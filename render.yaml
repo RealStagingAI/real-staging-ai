@@ -151,6 +151,9 @@ services:
         value: price_1SJmy5LpUWppqPSlNElnvowM
       - key: NEXT_PUBLIC_STRIPE_PRICE_BUSINESS
         value: price_1SJmyqLpUWppqPSlGhxfz2oQ
+      # Stripe Publishable Key (for Stripe Elements)
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false  # Set in Render dashboard (pk_live_...)
   # Redis Service
   - type: redis
     name: realstaging-redis
