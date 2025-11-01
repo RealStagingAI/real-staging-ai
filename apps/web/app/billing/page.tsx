@@ -104,7 +104,49 @@ export default function BillingPage() {
         return;
       }
 
-      // Create subscription with Elements (returns client secret)
+      // Special handling for free plans - no payment required
+      if (planCode === 'free') {
+        // Create subscription directly without payment form
+        const response = await apiFetch<{ 
+          subscriptionId: string;
+          clientSecret: string;
+        }>('/v1/billing/create-subscription-elements', {
+          method: 'POST',
+          body: JSON.stringify({ price_id: priceId }),
+        });
+
+        if (response?.subscriptionId) {
+          setMessage({ type: 'success', text: 'Free plan activated successfully!' });
+          
+          // Reload billing data and refresh page
+          try {
+            const [usageData, subsData] = await Promise.all([
+              apiFetch<UsageStats>('/v1/billing/usage'),
+              apiFetch<SubscriptionResponse>('/v1/billing/subscriptions'),
+            ]);
+            setUsage(usageData);
+            
+            // Find active subscription
+            const activeSub = subsData.items?.find(
+              (sub: Subscription) => sub.status === 'active' || sub.status === 'trialing'
+            );
+            setSubscription(activeSub || null);
+            
+            // Refresh the entire page to ensure UI consistency
+            window.location.reload();
+          } catch (err: unknown) {
+            console.error('Failed to reload billing data:', err);
+            // Still refresh page even if data reload fails
+            window.location.reload();
+          }
+        } else {
+          console.error('No subscriptionId in response:', response);
+          setMessage({ type: 'error', text: 'Invalid response from server: missing subscription ID' });
+        }
+        return;
+      }
+
+      // For paid plans, show payment form
       const response = await apiFetch<{ 
         subscriptionId: string;
         clientSecret: string;

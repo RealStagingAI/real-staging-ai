@@ -261,7 +261,38 @@ function ProfilePageContent() {
     try {
       setUpgradeLoading(planCode);
       
-      // Create subscription with Elements (returns client secret)
+      // Special handling for free plans - no payment required
+      if (planCode === 'free') {
+        // Create subscription directly without payment form
+        const data = await apiFetch<{ 
+          subscriptionId: string;
+          clientSecret: string;
+        }>('/v1/billing/create-subscription-elements', {
+          method: 'POST',
+          body: JSON.stringify({ price_id: priceId }),
+        });
+
+        if (data?.subscriptionId) {
+          setMessage({ type: 'success', text: 'Free plan activated successfully!' });
+          
+          // Reload profile data and refresh page
+          try {
+            await fetchProfileAndSubscription();
+            // Refresh the entire page to ensure UI consistency
+            window.location.reload();
+          } catch (err: unknown) {
+            console.error('Failed to reload profile data:', err);
+            // Still refresh page even if data reload fails
+            window.location.reload();
+          }
+        } else {
+          console.error('No subscriptionId in response:', data);
+          setMessage({ type: 'error', text: 'Invalid response from server: missing subscription ID' });
+        }
+        return;
+      }
+      
+      // For paid plans, create subscription with Elements (returns client secret)
       const data = await apiFetch<{ 
         subscriptionId: string;
         clientSecret: string;
