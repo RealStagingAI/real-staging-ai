@@ -65,7 +65,10 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 			// Find the most recent active subscription (sorted by created_at desc)
 			var mostRecentSub *queries.Subscription
 			for _, sub := range subs {
-				if mostRecentSub == nil || (sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid && sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time)) {
+				isMoreRecent := mostRecentSub == nil || 
+					(sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid && 
+						sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time))
+				if isMoreRecent {
 					mostRecentSub = sub
 				}
 			}
@@ -124,7 +127,10 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 		// Find the most recent active subscription for billing period
 		var mostRecentSub *queries.Subscription
 		for _, sub := range subs {
-			if mostRecentSub == nil || (sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid && sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time)) {
+			isMoreRecent := mostRecentSub == nil || 
+				(sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid && 
+					sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time))
+			if isMoreRecent {
 				mostRecentSub = sub
 			}
 		}
