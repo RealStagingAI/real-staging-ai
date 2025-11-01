@@ -3,6 +3,7 @@ package billing
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -61,18 +62,36 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 			Column2: []string{"active", "trialing"},
 		})
 		if err == nil && len(subs) > 0 {
-			// User has active subscription, find plan by price ID using config
-			subscriptionPriceID := subs[0].PriceID.String
-			for _, configPlan := range s.config.GetAllPlans() {
-				if configPlan.PriceID == subscriptionPriceID {
-					// Create a plan object from config
-					plan = &queries.Plan{
-						Code:         configPlan.Code,
-						PriceID:      configPlan.PriceID,
-						MonthlyLimit: configPlan.MonthlyLimit,
+			// Find the most recent active subscription (sorted by created_at desc)
+			var mostRecentSub *queries.Subscription
+			for _, sub := range subs {
+				if mostRecentSub == nil || (sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid && sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time)) {
+					mostRecentSub = sub
+				}
+			}
+			
+			if mostRecentSub != nil {
+				fmt.Printf("DEBUG: Selected most recent subscription - ID: %s, PriceID: %s, Created: %s\n", 
+					mostRecentSub.StripeSubscriptionID, mostRecentSub.PriceID.String, mostRecentSub.CreatedAt.Time)
+				
+				// User has active subscription, find plan by price ID using config
+				subscriptionPriceID := mostRecentSub.PriceID.String
+				for _, configPlan := range s.config.GetAllPlans() {
+					if configPlan.PriceID == subscriptionPriceID {
+						// Create a plan object from config
+						plan = &queries.Plan{
+							Code:         configPlan.Code,
+							PriceID:      configPlan.PriceID,
+							MonthlyLimit: configPlan.MonthlyLimit,
+						}
+						hasSubscription = true
+						fmt.Printf("DEBUG: Matched plan - Code: %s, Limit: %d\n", plan.Code, plan.MonthlyLimit)
+						break
 					}
-					hasSubscription = true
-					break
+				}
+				
+				if plan == nil {
+					fmt.Printf("DEBUG: No plan found for PriceID: %s\n", subscriptionPriceID)
 				}
 			}
 		}
@@ -101,10 +120,20 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 		UserID:  userUUID,
 		Column2: []string{"active", "trialing"},
 	})
-	if err == nil && len(subs) > 0 && subs[0].CurrentPeriodStart.Valid && subs[0].CurrentPeriodEnd.Valid {
-		// Use subscription period from Stripe (free tier subscriptions have $0.00 price)
-		periodStart = subs[0].CurrentPeriodStart.Time
-		periodEnd = subs[0].CurrentPeriodEnd.Time
+	if err == nil && len(subs) > 0 {
+		// Find the most recent active subscription for billing period
+		var mostRecentSub *queries.Subscription
+		for _, sub := range subs {
+			if mostRecentSub == nil || (sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid && sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time)) {
+				mostRecentSub = sub
+			}
+		}
+		
+		if mostRecentSub != nil && mostRecentSub.CurrentPeriodStart.Valid && mostRecentSub.CurrentPeriodEnd.Valid {
+			// Use subscription period from Stripe (free tier subscriptions have $0.00 price)
+			periodStart = mostRecentSub.CurrentPeriodStart.Time
+			periodEnd = mostRecentSub.CurrentPeriodEnd.Time
+		}
 	} else {
 		// Fallback to calendar month if no subscription found
 		// (shouldn't happen for properly onboarded users)
