@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Clean up old test subscriptions for a given Stripe customer
-# Usage: ./cleanup_test_subscriptions.sh <customer_id> [api_key]
+# Clean up old subscriptions, keeping only the most recent one
+# Usage: ./cleanup_old_subscriptions.sh <customer_id> [api_key]
 
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <stripe_customer_id> [api_key]"
@@ -13,8 +13,8 @@ fi
 CUSTOMER_ID="$1"
 API_KEY="$2"
 
-echo "Cleaning up SUBSCRIPTIONS for customer: $CUSTOMER_ID"
-echo "WARNING: This will cancel ALL subscriptions for this customer, but keep the customer account intact!"
+echo "Cleaning up OLD subscriptions for customer: $CUSTOMER_ID"
+echo "This will cancel all subscriptions EXCEPT the most recent active one."
 echo "Press Ctrl+C to cancel, or Enter to continue..."
 read
 
@@ -55,23 +55,34 @@ fi
 echo "Fetching subscriptions for customer $CUSTOMER_ID..."
 run_stripe subscriptions list --customer "$CUSTOMER_ID" --limit 100
 
-# Cancel each subscription (except the most recent active one)
-echo ""
-echo "Cancelling old subscriptions..."
+# Get all subscription IDs, sorted by creation date (newest first)
+# Use jq to properly extract subscription IDs from JSON
+ALL_SUBSCRIPTIONS=$(run_stripe subscriptions list --customer "$CUSTOMER_ID" --limit 100 | jq -r '.data[].id' | sort -r)
 
-# Get subscription IDs (skip the most recent one)
-SUBSCRIPTIONS=$(run_stripe subscriptions list --customer "$CUSTOMER_ID" --limit 100 | jq -r '.data[].id' | sort -r | tail -n +2)
-
-if [ -z "$SUBSCRIPTIONS" ]; then
-    echo "No subscriptions found to cancel."
-else
-    for sub in $SUBSCRIPTIONS; do
-        echo "Cancelling subscription: $sub"
-        run_stripe subscriptions cancel "$sub"
-    done
+# Keep the most recent one, cancel the rest
+if [ -z "$ALL_SUBSCRIPTIONS" ]; then
+    echo "No subscriptions found."
+    exit 0
 fi
 
+# Get the most recent subscription (first one in the list)
+MOST_RECENT=$(echo "$ALL_SUBSCRIPTIONS" | head -n 1)
+echo "Keeping most recent subscription: $MOST_RECENT"
+
+# Cancel all others
 echo ""
-echo "Subscription cleanup complete! Customer account preserved."
-echo "Remaining subscriptions for customer $CUSTOMER_ID:"
+echo "Cancelling old subscriptions..."
+CANCEL_COUNT=0
+
+for sub in $ALL_SUBSCRIPTIONS; do
+    if [ "$sub" != "$MOST_RECENT" ]; then
+        echo "Cancelling subscription: $sub"
+        run_stripe subscriptions cancel "$sub"
+        CANCEL_COUNT=$((CANCEL_COUNT + 1))
+    fi
+done
+
+echo ""
+echo "Cleanup complete! Cancelled $CANCEL_COUNT old subscriptions."
+echo "Remaining subscription for customer $CUSTOMER_ID:"
 run_stripe subscriptions list --customer "$CUSTOMER_ID" --limit 100
