@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
-import { Clock, CreditCard, Loader2, Package, TrendingUp, AlertCircle } from 'lucide-react';
+import { Clock, CreditCard, Loader2, Package, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
 import { PaymentElementForm } from '@/components/stripe/PaymentElementForm';
 
 interface UsageStats {
@@ -195,6 +195,11 @@ export default function BillingPage() {
     } catch (err: unknown) {
       console.error('Failed to reload billing data:', err);
     }
+
+    // Clear message after 3 seconds and return to normal view
+    setTimeout(() => {
+      setMessage(null);
+    }, 3000);
   };
 
   const handlePaymentError = (error: Error) => {
@@ -244,14 +249,23 @@ export default function BillingPage() {
   }
 
   if (message) {
+    const isError = message.type === 'error';
     return (
       <div className="container max-w-7xl py-12">
-        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+        <div className={`${isError ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800' : 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'} border rounded-lg p-6`}>
           <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600" />
+            {isError ? (
+              <AlertCircle className="h-5 w-5 text-red-600" />
+            ) : (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            )}
             <div>
-              <h3 className="font-semibold text-red-900 dark:text-red-300">Error</h3>
-              <p className="text-sm text-red-700 dark:text-red-400 mt-1">{message.text}</p>
+              <h3 className={`font-semibold ${isError ? 'text-red-900 dark:text-red-300' : 'text-green-900 dark:text-green-300'}`}>
+                {isError ? 'Error' : 'Success'}
+              </h3>
+              <p className={`text-sm mt-1 ${isError ? 'text-red-700 dark:text-red-400' : 'text-green-700 dark:text-green-400'}`}>
+                {message.text}
+              </p>
             </div>
           </div>
         </div>
