@@ -148,7 +148,7 @@ export default function MobileNav() {
         )}
         aria-label="Mobile navigation"
         aria-hidden={!isOpen}
-        inert={!isOpen}
+        {...({ inert: !isOpen } as React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>)}
         style={{ 
           touchAction: isOpen ? 'pan-y' : 'none',
           willChange: 'transform'
