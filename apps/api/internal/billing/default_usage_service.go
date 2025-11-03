@@ -42,112 +42,16 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 
 	q := queries.New(s.db)
 
-	// Get user's active plan (if they have a subscription)
-	activePlan, err := q.GetUserActivePlan(ctx, userUUID)
-	if err != nil && err.Error() != "no rows in result set" {
+	plan, hasSubscription, err := s.resolveUserPlan(ctx, q, userUUID)
+	if err != nil {
 		return nil, err
 	}
 
-	// If no active subscription from DB, try to find plan by subscription price ID
-	// This handles the case where DB plans are out of sync with env vars
-	var plan *queries.Plan
-	hasSubscription := false
-	if activePlan != nil {
-		plan = activePlan
-		hasSubscription = true
-	} else {
-		// Try to get subscription price ID and find matching plan from config
-		subs, err := q.ListSubscriptionsByUserIDAndStatuses(ctx, queries.ListSubscriptionsByUserIDAndStatusesParams{
-			UserID:  userUUID,
-			Column2: []string{"active", "trialing"},
-		})
-		if err == nil && len(subs) > 0 {
-			// Find the most recent active subscription (sorted by created_at desc)
-			var mostRecentSub *queries.Subscription
-			for _, sub := range subs {
-				isMoreRecent := mostRecentSub == nil || 
-					(sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid && 
-						sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time))
-				if isMoreRecent {
-					mostRecentSub = sub
-				}
-			}
-			
-			if mostRecentSub != nil {
-				fmt.Printf("DEBUG: Selected most recent subscription - ID: %s, PriceID: %s, Created: %s\n", 
-					mostRecentSub.StripeSubscriptionID, mostRecentSub.PriceID.String, mostRecentSub.CreatedAt.Time)
-				
-				// User has active subscription, find plan by price ID using config
-				subscriptionPriceID := mostRecentSub.PriceID.String
-				for _, configPlan := range s.config.GetAllPlans() {
-					if configPlan.PriceID == subscriptionPriceID {
-						// Create a plan object from config
-						plan = &queries.Plan{
-							Code:         configPlan.Code,
-							PriceID:      configPlan.PriceID,
-							MonthlyLimit: configPlan.MonthlyLimit,
-						}
-						hasSubscription = true
-						fmt.Printf("DEBUG: Matched plan - Code: %s, Limit: %d\n", plan.Code, plan.MonthlyLimit)
-						break
-					}
-				}
-				
-				if plan == nil {
-					fmt.Printf("DEBUG: No plan found for PriceID: %s\n", subscriptionPriceID)
-				}
-			}
-		}
-
-		// If still no plan found, use free plan from config
-		if plan == nil {
-			freePriceID, err := s.config.GetPriceIDByCode("free")
-			if err != nil {
-				return nil, errors.New("free plan price ID not configured")
-			}
-			plan = &queries.Plan{
-				Code:         "free",
-				PriceID:      freePriceID,
-				MonthlyLimit: 100, // Updated free tier limit
-			}
-		}
+	periodStart, periodEnd, err := s.getBillingPeriod(ctx, q, userUUID)
+	if err != nil {
+		return nil, err
 	}
 
-	// Calculate billing period from subscription (both free and paid)
-	// All users (including free tier) should have a Stripe subscription that tracks their period
-	now := time.Now().UTC()
-	var periodStart, periodEnd time.Time
-
-	// Try to get subscription period for all users (free and paid)
-	subs, err := q.ListSubscriptionsByUserIDAndStatuses(ctx, queries.ListSubscriptionsByUserIDAndStatusesParams{
-		UserID:  userUUID,
-		Column2: []string{"active", "trialing"},
-	})
-	if err == nil && len(subs) > 0 {
-		// Find the most recent active subscription for billing period
-		var mostRecentSub *queries.Subscription
-		for _, sub := range subs {
-			isMoreRecent := mostRecentSub == nil || 
-				(sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid && 
-					sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time))
-			if isMoreRecent {
-				mostRecentSub = sub
-			}
-		}
-		
-		if mostRecentSub != nil && mostRecentSub.CurrentPeriodStart.Valid && mostRecentSub.CurrentPeriodEnd.Valid {
-			// Use subscription period from Stripe (free tier subscriptions have $0.00 price)
-			periodStart = mostRecentSub.CurrentPeriodStart.Time
-			periodEnd = mostRecentSub.CurrentPeriodEnd.Time
-		}
-	} else {
-		// Fallback to calendar month if no subscription found
-		// (shouldn't happen for properly onboarded users)
-		periodStart = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-		periodEnd = periodStart.AddDate(0, 1, 0)
-	}
-
-	// Count images created in this period
 	imagesUsed, err := q.CountImagesCreatedInPeriod(ctx, queries.CountImagesCreatedInPeriodParams{
 		UserID:      userUUID,
 		CreatedAt:   pgtype.Timestamptz{Time: periodStart, Valid: true},
@@ -157,9 +61,7 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 		return nil, err
 	}
 
-	// Calculate remaining images
-	var remaining int32
-	remaining = plan.MonthlyLimit - imagesUsed
+	remaining := plan.MonthlyLimit - imagesUsed
 	if remaining < 0 {
 		remaining = 0
 	}
@@ -173,6 +75,133 @@ func (s *DefaultUsageService) GetUsage(ctx context.Context, userID string) (*Usa
 		HasSubscription: hasSubscription,
 		RemainingImages: remaining,
 	}, nil
+}
+
+// resolveUserPlan determines the user's current plan and subscription status
+func (s *DefaultUsageService) resolveUserPlan(
+	ctx context.Context,
+	q *queries.Queries,
+	userUUID pgtype.UUID,
+) (*queries.Plan, bool, error) {
+	// Get user's active plan from database
+	activePlan, err := q.GetUserActivePlan(ctx, userUUID)
+	if err != nil && err.Error() != "no rows in result set" {
+		return nil, false, err
+	}
+
+	if activePlan != nil {
+		return activePlan, true, nil
+	}
+
+	// Try to find plan by subscription price ID
+	plan, hasSubscription, err := s.findPlanBySubscription(ctx, q, userUUID)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if plan != nil {
+		return plan, hasSubscription, nil
+	}
+
+	// Fallback to free plan
+	return s.getFreePlan()
+}
+
+// findPlanBySubscription looks up the user's plan based on their active subscription
+func (s *DefaultUsageService) findPlanBySubscription(
+	ctx context.Context,
+	q *queries.Queries,
+	userUUID pgtype.UUID,
+) (*queries.Plan, bool, error) {
+	subs, err := q.ListSubscriptionsByUserIDAndStatuses(ctx, queries.ListSubscriptionsByUserIDAndStatusesParams{
+		UserID:  userUUID,
+		Column2: []string{"active", "trialing"},
+	})
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to list subscriptions: %w", err)
+	}
+	if len(subs) == 0 {
+		return nil, false, nil
+	}
+
+	mostRecentSub := s.findMostRecentSubscription(subs)
+	if mostRecentSub == nil {
+		return nil, false, nil
+	}
+
+	fmt.Printf("DEBUG: Selected most recent subscription - ID: %s, PriceID: %s, Created: %s\n",
+		mostRecentSub.StripeSubscriptionID, mostRecentSub.PriceID.String, mostRecentSub.CreatedAt.Time)
+
+	subscriptionPriceID := mostRecentSub.PriceID.String
+	for _, configPlan := range s.config.GetAllPlans() {
+		if configPlan.PriceID == subscriptionPriceID {
+			plan := &queries.Plan{
+				Code:         configPlan.Code,
+				PriceID:      configPlan.PriceID,
+				MonthlyLimit: configPlan.MonthlyLimit,
+			}
+			fmt.Printf("DEBUG: Matched plan - Code: %s, Limit: %d\n", plan.Code, plan.MonthlyLimit)
+			return plan, true, nil
+		}
+	}
+
+	fmt.Printf("DEBUG: No plan found for PriceID: %s\n", subscriptionPriceID)
+	return nil, false, nil
+}
+
+// findMostRecentSubscription returns the most recent subscription from a list
+func (s *DefaultUsageService) findMostRecentSubscription(subs []*queries.Subscription) *queries.Subscription {
+	var mostRecentSub *queries.Subscription
+	for _, sub := range subs {
+		isMoreRecent := mostRecentSub == nil ||
+			(sub.CreatedAt.Valid && mostRecentSub.CreatedAt.Valid &&
+				sub.CreatedAt.Time.After(mostRecentSub.CreatedAt.Time))
+		if isMoreRecent {
+			mostRecentSub = sub
+		}
+	}
+	return mostRecentSub
+}
+
+// getFreePlan returns the default free plan configuration
+func (s *DefaultUsageService) getFreePlan() (*queries.Plan, bool, error) {
+	freePriceID, err := s.config.GetPriceIDByCode("free")
+	if err != nil {
+		return nil, false, errors.New("free plan price ID not configured")
+	}
+	plan := &queries.Plan{
+		Code:         "free",
+		PriceID:      freePriceID,
+		MonthlyLimit: 100, // Updated free tier limit
+	}
+	return plan, false, nil
+}
+
+// getBillingPeriod determines the current billing period for a user
+func (s *DefaultUsageService) getBillingPeriod(
+	ctx context.Context,
+	q *queries.Queries,
+	userUUID pgtype.UUID,
+) (time.Time, time.Time, error) {
+	now := time.Now().UTC()
+
+	// Try to get subscription period for all users (free and paid)
+	subs, err := q.ListSubscriptionsByUserIDAndStatuses(ctx, queries.ListSubscriptionsByUserIDAndStatusesParams{
+		UserID:  userUUID,
+		Column2: []string{"active", "trialing"},
+	})
+	if err == nil && len(subs) > 0 {
+		mostRecentSub := s.findMostRecentSubscription(subs)
+		if mostRecentSub != nil && mostRecentSub.CurrentPeriodStart.Valid && mostRecentSub.CurrentPeriodEnd.Valid {
+			// Use subscription period from Stripe
+			return mostRecentSub.CurrentPeriodStart.Time, mostRecentSub.CurrentPeriodEnd.Time, nil
+		}
+	}
+
+	// Fallback to calendar month if no subscription found
+	periodStart := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+	periodEnd := periodStart.AddDate(0, 1, 0)
+	return periodStart, periodEnd, nil
 }
 
 // CanCreateImage checks if a user can create a new image based on their plan limits.

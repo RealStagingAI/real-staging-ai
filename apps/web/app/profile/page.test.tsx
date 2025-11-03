@@ -180,7 +180,10 @@ describe('ProfilePage', () => {
         remaining_images: 10
       })
       .mockResolvedValueOnce({ items: [] })
-      .mockResolvedValueOnce({ url: 'https://checkout.example.com' })
+      .mockResolvedValueOnce({ 
+        subscriptionId: 'sub_test_123',
+        clientSecret: 'pi_test_123_secret'
+      })
 
     // Mock window.location to allow setting href
     const originalLocation = window.location
@@ -203,8 +206,8 @@ describe('ProfilePage', () => {
       await Promise.resolve()
     })
 
-    // Expect POST to create-checkout
-    const call = apiFetchMock.mock.calls.find((c) => c[0] === '/v1/billing/create-checkout')
+    // Expect POST to create-subscription-elements
+    const call = apiFetchMock.mock.calls.find((c) => c[0] === '/v1/billing/create-subscription-elements')
     expect(call).toBeTruthy()
     expect(call?.[1]?.method).toBe('POST')
 
