@@ -21,8 +21,11 @@ export async function middleware(request: NextRequest) {
   const adminProtectedPaths = ['/admin'];
   const pathname = request.nextUrl.pathname;
   
+  // Exclude marketing images from protection
+  const isMarketingImage = pathname.startsWith('/images/marketing/');
+  
   // Check if the current path is protected
-  const isUserProtectedPath = userProtectedPaths.some(path => pathname.startsWith(path));
+  const isUserProtectedPath = !isMarketingImage && userProtectedPaths.some(path => pathname.startsWith(path));
   const isAdminProtectedPath = adminProtectedPaths.some(path => pathname.startsWith(path));
   
   if (isUserProtectedPath || isAdminProtectedPath) {

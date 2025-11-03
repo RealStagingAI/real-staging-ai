@@ -25,11 +25,15 @@ export default function MobileNav() {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Prevent touch move on body when menu is open to avoid swipe gestures
+      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -41,6 +45,37 @@ export default function MobileNav() {
     if (isOpen) {
       window.addEventListener('keydown', handleEscape);
       return () => window.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen]);
+
+  // Prevent swipe gestures from revealing closed menu
+  useEffect(() => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isOpen) {
+        // Check if touch is starting from the right edge and moving left
+        const touch = e.touches[0];
+        if (touch && touch.clientX > window.innerWidth - 50) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (!isOpen) {
+        const touch = e.touches[0];
+        if (touch && touch.clientX > window.innerWidth - 50) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    if (!isOpen) {
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchstart', handleTouchStart, { passive: false });
+      return () => {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchstart', handleTouchStart);
+      };
     }
   }, [isOpen]);
 
@@ -109,9 +144,15 @@ export default function MobileNav() {
           'fixed top-0 right-0 h-[100dvh] w-80 max-w-[85vw] bg-white dark:bg-slate-950 z-40 md:hidden',
           'shadow-2xl transform transition-transform duration-300 ease-out',
           'flex flex-col pt-safe', // Use flexbox for proper layout with top safe area
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          isOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         )}
         aria-label="Mobile navigation"
+        aria-hidden={!isOpen}
+        inert={!isOpen}
+        style={{ 
+          touchAction: isOpen ? 'pan-y' : 'none',
+          willChange: 'transform'
+        }}
       >
         {/* Menu Header */}
         <div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-800">
