@@ -173,8 +173,9 @@ function ProfilePageContent() {
             text: 'Subscription activated successfully! Welcome to your new plan.' 
           });
           setTimeout(() => setMessage(null), 5000);
-          // Clean up URL
+          // Clean up URL and refresh page to ensure UI consistency
           router.replace('/profile');
+          window.location.reload();
           return; // Success, stop polling
         }
       } catch (error) {
@@ -261,7 +262,68 @@ function ProfilePageContent() {
     try {
       setUpgradeLoading(planCode);
       
-      // Special handling for free plans - no payment required
+      // Check if user has existing subscription
+      if (subscription) {
+        // Show confirmation prompt before upgrading
+        const planNames: Record<string, string> = {
+          free: 'Free',
+          pro: 'Pro',
+          business: 'Business'
+        };
+        
+        const currentPlanName = usage ? planNames[usage.plan_code] || 'Unknown' : 'Current';
+        const newPlanName = planNames[planCode] || 'Unknown';
+        
+        const confirmed = window.confirm(
+          `Are you sure you want to upgrade from ${currentPlanName} to ${newPlanName}?\n\n` +
+          `This will modify your existing subscription and may result in additional charges.\n\n` +
+          `Click OK to continue or Cancel to keep your current plan.`
+        );
+        
+        if (!confirmed) {
+          return;
+        }
+        
+        // Use upgrade endpoint for existing subscriptions
+        const data = await apiFetch<{ 
+          clientSecret?: string;
+          success?: boolean;
+          message?: string;
+          subscriptionId?: string;
+        }>('/v1/billing/upgrade-subscription', {
+          method: 'POST',
+          body: JSON.stringify({ price_id: priceId }),
+        });
+
+        // Handle immediate successful upgrade (no payment required)
+        if (data.success) {
+          setMessage({ type: 'success', text: data.message || 'Subscription updated successfully!' });
+          
+          // Reload profile data
+          try {
+            await fetchProfileAndSubscription();
+            // Refresh the entire page to ensure UI consistency
+            window.location.reload();
+          } catch (err: unknown) {
+            console.error('Failed to reload profile data:', err);
+            // Still refresh page even if data reload fails
+            window.location.reload();
+          }
+          return;
+        }
+
+        if (data?.clientSecret) {
+          // Show payment form for upgrade
+          setClientSecret(data.clientSecret);
+          setSelectedPlan(planCode);
+          setShowPaymentForm(true);
+        } else {
+          setMessage({ type: 'error', text: 'Invalid response from server: missing client secret' });
+        }
+        return;
+      }
+      
+      // Special handling for free plans - no payment required (new subscription)
       if (planCode === 'free') {
         // Create subscription directly without payment form
         const data = await apiFetch<{ 
@@ -292,7 +354,7 @@ function ProfilePageContent() {
         return;
       }
       
-      // For paid plans, create subscription with Elements (returns client secret)
+      // For paid plans, create subscription with Elements (new subscription)
       const data = await apiFetch<{ 
         subscriptionId: string;
         clientSecret: string;

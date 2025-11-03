@@ -14,12 +14,12 @@ import (
 	checkoutsession "github.com/stripe/stripe-go/v81/checkout/session"
 	"github.com/stripe/stripe-go/v81/customer"
 	"github.com/stripe/stripe-go/v81/paymentmethod"
-	"github.com/stripe/stripe-go/v81/setupintent"
 	"github.com/stripe/stripe-go/v81/subscription"
 
 	"github.com/real-staging-ai/api/internal/auth"
 	"github.com/real-staging-ai/api/internal/config"
 	"github.com/real-staging-ai/api/internal/storage"
+	"github.com/real-staging-ai/api/internal/storage/queries"
 	stripeLib "github.com/real-staging-ai/api/internal/stripe"
 	"github.com/real-staging-ai/api/internal/user"
 )
@@ -665,7 +665,7 @@ func (h *DefaultHandler) GetPaymentMethods(c echo.Context) error {
 	})
 }
 
-// UpgradeSubscription creates a subscription upgrade session
+// UpgradeSubscription upgrades an existing subscription to a new price tier
 // POST /api/v1/billing/upgrade-subscription
 func (h *DefaultHandler) UpgradeSubscription(c echo.Context) error {
 	var req struct {
@@ -687,7 +687,7 @@ func (h *DefaultHandler) UpgradeSubscription(c echo.Context) error {
 		})
 	}
 
-	// Get user
+	// Get user with subscription
 	uRepo := user.NewDefaultRepository(h.db)
 	existingUser, err := uRepo.GetByAuth0Sub(c.Request().Context(), auth0Sub)
 	if err != nil {
@@ -706,24 +706,115 @@ func (h *DefaultHandler) UpgradeSubscription(c echo.Context) error {
 		})
 	}
 
-	// Create a SetupIntent for payment method collection
-	setupIntentParams := &stripe.SetupIntentParams{
-		Customer:           stripe.String(existingUser.StripeCustomerID.String),
-		Usage:              stripe.String("off_session"),
-		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-	}
-
-	setupIntent, err := setupintent.New(setupIntentParams)
+	// Get user's existing subscription from database
+	subRepo := stripeLib.NewSubscriptionsRepository(h.db)
+	dbSubscriptions, err := subRepo.ListByUserID(c.Request().Context(), existingUser.ID.String(), 10, 0)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, ErrorResponse{
 			Error:   "internal_server_error",
-			Message: fmt.Sprintf("Failed to create setup intent: %v", err),
+			Message: "Failed to retrieve existing subscription",
+		})
+	}
+
+	// Find active subscription
+	var activeSubscription *queries.Subscription
+	for _, sub := range dbSubscriptions {
+		if sub.Status == "active" || sub.Status == "trialing" {
+			activeSubscription = sub
+			break
+		}
+	}
+
+	if activeSubscription == nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "no_active_subscription",
+			Message: "No active subscription found to upgrade",
+		})
+	}
+
+	// Retrieve the Stripe subscription
+	stripeSubscription, err := subscription.Get(activeSubscription.StripeSubscriptionID, nil)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: fmt.Sprintf("Failed to retrieve Stripe subscription: %v", err),
+		})
+	}
+
+	// For free plans, downgrade immediately without payment
+	if req.PriceID == h.config.Plans.FreePriceID {
+		// Update subscription to free plan
+		_, err = subscription.Update(stripeSubscription.ID, &stripe.SubscriptionParams{
+			Items: []*stripe.SubscriptionItemsParams{
+				{
+					ID:    stripe.String(stripeSubscription.Items.Data[0].ID),
+					Price: stripe.String(req.PriceID),
+				},
+			},
+			ProrationBehavior: stripe.String("create_prorations"),
+		})
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "internal_server_error",
+				Message: fmt.Sprintf("Failed to downgrade subscription: %v", err),
+			})
+		}
+
+		return c.JSON(http.StatusOK, map[string]interface{}{
+			"success": true,
+			"message": "Successfully downgraded to free plan",
+		})
+	}
+
+	// For paid plans, create a subscription modification with payment
+	updatedSubscription, err := subscription.Update(stripeSubscription.ID, &stripe.SubscriptionParams{
+		Items: []*stripe.SubscriptionItemsParams{
+			{
+				ID:    stripe.String(stripeSubscription.Items.Data[0].ID),
+				Price: stripe.String(req.PriceID),
+			},
+		},
+		PaymentBehavior: stripe.String("default_incomplete"),
+		PaymentSettings: &stripe.SubscriptionPaymentSettingsParams{
+			SaveDefaultPaymentMethod: stripe.String("on_subscription"),
+		},
+		ProrationBehavior: stripe.String("create_prorations"),
+		Expand: []*string{
+			stripe.String("latest_invoice.payment_intent"),
+		},
+	})
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "internal_server_error",
+			Message: fmt.Sprintf("Failed to upgrade subscription: %v", err),
+		})
+	}
+
+	// Return client secret for payment confirmation
+	var clientSecret string
+	if updatedSubscription.LatestInvoice != nil {
+		if updatedSubscription.LatestInvoice.PaymentIntent != nil {
+			clientSecret = updatedSubscription.LatestInvoice.PaymentIntent.ClientSecret
+		} else if updatedSubscription.LatestInvoice.Status == "paid" {
+			// Subscription already paid/updated, no payment confirmation needed
+			return c.JSON(http.StatusOK, map[string]interface{}{
+				"success":        true,
+				"message":        "Subscription updated successfully",
+				"subscriptionId": updatedSubscription.ID,
+			})
+		}
+	}
+
+	if clientSecret == "" {
+		return c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "payment_failed",
+			Message: "Failed to create payment intent for subscription upgrade",
 		})
 	}
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
-		"clientSecret": setupIntent.ClientSecret,
-		"priceId":      req.PriceID,
+		"clientSecret":   clientSecret,
+		"subscriptionId": updatedSubscription.ID,
 	})
 }
 

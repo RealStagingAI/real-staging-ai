@@ -104,7 +104,81 @@ export default function BillingPage() {
         return;
       }
 
-      // Special handling for free plans - no payment required
+      // Check if user has existing subscription
+      if (subscription) {
+        // Show confirmation prompt before upgrading
+        const planNames: Record<string, string> = {
+          free: 'Free',
+          pro: 'Pro',
+          business: 'Business'
+        };
+        
+        const currentPlanName = usage ? planNames[usage.plan_code] || 'Unknown' : 'Current';
+        const newPlanName = planNames[planCode] || 'Unknown';
+        
+        const confirmed = window.confirm(
+          `Are you sure you want to upgrade from ${currentPlanName} to ${newPlanName}?\n\n` +
+          `This will modify your existing subscription and may result in additional charges.\n\n` +
+          `Click OK to continue or Cancel to keep your current plan.`
+        );
+        
+        if (!confirmed) {
+          return;
+        }
+        
+        // Use upgrade endpoint for existing subscriptions
+        const response = await apiFetch<{ 
+          clientSecret?: string;
+          success?: boolean;
+          message?: string;
+          subscriptionId?: string;
+        }>('/v1/billing/upgrade-subscription', {
+          method: 'POST',
+          body: JSON.stringify({ price_id: priceId }),
+        });
+
+        // Handle immediate successful upgrade (no payment required)
+        if (response.success) {
+          setMessage({ type: 'success', text: response.message || 'Subscription updated successfully!' });
+          
+          // Reload billing data
+          try {
+            const [usageData, subsData] = await Promise.all([
+              apiFetch<UsageStats>('/v1/billing/usage'),
+              apiFetch<SubscriptionResponse>('/v1/billing/subscriptions'),
+            ]);
+            setUsage(usageData);
+            
+            // Find active subscription
+            const activeSub = subsData.items?.find(
+              (sub: Subscription) => sub.status === 'active' || sub.status === 'trialing'
+            );
+            setSubscription(activeSub || null);
+            
+            // Clear message after 3 seconds and return to normal view
+            setTimeout(() => {
+              setMessage(null);
+            }, 3000);
+          } catch (err: unknown) {
+            console.error('Failed to reload billing data:', err);
+          }
+          return;
+        }
+
+        if (!response.clientSecret) {
+          console.error('No clientSecret in upgrade response:', response);
+          setMessage({ type: 'error', text: 'Invalid response from server: missing client secret' });
+          return;
+        }
+
+        // Show payment form for upgrade
+        setClientSecret(response.clientSecret);
+        setSelectedPlan(planCode);
+        setShowPaymentForm(true);
+        return;
+      }
+
+      // Special handling for free plans - no payment required (new subscription)
       if (planCode === 'free') {
         // Create subscription directly without payment form
         const response = await apiFetch<{ 
@@ -146,7 +220,7 @@ export default function BillingPage() {
         return;
       }
 
-      // For paid plans, show payment form
+      // For paid plans, show payment form (new subscription)
       const response = await apiFetch<{ 
         subscriptionId: string;
         clientSecret: string;
@@ -192,8 +266,13 @@ export default function BillingPage() {
         (sub: Subscription) => sub.status === 'active' || sub.status === 'trialing'
       );
       setSubscription(activeSub || null);
+      
+      // Refresh the entire page to ensure UI consistency
+      window.location.reload();
     } catch (err: unknown) {
       console.error('Failed to reload billing data:', err);
+      // Still refresh page even if data reload fails
+      window.location.reload();
     }
 
     // Clear message after 3 seconds and return to normal view
