@@ -51,17 +51,8 @@ export default function MobileNav() {
   // Prevent swipe gestures from revealing closed menu
   useEffect(() => {
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isOpen) {
-        // Check if touch is starting from the right edge and moving left
-        const touch = e.touches[0];
-        if (touch && touch.clientX > window.innerWidth - 50) {
-          e.preventDefault();
-        }
-      }
-    };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (!isOpen) {
+      if (!isOpen && e.target === document.body) {
+        // Only prevent swipe gestures on the body, not on interactive elements
         const touch = e.touches[0];
         if (touch && touch.clientX > window.innerWidth - 50) {
           e.preventDefault();
@@ -71,10 +62,8 @@ export default function MobileNav() {
 
     if (!isOpen) {
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      document.addEventListener('touchstart', handleTouchStart, { passive: false });
       return () => {
         document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchstart', handleTouchStart);
       };
     }
   }, [isOpen]);
