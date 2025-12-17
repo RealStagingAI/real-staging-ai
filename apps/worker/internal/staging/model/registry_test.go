@@ -38,8 +38,8 @@ func TestNewModelRegistry(t *testing.T) {
 		registry := NewModelRegistry()
 
 		models := registry.List()
-		if len(models) != 6 {
-			t.Errorf("expected 6 models to be registered, got %d", len(models))
+		if len(models) != 7 {
+			t.Errorf("expected 7 models to be registered, got %d", len(models))
 		}
 	})
 }
@@ -97,145 +97,95 @@ func TestModelRegistry_Register(t *testing.T) {
 }
 
 func TestModelRegistry_Get(t *testing.T) {
-	t.Run("success: retrieves Qwen model", func(t *testing.T) {
-		registry := NewModelRegistry()
+	tests := []struct {
+		name           string
+		modelID        ID
+		wantName       string
+		expectError    bool
+		expectedErrMsg string
+	}{
+		{
+			name:        "success: retrieves Qwen model",
+			modelID:     ModelQwenImageEdit,
+			wantName:    "", // any name is fine for Qwen
+			expectError: false,
+		},
+		{
+			name:        "success: retrieves Flux Kontext Max model",
+			modelID:     ModelFluxKontextMax,
+			wantName:    "Flux Kontext Max",
+			expectError: false,
+		},
+		{
+			name:        "success: retrieves Flux Kontext Pro model",
+			modelID:     ModelFluxKontextPro,
+			wantName:    "Flux Kontext Pro",
+			expectError: false,
+		},
+		{
+			name:        "success: retrieves Seedream-3 model",
+			modelID:     ModelSeedream3,
+			wantName:    "Seedream 3",
+			expectError: false,
+		},
+		{
+			name:        "success: retrieves Seedream-4 model",
+			modelID:     ModelSeedream4,
+			wantName:    "Seedream 4",
+			expectError: false,
+		},
+		{
+			name:        "success: retrieves GPT Image 1 model",
+			modelID:     ModelGPTImage1,
+			wantName:    "GPT Image 1",
+			expectError: false,
+		},
+		{
+			name:        "success: retrieves GPT Image 1.5 model",
+			modelID:     ModelGPTImage1_5,
+			wantName:    "GPT Image 1.5",
+			expectError: false,
+		},
+		{
+			name:           "fail: model not found",
+			modelID:        ID("nonexistent/model"),
+			expectError:    true,
+			expectedErrMsg: "model not found: nonexistent/model",
+		},
+	}
 
-		model, err := registry.Get(ModelQwenImageEdit)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			registry := NewModelRegistry()
 
-		if model.ID != ModelQwenImageEdit {
-			t.Errorf("expected model ID to be %s, got %s", ModelQwenImageEdit, model.ID)
-		}
+			model, err := registry.Get(tt.modelID)
+			if tt.expectError {
+				if err == nil {
+					t.Fatal("expected error for nonexistent model")
+				}
+				if err.Error() != tt.expectedErrMsg {
+					t.Errorf("expected error message %q, got %q", tt.expectedErrMsg, err.Error())
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-		if model.Name == "" {
-			t.Error("expected model to have a name")
-		}
-
-		if model.InputBuilder == nil {
-			t.Error("expected model to have an input builder")
-		}
-	})
-
-	t.Run("success: retrieves Flux Kontext Max model", func(t *testing.T) {
-		registry := NewModelRegistry()
-
-		model, err := registry.Get(ModelFluxKontextMax)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if model.ID != ModelFluxKontextMax {
-			t.Errorf("expected model ID to be %s, got %s", ModelFluxKontextMax, model.ID)
-		}
-
-		if model.Name != "Flux Kontext Max" {
-			t.Errorf("expected model name to be 'Flux Kontext Max', got %s", model.Name)
-		}
-
-		if model.InputBuilder == nil {
-			t.Error("expected model to have an input builder")
-		}
-	})
-
-	t.Run("success: retrieves Flux Kontext Pro model", func(t *testing.T) {
-		registry := NewModelRegistry()
-
-		model, err := registry.Get(ModelFluxKontextPro)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if model.ID != ModelFluxKontextPro {
-			t.Errorf("expected model ID to be %s, got %s", ModelFluxKontextPro, model.ID)
-		}
-
-		if model.Name != "Flux Kontext Pro" {
-			t.Errorf("expected model name to be 'Flux Kontext Pro', got %s", model.Name)
-		}
-
-		if model.InputBuilder == nil {
-			t.Error("expected model to have an input builder")
-		}
-	})
-
-	t.Run("success: retrieves Seedream-3 model", func(t *testing.T) {
-		registry := NewModelRegistry()
-
-		model, err := registry.Get(ModelSeedream3)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if model.ID != ModelSeedream3 {
-			t.Errorf("expected model ID to be %s, got %s", ModelSeedream3, model.ID)
-		}
-
-		if model.Name != "Seedream 3" {
-			t.Errorf("expected model name to be 'Seedream 3', got %s", model.Name)
-		}
-
-		if model.InputBuilder == nil {
-			t.Error("expected model to have an input builder")
-		}
-	})
-
-	t.Run("success: retrieves Seedream-4 model", func(t *testing.T) {
-		registry := NewModelRegistry()
-
-		model, err := registry.Get(ModelSeedream4)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if model.ID != ModelSeedream4 {
-			t.Errorf("expected model ID to be %s, got %s", ModelSeedream4, model.ID)
-		}
-
-		if model.Name != "Seedream 4" {
-			t.Errorf("expected model name to be 'Seedream 4', got %s", model.Name)
-		}
-
-		if model.InputBuilder == nil {
-			t.Error("expected model to have an input builder")
-		}
-	})
-
-	t.Run("success: retrieves GPT Image 1 model", func(t *testing.T) {
-		registry := NewModelRegistry()
-
-		model, err := registry.Get(ModelGPTImage1)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-
-		if model.ID != ModelGPTImage1 {
-			t.Errorf("expected model ID to be %s, got %s", ModelGPTImage1, model.ID)
-		}
-
-		if model.Name != "GPT Image 1" {
-			t.Errorf("expected model name to be 'GPT Image 1', got %s", model.Name)
-		}
-
-		if model.InputBuilder == nil {
-			t.Error("expected model to have an input builder")
-		}
-	})
-
-	t.Run("fail: model not found", func(t *testing.T) {
-		registry := NewModelRegistry()
-
-		_, err := registry.Get(ID("nonexistent/model"))
-		if err == nil {
-			t.Fatal("expected error for nonexistent model")
-		}
-
-		expectedMsg := "model not found: nonexistent/model"
-		if err.Error() != expectedMsg {
-			t.Errorf("expected error message %q, got %q", expectedMsg, err.Error())
-		}
-	})
+			if model.ID != tt.modelID {
+				t.Errorf("expected model ID to be %s, got %s", tt.modelID, model.ID)
+			}
+			if tt.wantName != "" && model.Name != tt.wantName {
+				t.Errorf("expected model name to be '%s', got %s", tt.wantName, model.Name)
+			}
+			if model.Name == "" {
+				t.Error("expected model to have a name")
+			}
+			if model.InputBuilder == nil {
+				t.Error("expected model to have an input builder")
+			}
+		})
+	}
 }
 
 func TestModelRegistry_List(t *testing.T) {
@@ -244,8 +194,8 @@ func TestModelRegistry_List(t *testing.T) {
 
 		models := registry.List()
 
-		if len(models) != 6 {
-			t.Errorf("expected 6 models to be registered, got %d", len(models))
+		if len(models) != 7 {
+			t.Errorf("expected 7 models to be registered, got %d", len(models))
 		}
 
 		// Verify all models are in the list
@@ -255,6 +205,7 @@ func TestModelRegistry_List(t *testing.T) {
 		foundSeedream3 := false
 		foundSeedream4 := false
 		foundGPTImage1 := false
+		foundGPTImage1_5 := false
 		for _, model := range models {
 			if model.ID == ModelQwenImageEdit {
 				foundQwen = true
@@ -273,6 +224,9 @@ func TestModelRegistry_List(t *testing.T) {
 			}
 			if model.ID == ModelGPTImage1 {
 				foundGPTImage1 = true
+			}
+			if model.ID == ModelGPTImage1_5 {
+				foundGPTImage1_5 = true
 			}
 		}
 
@@ -293,6 +247,9 @@ func TestModelRegistry_List(t *testing.T) {
 		}
 		if !foundGPTImage1 {
 			t.Error("expected GPT Image 1 model to be in the list")
+		}
+		if !foundGPTImage1_5 {
+			t.Error("expected GPT Image 1.5 model to be in the list")
 		}
 	})
 

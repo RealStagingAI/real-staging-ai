@@ -39,6 +39,7 @@ const (
     ModelSeedream3      ModelID = "bytedance/seedream-3"
     ModelSeedream4      ModelID = "bytedance/seedream-4"
     ModelGPTImage1      ModelID = "openai/gpt-image-1"
+    ModelGPTImage1_5    ModelID = "openai/gpt-image-1.5"
     // Additional models can be added here
 )
 ```

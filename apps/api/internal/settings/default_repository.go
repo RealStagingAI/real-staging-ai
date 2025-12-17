@@ -172,6 +172,8 @@ func getConfigKey(modelID string) string {
 		return "model_config_seedream_4"
 	case "openai/gpt-image-1":
 		return "model_config_gpt_image_1"
+	case "openai/gpt-image-1.5":
+		return "model_config_gpt_image_1_5"
 	default:
 		return fmt.Sprintf("model_config_%s", modelID)
 	}

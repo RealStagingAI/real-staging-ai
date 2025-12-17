@@ -18,6 +18,7 @@ const (
 	ModelSeedream3      ID = "bytedance/seedream-3"
 	ModelSeedream4      ID = "bytedance/seedream-4"
 	ModelGPTImage1      ID = "openai/gpt-image-1"
+	ModelGPTImage1_5    ID = "openai/gpt-image-1.5"
 )
 
 // ModelInputRequest contains the parameters needed to build model input.
@@ -115,6 +116,16 @@ func NewModelRegistry() *ModelRegistry {
 		Name:          "GPT Image 1",
 		Description:   "OpenAI's GPT Image 1 model providing multimodal image generation",
 		Version:       "5ac56c15446a60fa63b3823de926ada90f5971c2cf9b1dd07659126cfda434e6",
+		InputBuilder:  NewGPTImageInputBuilder(),
+		DefaultConfig: (&GPTImageConfig{}).GetDefaults(),
+	})
+
+	// Register GPT Image 1.5 model
+	registry.Register(&ModelMetadata{
+		ID:            ModelGPTImage1_5,
+		Name:          "GPT Image 1.5",
+		Description:   "OpenAI's GPT Image 1.5 model providing multimodal image generation",
+		Version:       "gpt-image-1.5",
 		InputBuilder:  NewGPTImageInputBuilder(),
 		DefaultConfig: (&GPTImageConfig{}).GetDefaults(),
 	})

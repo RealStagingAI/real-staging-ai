@@ -17,6 +17,7 @@ const (
 	configKeySeedream3      = "seedream_3"
 	configKeySeedream4      = "seedream_4"
 	configKeyGPTImage1      = "gpt_image_1"
+	configKeyGPTImage1_5    = "gpt_image_1_5"
 )
 
 // DefaultRepository provides access to settings stored in the database.
@@ -126,6 +127,8 @@ func getConfigKey(modelID model.ID) string {
 		return configKeySeedream4
 	case model.ModelGPTImage1:
 		return configKeyGPTImage1
+	case model.ModelGPTImage1_5:
+		return configKeyGPTImage1_5
 	default:
 		return string(modelID)
 	}

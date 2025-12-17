@@ -220,6 +220,129 @@ func getGPTImageSchema() *ConfigSchema {
 	}
 }
 
+func getGPTImage15Schema() *ConfigSchema {
+	return &ConfigSchema{
+		ModelID:     ModelGPTImage1_5,
+		DisplayName: "GPT Image 1.5",
+		Fields: []ConfigField{
+			{
+				Name:        "openai_api_key",
+				Type:        "string",
+				Title:       "Openai Api Key",
+				Default:     "",
+				Description: "Your OpenAI API key",
+				Required:    true,
+				Format:      "password",
+				WriteOnly:   true,
+				Secret:      true,
+				XOrder:      intPtr(0),
+			},
+			{
+				Name:        "prompt",
+				Type:        "string",
+				Title:       "Prompt",
+				Default:     "",
+				Description: "A text description of the desired image",
+				Required:    true,
+				XOrder:      intPtr(1),
+			},
+			{
+				Name:        "aspect_ratio",
+				Type:        "string",
+				Title:       "aspect_ratio",
+				Default:     "1:1",
+				Description: "The aspect ratio of the generated image",
+				Options:     []string{"1:1", "3:2", "2:3"},
+				XOrder:      intPtr(2),
+			},
+			{
+				Name:        "input_fidelity",
+				Type:        "string",
+				Title:       "input_fidelity",
+				Default:     "low",
+				Description: "Control how much effort the model will exert to match the style and features of input images",
+				Options:     []string{"low", "high"},
+				XOrder:      intPtr(3),
+			},
+			{
+				Name:        "input_images",
+				Type:        "array",
+				Title:       "Input Images",
+				Description: "A list of images to use as input for the generation",
+				ItemsType:   "string",
+				ItemsFormat: "uri",
+				Nullable:    true,
+				XOrder:      intPtr(4),
+			},
+			{
+				Name:        "number_of_images",
+				Type:        "int",
+				Title:       "Number Of Images",
+				Default:     1,
+				Description: "Number of images to generate (1-10)",
+				Min:         ptr(1.0),
+				Max:         ptr(10.0),
+				XOrder:      intPtr(5),
+			},
+			{
+				Name:        "quality",
+				Type:        "string",
+				Title:       "quality",
+				Default:     "auto",
+				Description: "The quality of the generated image",
+				Options:     []string{"low", "medium", "high", "auto"},
+				XOrder:      intPtr(6),
+			},
+			{
+				Name:        "background",
+				Type:        "string",
+				Title:       "background",
+				Default:     "auto",
+				Description: "Set whether the background is transparent or opaque or choose automatically",
+				Options:     []string{"auto", "transparent", "opaque"},
+				XOrder:      intPtr(7),
+			},
+			{
+				Name:        "output_compression",
+				Type:        "int",
+				Title:       "Output Compression",
+				Default:     90,
+				Description: "Compression level (0-100%)",
+				Min:         ptr(0.0),
+				Max:         ptr(100.0),
+				XOrder:      intPtr(8),
+			},
+			{
+				Name:        "output_format",
+				Type:        "string",
+				Title:       "output_format",
+				Default:     "webp",
+				Description: "Output format",
+				Options:     []string{"png", "jpeg", "webp"},
+				XOrder:      intPtr(9),
+			},
+			{
+				Name:        "moderation",
+				Type:        "string",
+				Title:       "moderation",
+				Default:     "auto",
+				Description: "Content moderation level",
+				Options:     []string{"auto", "low"},
+				XOrder:      intPtr(10),
+			},
+			{
+				Name:  "user_id",
+				Type:  "string",
+				Title: "User Id",
+				Description: "An optional unique identifier representing your end-user. " +
+					"This helps OpenAI monitor and detect abuse.",
+				Nullable: true,
+				XOrder:   intPtr(11),
+			},
+		},
+	}
+}
+
 // FluxKontextConfig contains all Flux Kontext model parameters.
 type FluxKontextConfig struct {
 	AspectRatio      string `json:"aspect_ratio"`
@@ -455,6 +578,8 @@ func ParseModelConfig(modelID ID, data []byte) (Config, error) {
 		config = &SeedreamConfig{}
 	case ModelGPTImage1:
 		config = &GPTImageConfig{}
+	case ModelGPTImage1_5:
+		config = &GPTImageConfig{}
 	default:
 		return nil, fmt.Errorf("unknown model ID: %s", modelID)
 	}
@@ -481,6 +606,8 @@ func GetConfigSchema(modelID ID) (*ConfigSchema, error) {
 		return getSeedreamSchema(modelID), nil
 	case ModelGPTImage1:
 		return getGPTImageSchema(), nil
+	case ModelGPTImage1_5:
+		return getGPTImage15Schema(), nil
 	default:
 		return nil, fmt.Errorf("unknown model ID: %s", modelID)
 	}
